@@ -16,7 +16,8 @@ study-all/
 ├── docs/
 │   └── {skill-name}/                  # 학습 기록
 │       ├── plan.md
-│       └── {Topic-Name}.md
+│       ├── {Topic-Name}.md
+│       └── {Topic-Name}-quiz.md
 └── ref/                               # 소스 코드/공식 문서
     ├── {name}-fork/
     └── {name}.dev/
@@ -85,7 +86,7 @@ study-all/
 
 학습 기록(`docs/`)을 기반으로 1문제씩 출제하는 적응형 복습 세션.
 
-**흐름**: Input Parsing → Study Record Discovery → Content Extraction → Review Session (1문제씩 반복) → Session End
+**흐름**: Input Parsing → Study Record Discovery → Content Extraction → Review Session (1문제씩 반복) → Session End → Quiz Save ("정리" 시)
 
 **소스**: `docs/{skill}/{Topic-Name}.md`의 학습 요약, Q&A 기록, 소스 경로
 
@@ -94,7 +95,8 @@ study-all/
 - 통과 → 다음 개념, 오답/부분 답변 → 같은 개념 변형 질문
 - AI가 통과 여부를 판단하고 다음으로 넘김
 - 3회 연속 실패 시 원문 전체 제공 후 다음 개념으로 (무한 루프 방지)
-- 읽기 전용: 어떤 파일도 수정하지 않는다
+- "정리" 시 퀴즈 기록을 `docs/{skill}/{Topic-Name}-quiz.md`에 저장
+- "정리" 외에는 읽기 전용
 
 ---
 
