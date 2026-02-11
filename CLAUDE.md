@@ -11,6 +11,7 @@ study-all/
 ├── CLAUDE.md                          # 이 파일
 ├── .claude/commands/
 │   ├── learn.md                       # /learn — 소스 기반 Q&A 튜터링
+│   ├── review.md                      # /review — 학습 기록 기반 복습
 │   └── study-skill.md                 # /study-skill — 레퍼런스 검증/개선
 ├── docs/
 │   └── {skill-name}/                  # 학습 기록
@@ -79,6 +80,21 @@ study-all/
 - 토픽 순서는 bottom-up (기초 → 내부 메커니즘 → 사용자 기능 → 고급)
 - 최소 변경 원칙: 틀린 것만 고치고, 없는 것만 추가
 - `patterns.md`, `anti-patterns.md`는 사용자 명시 요청 시에만 수정
+
+### `/review <skill-name> [topic]` — 복습
+
+학습 기록(`docs/`)을 기반으로 1문제씩 출제하는 적응형 복습 세션.
+
+**흐름**: Input Parsing → Study Record Discovery → Content Extraction → Review Session (1문제씩 반복) → Session End
+
+**소스**: `docs/{skill}/{Topic-Name}.md`의 학습 요약, Q&A 기록, 소스 경로
+
+**핵심 규칙**:
+- 한 턴에 1문제만 출제
+- 통과 → 다음 개념, 오답/부분 답변 → 같은 개념 변형 질문
+- AI가 통과 여부를 판단하고 다음으로 넘김
+- 3회 연속 실패 시 원문 전체 제공 후 다음 개념으로 (무한 루프 방지)
+- 읽기 전용: 어떤 파일도 수정하지 않는다
 
 ---
 
