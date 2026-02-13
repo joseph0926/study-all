@@ -197,3 +197,223 @@ A: Git 커밋 히스토리에서 찾았다. Sebastian Markbåge의 커밋 `94e4a
 - Topic 7: Hooks: memoizedState 필드에 hooks linked list가 저장되는 메커니즘
 
 ---
+
+## 2026-02-13 (재개 — Step 2부터)
+
+### 학습 로드맵
+- [x] Step 1: Fiber Node 구조 — FiberNode 생성자, 필드 5개 카테고리(Instance/Tree/Props/Effects/Priority)
+- [x] Step 2: WorkTag 전체 목록과 type→tag 변환 — 31개 태그 상수, createFiberFromTypeAndProps 분기 로직
+- [ ] Step 3: Flags & Mode 비트마스크 — 부작용 플래그, 모드 플래그, Commit Phase 마스크
+- [ ] Step 4: Double Buffering — createWorkInProgress — current ↔ workInProgress 쌍, 노드 재사용/복제 전략
+
+### 학습 요약
+- WorkTag는 Fiber 노드의 "직종"을 나타내는 정수 상수 (0~31), 5개 카테고리(사용자 컴포넌트/호스트/구조·제어/데이터·컨텍스트/에러·내부)로 분류
+- `createFiberFromTypeAndProps`는 JSX의 `type`을 보고 WorkTag를 결정하는 3-way 분기: `typeof type`이 `function`(→shouldConstruct로 Class/Function 구분) / `string`(→HostComponent/HostHoistable/HostSingleton) / 그 외(→심볼·`$$typeof` 체크)
+- `shouldConstruct`는 `type.prototype.isReactComponent` 체크 — ES6 class도 `typeof`하면 `'function'`이므로 이것이 유일한 구분 방법
+- `isReactComponent`는 함수 컴포넌트 구분용이 아니라, React 0.13에서 `createClass` vs `React.Component` 구분을 위해 도입된 것. 0.14에서 함수 컴포넌트가 추가되며 자연스럽게 class/function 구분 역할도 겸하게 됨
+- `elementType`은 원본 type, `type`은 resolve된 결과(HMR 교체, lazy=null) — 분기는 원본으로, 저장은 resolved로
+- WorkTag가 순차 정수인 이유: Fiber는 한 번에 하나의 tag만 가지므로 비트마스크 불필요, V8 Smi 최적화 + switch 점프 테이블 활용
+- 빈 번호(2, 20)는 제거된 태그(IndeterminateComponent, FundamentalComponent)의 자리 — 외부 도구 호환성을 위해 재할당하지 않음
+- React 팀은 "이상적 설계"보다 "안정적 생태계"를 우선 — `isReactComponent` 이름 변경(breaking change 비용 > 가독성 이득)이나 `{}` → `true` 변경(이득 = 0)을 하지 않는 이유
+
+### 소스 코드 경로
+- `ReactWorkTags.js` — 32개 WorkTag 상수 (0~31, 2와 20 결번)
+- `ReactFiber.js:397-544` — createFiberFromTypeAndProps (type→tag 변환, 3-way 분기)
+- `ReactBaseClasses.js` — `Component.prototype.isReactComponent = {}` (shouldConstruct 판별 근거)
+
+> 참고: `ref/` 소스가 현재 없어 GitHub raw 소스(v19.2.4)와 스킬 레퍼런스(`~/.claude/skills/react-aio/references/fiber.md`)를 사용
+
+### Q&A 전체 기록
+
+#### Step 2: WorkTag 전체 목록과 type→tag 변환
+
+**Q: 사소한 질문이긴 하지만 `let resolvedType = type;`로 할당 이후 분기 처리는 typeof type 처럼 다시 type으로 하고있습ㅂ니다. 특별한 이유가 있을까요?**
+
+A: `type`과 `resolvedType`는 역할이 다르다. `type`은 원본 입력으로 분류(classification)에 사용하고, `resolvedType`은 최종 저장값으로 분기 과정에서 변형될 수 있다.
+
+`resolvedType`이 바뀌는 지점:
+```javascript
+if (typeof type === 'function') {
+  if (shouldConstruct(type)) {
+    fiberTag = ClassComponent;
+    if (__DEV__) {
+      resolvedType = resolveClassForHotReloading(resolvedType); // ← 변형!
+    }
+  }
+}
+// ...
+case REACT_LAZY_TYPE:
+  fiberTag = LazyComponent;
+  resolvedType = null;  // ← lazy는 아직 resolve 안 됐으므로 null!
+```
+
+함수 끝에서 두 값이 각각 다른 필드에 저장된다:
+```javascript
+fiber.elementType = type;       // 원본 그대로 (주문서 원본)
+fiber.type = resolvedType;      // resolve된 결과 (HMR 교체, lazy=null)
+```
+
+Step 1의 택배 비유로: `elementType`은 주문서에 적힌 상품명, `type`은 실제 출고된 상품. 보통은 같지만, HMR이나 lazy 로딩 상황에서 달라진다. 분기는 원본(`type`)으로 해야 정확하다.
+
+---
+
+**Q: `type.prototype && type.prototype.isReactComponent` < 이게 왜/어떻게 구분을 짓는건가요?**
+
+A: React.Component의 상속 체인을 이용한 구분이다.
+
+`React.Component` 정의 시:
+```javascript
+// ReactBaseClasses.js
+Component.prototype.isReactComponent = {};  // 빈 객체 (truthy)
+```
+
+`shouldConstruct` 함수:
+```javascript
+function shouldConstruct(Component) {
+  const prototype = Component.prototype;
+  return !!(prototype && prototype.isReactComponent);
+}
+```
+
+| 컴포넌트 종류 | `prototype` | `prototype.isReactComponent` | 결과 |
+|-------------|------------|-----|------|
+| `class App extends Component` | 존재 (Component에서 상속) | `{}` (truthy) | `ClassComponent` |
+| `function App() {}` | 존재하지만 | `undefined` | `FunctionComponent` |
+| `const App = () => {}` | `undefined` (화살표 함수) | 접근 불가 | `FunctionComponent` |
+
+핵심은 JavaScript의 프로토타입 상속. `class App extends React.Component`를 하면, `App.prototype`이 `Component.prototype`을 상속받으므로 `App.prototype.isReactComponent`가 `{}`를 반환한다.
+
+이것이 React가 함수와 클래스를 구분하는 유일한 방법이다. `typeof`만으로는 구분 불가 — ES6 class도 `typeof`하면 `'function'`이다:
+```javascript
+class Foo {}
+typeof Foo // 'function'  ← class와 function 구분 불가!
+```
+
+---
+
+**Q: type을 숫자로 매핑한 이유나 특별한 규칙이있나요?**
+
+A: 성능 + 메모리 이유로 숫자를 사용한다:
+1. 정수 비교가 문자열 비교보다 빠름: `tag === 0`은 CPU 단일 명령어, `tag === 'FunctionComponent'`는 문자열 길이만큼 비교
+2. V8 Smi 최적화: 0~31 범위의 정수는 Smi(Small Integer)로 포인터 안에 직접 인코딩 — 힙 할당 없음
+3. switch 최적화: V8은 연속된 정수 switch를 점프 테이블로 컴파일 가능 — O(1) 분기
+
+번호 배정에 특별한 의미론적 규칙은 없다. 대체로 React에 추가된 시간순이다.
+
+Flags와의 중요한 차이:
+| | WorkTag | Flags |
+|---|---------|-------|
+| 값 | 순차 정수 (0, 1, 3, 5...) | 2의 거듭제곱 (1, 2, 4, 8...) |
+| 조합 | 불가 — Fiber는 한 번에 하나의 tag만 | 가능 — `flags | Update | Placement` |
+| 이유 | 컴포넌트는 "함수이면서 클래스"일 수 없음 | 부작용은 동시에 여러 개 가능 |
+
+빈 번호(2, 20)는 과거 `IndeterminateComponent`(2)와 `FundamentalComponent`(20)가 있었으나 v19에서 제거. DevTools, 직렬화된 데이터, 디버깅 로그 등 외부 도구와의 호환성 유지를 위해 번호를 재할당하지 않는다.
+
+---
+
+**Q: prototype.isReactComponent 는 class 컴포넌트 초기부터 있던 속성일까요? 즉, 함수형 컴포넌트가 나오고 그것과 구분하기 위해 추가된건지? 아니면 원래 있던 속성인지? 원래 있던 속성이면 어떤 역할을 햇던건가요? 원래는 클래스 컴포넌트만 있었으니 분기용은 아닐거같습니다**
+
+A: 사용자의 직감이 맞다. 원래 함수 컴포넌트 구분용이 아니었다.
+
+타임라인:
+
+| 시점 | 변화 |
+|------|------|
+| ~React 0.13 (2015.03) | ES6 class 지원 추가 → `React.Component` 도입 + `isReactComponent` 추가 |
+| React 0.14 (2015.10) | Stateless Functional Component 도입 |
+
+0.13 시점에는 컴포넌트를 만드는 방법이 두 가지였다:
+```javascript
+// 방법 1: createClass (React 고유 API)
+var App = React.createClass({
+  mixins: [SomeMixin],           // 믹스인 지원
+  handleClick() { ... },         // 자동 this 바인딩
+});
+
+// 방법 2: ES6 class (새로 추가)
+class App extends React.Component {
+  handleClick() { ... }          // 자동 바인딩 없음!
+}
+```
+
+이 둘은 내부 동작이 달랐다: `createClass`는 자동 `this` 바인딩, 믹스인 지원, `getInitialState` 등 고유 라이프사이클을 가졌고, `React.Component`는 없었다. React 내부에서 이 둘을 구분해야 했으므로 `isReactComponent`가 추가됨 — "이것은 `React.Component` 기반 클래스다"라는 정체성 마커.
+
+그 후 0.14에서 함수 컴포넌트가 추가되자, 이미 존재하던 `isReactComponent`가 자연스럽게 "class vs function" 구분 역할도 겸하게 된 것. 새로운 메커니즘을 추가한 게 아니라, 기존 마커가 새 용도에도 맞아떨어진 케이스.
+
+`createClass`는 v16에서 제거되었고, 원래 용도는 사라졌지만 마커는 남아서 현재 역할을 수행.
+
+---
+
+**Q: 소스에서 확인하지 못했지만, Dan Abramov의 블로그에 따르면 과거 특정 테스트 라이브러리의 직렬화 이슈를 회피하기위한 것, isReactComponent 이름 << 이처럼 레거시를 처리하지 못한걸까요? 안할걸까요? / 예를들어 isReactComponent보다 isClassComponent가 더 명시적인 이름인거같고, 특정 테스트 라이브러리의 직렬화 이슈를 회피하기 위해 React가 대응하는건 뭔가 역방향인거같습니다**
+
+A: "안 한 것"에 가깝고, 이유가 있다.
+
+이름 변경(`isClassComponent`):
+- `isReactComponent`는 React 내부 속성이지만 사실상 공개 API. React DevTools, 테스팅 라이브러리, SSR 프레임워크 등 서드파티가 이 속성명에 의존
+- 비용: 생태계 전체에 영향을 주는 breaking change
+- 이득: 이름이 좀 더 명확해짐 (기능 변화 없음)
+- 비용 대비 이득이 맞지 않다
+
+React 팀이 breaking change를 하는 경우의 패턴:
+
+| 변경 | 이유 | 소요 기간 |
+|------|------|----------|
+| `createClass` 제거 | 기술적 부채 + ES6 class 표준 | 0.13 → v16 (약 2년) |
+| String refs 제거 | 성능 문제 + 소유권 추적 불가 | v15 → v19 (약 5년) |
+| `isReactComponent` 이름 변경 | 논의된 적 없음 | — |
+
+기능적 문제가 있는 것만 긴 deprecation 기간을 거쳐 변경한다. 동작에 문제가 없는 이름 변경은 비용만 발생시키므로 하지 않는다.
+
+`{}` vs `true` — React가 테스트 라이브러리에 대응한 것이 역방향 아닌가:
+사용자의 직감이 맞으나 2015년 시점 맥락이 있다. React는 아직 지배적 프레임워크가 아니었고, 생태계를 키워야 하는 입장에서 기존 도구들과의 마찰을 최소화하는 것이 합리적이었다. 기술적 판단이 아니라 생태계 전략적 판단.
+
+---
+
+**Q: HostSingleton에서 이름의 싱글톤은 왜 붙은건가요?**
+
+A: 디자인 패턴의 싱글톤 패턴에서 온 이름. HTML 문서에서 단 하나만 존재할 수 있는 DOM 요소를 가리킨다: `<html>`, `<head>`, `<body>`.
+
+일반 `HostComponent`(`<div>`, `<span>`)는 몇 개든 만들 수 있지만, 이 셋은 이미 존재하는 것을 "입양(adopt)"해야 한다:
+```
+일반 HostComponent: React가 createElement('div') → 새 DOM 노드 생성 → 삽입
+HostSingleton: <body>는 이미 있음 → 새로 만들 수 없음 → 기존 것을 찾아서 연결
+```
+
+SSR + 하이드레이션 시 중요: 서버에서 보낸 HTML에 이미 `<html>`, `<head>`, `<body>`가 있고, React는 새로 만드는 게 아니라 기존 DOM 노드를 Fiber에 연결해야 한다. `HostSingleton` 태그가 있으면 "새 DOM을 만들지 말고 기존 것을 찾아라"는 다른 처리 경로를 탄다.
+
+---
+
+**Q: {} 대신 true로 바꾸면 안 되는 건가? 이름 변경과 동일한 상황인가?**
+
+A: 이름 변경과는 상황이 다르다.
+
+`shouldConstruct`는 truthy 체크만 한다:
+```javascript
+return !!(prototype && prototype.isReactComponent);
+```
+
+| 값 | `!!value` | 결과 |
+|---|----------|------|
+| `{}` | `true` | 통과 |
+| `true` | `true` | 통과 |
+
+React 내부적으로 안 깨지고, 서드파티도 대부분 같은 truthy 체크 패턴을 사용하므로 거의 안 깨진다.
+
+그러면 왜 안 바꾸는가 — **바꿀 이유가 없기 때문이다.**
+
+| | 이름 변경 (`isClassComponent`) | 값 변경 (`true`) |
+|---|---|---|
+| breaking 위험 | 높음 | 거의 없음 |
+| 이득 | 가독성 향상 (작지만 존재) | 없음 |
+| 결론 | 안 함 (비용 > 이득) | 안 함 (이득 = 0) |
+
+`{}` → `true`로 바꾸는 PR을 올리면 리뷰어 입장에서: "동작이 바뀌는 건 없고, 어딘가 깨질 가능성이 0.01%라도 있고, 이 변경으로 사용자가 얻는 건 아무것도 없다. 왜 머지해야 하는가?" — benefit이 존재하지 않는 상황이다.
+
+### 연결 토픽
+- Step 3-4 (미완료): Flags & Mode 비트마스크, Double Buffering
+- shouldConstruct: `ReactFiber.js` 내 함수 — class vs function 구분의 유일한 메커니즘
+- HostHoistable/HostSingleton: 렌더러(react-dom) 특화 태그 — `isHostHoistableType`, `isHostSingletonType` 판별 로직
+- beginWork switch: `ReactFiberBeginWork.js`에서 tag별 분기 — WorkTag가 실제 사용되는 핵심 지점
+- Hyrum's Law와 React 생태계 전략: 기술 부채 vs 의도적 안정성 선택
+
+---
