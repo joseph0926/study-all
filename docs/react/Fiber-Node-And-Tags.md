@@ -1,4 +1,4 @@
-# Fiber Node & Tags
+# Fiber Node And Tags
 
 > `/learn react` 세션 기록. 소스 코드 기반 Q&A 히스토리.
 

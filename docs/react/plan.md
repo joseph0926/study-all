@@ -634,5 +634,5 @@ Part 1에서 소스 코드로 내부 동작을 이해한 후, 공식 문서로 "
 ## Verification
 
 - 각 토픽 완료 후: 수정된 react-aio 문서의 내용이 소스 코드와 일치하는지 교차 확인
-- 전체 완료 후: `scripts/skills_audit.py` 실행하여 메타데이터/링크 정합성 검증
+- 전체 완료 후: `bash scripts/check-docs.sh` 실행하여 문서 정합성 검증
 - GitHub URL 링크가 실제 소스 파일 경로와 일치하는지 확인

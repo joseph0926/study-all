@@ -1,4 +1,4 @@
-# Architecture — App Router 구조와 파일 컨벤션
+# Architecture App Router
 
 > `/learn nextjs` 세션 기록. 소스 코드 기반 Q&A 히스토리.
 

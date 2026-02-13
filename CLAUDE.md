@@ -13,6 +13,8 @@ study-all/
 │   ├── learn.md                       # /learn — 소스 기반 Q&A 튜터링
 │   ├── review.md                      # /review — 학습 기록 기반 복습
 │   └── study-skill.md                 # /study-skill — 레퍼런스 검증/개선
+├── scripts/
+│   └── check-docs.sh                  # 정합성 검증 (pre-commit 훅)
 ├── docs/
 │   └── {skill-name}/                  # 학습 기록
 │       ├── plan.md
@@ -148,6 +150,29 @@ study-all/
 
 ---
 
+## 정합성 검증 (2계층)
+
+### Layer 1: 정적 스크립트 — `scripts/check-docs.sh`
+
+`git commit` 시 pre-commit 훅으로 자동 실행. ERROR 시 커밋 차단.
+
+체크 항목: 커맨드 테이블 동기화, 파일명 컨벤션, 팬텀 참조, 구조 트리, plan.md 동기화.
+
+수동 실행: `bash scripts/check-docs.sh`
+
+### Layer 2: AI 시맨틱 검증 — 각 커맨드 종료 Phase
+
+정적 스크립트가 잡지 못하는 시맨틱 레벨 이슈를 AI가 세션 종료 시 검증.
+
+체크 항목 (커맨드별 상세는 각 `.claude/commands/*.md` 참조):
+- 세션 기록 필수 섹션 존재 여부 및 구조 준수
+- Q&A 원문 보존 (요약 테이블 축약 감지)
+- 소스 경로(`file:line`) 유효성 샘플링
+- plan.md 체크리스트 ↔ 세션 결과 동기화
+- README.md / CLAUDE.md 업데이트 필요 여부 알림
+
+---
+
 ## AI 행동 규칙
 
 ### DO
@@ -159,6 +184,7 @@ study-all/
 - 심층 학습이 필요한 항목은 "심층 학습 대기 항목"으로 명시
 - `docs/` 하위와 지정된 파일만 생성/수정. 다른 디렉토리는 건드리지 않는다.
 - 기록은 AI가 정리하여 저장. 사용자에게 기록 부담을 주지 않는다.
+- 세션 종료 시 Post-Session Consistency Check를 실행하고 결과를 보고한다.
 
 ### DO NOT
 
@@ -167,3 +193,4 @@ study-all/
 - 사용자 동의 없이 스킬 레퍼런스 파일 수정
 - `/learn` 세션에서 소스 코드나 스킬 파일 수정 (읽기 전용)
 - 세션 재개 확인 단계(Phase 1.5) 건너뛰기
+- Post-Session Consistency Check 건너뛰기
