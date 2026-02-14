@@ -18,7 +18,7 @@ argument-hint: "<skill-name>"
 `$ARGUMENTS`에서 스킬명을 파싱합니다. 접미사 `-aio`는 자동 보정합니다.
 
 1. `~/.claude/skills/{name}-aio/SKILL.md`를 읽습니다.
-   - 파일이 없으면: 사용 가능한 스킬 목록(`ls ~/.claude/skills/`)을 표시하고 종료합니다.
+   - 파일이 없으면: **Phase 1.1 (Skill Scaffold Creation)**으로 진행합니다.
 
 2. SKILL.md frontmatter에서 metadata를 추출합니다:
    - `version`, `source_repo`, `source_branch`
@@ -47,6 +47,50 @@ argument-hint: "<skill-name>"
 | Depends On | {depends_on} |
 | Reference Docs | {REF_FILES 개수}개 |
 ```
+
+---
+
+## Phase 1.1: Skill Scaffold Creation (스킬이 없을 때만)
+
+스킬 디렉토리(`~/.claude/skills/{SKILL_NAME}-aio/`)가 존재하지 않을 때 실행됩니다.
+`/learn`의 Phase 1.1과 **동일한 로직**으로 스킬 뼈대를 생성합니다.
+
+### 1. 소스 레포 정보 자동 추출
+
+`ref/` 디렉토리에서 SKILL_NAME과 매칭되는 소스 레포를 탐색합니다:
+- `ref/{name}-fork/`, `ref/{name}/`, `ref/{repo-name}/` 순서로 탐색
+- 발견하면 `git -C {path} remote get-url origin`으로 source_repo 추출
+- `git -C {path} describe --tags --abbrev=0 2>/dev/null`로 version 추출
+- `git -C {path} rev-parse --abbrev-ref HEAD`로 source_branch 추출
+
+### 2. 사용자 확인
+
+AskUserQuestion으로 스킬 자동 생성을 확인합니다:
+
+질문: "`{SKILL_NAME}-aio` 스킬이 없습니다. 기본 뼈대를 생성하고 학습하면서 채워나갈까요?"
+- header: "Skill"
+- 옵션:
+  - "자동 생성 후 진행" — 뼈대를 생성하고 Phase 2로 계속
+  - "중단" — 세션 종료
+
+### 3. 스킬 뼈대 생성
+
+아래 구조로 최소 파일을 생성합니다:
+
+```
+~/.claude/skills/{SKILL_NAME}-aio/
+├── SKILL.md
+└── references/
+    ├── architecture.md
+    ├── patterns.md
+    └── anti-patterns.md
+```
+
+SKILL.md 템플릿과 references/ 초기 파일은 `/learn`의 Phase 1.1과 동일합니다.
+
+### 4. Phase 1로 복귀
+
+생성 완료 후 Phase 1의 2단계(metadata 추출)부터 재실행하여 정상 흐름으로 합류합니다.
 
 ---
 

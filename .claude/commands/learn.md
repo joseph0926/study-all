@@ -23,7 +23,7 @@ argument-hint: "<skill-name> <topic>"
 2. **토픽 추출**: 나머지 단어 → `TOPIC` (여러 단어 가능, 예: "server components")
 3. `~/.claude/skills/{SKILL_NAME}-aio/SKILL.md`를 읽어 metadata 추출:
    - `source_repo`, `source_branch`, `version`
-4. 스킬이 없으면: 사용 가능한 스킬 목록을 표시하고 종료
+4. 스킬이 없으면: **Phase 1.1 (Skill Scaffold Creation)**으로 진행
 
 토픽이 비어 있으면 AskUserQuestion으로 질문합니다:
 
@@ -31,6 +31,134 @@ argument-hint: "<skill-name> <topic>"
 - header: "Topic"
 - 스킬의 `references/` 파일명 기반으로 옵션 동적 생성 (최대 4개, 나머지는 Other)
   - 예: references/hooks.md → "Hooks", references/fiber.md → "Fiber"
+
+---
+
+## Phase 1.1: Skill Scaffold Creation (스킬이 없을 때만)
+
+스킬 디렉토리(`~/.claude/skills/{SKILL_NAME}-aio/`)가 존재하지 않을 때 실행됩니다.
+
+### 1. 소스 레포 정보 자동 추출
+
+`ref/` 디렉토리에서 SKILL_NAME과 매칭되는 소스 레포를 탐색합니다:
+- `ref/{name}-fork/`, `ref/{name}/`, `ref/{repo-name}/` 순서로 탐색
+- 발견하면 `git -C {path} remote get-url origin`으로 source_repo 추출
+- `git -C {path} describe --tags --abbrev=0 2>/dev/null`로 version 추출
+- `git -C {path} rev-parse --abbrev-ref HEAD`로 source_branch 추출
+
+### 2. 사용자 확인
+
+AskUserQuestion으로 스킬 자동 생성을 확인합니다:
+
+질문: "`{SKILL_NAME}-aio` 스킬이 없습니다. 기본 뼈대를 생성하고 학습하면서 채워나갈까요?"
+- header: "Skill"
+- 옵션:
+  - "자동 생성 후 진행" — 뼈대를 생성하고 Phase 1.5로 계속
+  - "중단" — 세션 종료
+
+### 3. 스킬 뼈대 생성
+
+아래 구조로 최소 파일을 생성합니다:
+
+```
+~/.claude/skills/{SKILL_NAME}-aio/
+├── SKILL.md
+└── references/
+    ├── architecture.md
+    ├── patterns.md
+    └── anti-patterns.md
+```
+
+#### SKILL.md 템플릿
+
+```yaml
+---
+name: {SKILL_NAME}-aio
+description: >
+  {SKILL_NAME} 코드 작성/분석 가이드.
+  학습 진행 중 — `/learn`과 `/study-skill`로 레퍼런스가 채워집니다.
+metadata:
+  layer: library
+  depends_on: []
+  version: "{auto-detected or TBD}"
+  source_repo: "{auto-detected or TBD}"
+  source_branch: "{auto-detected or TBD}"
+  last_verified: "{today}"
+  keywords:
+    - {SKILL_NAME}
+  patterns_path: references/patterns.md
+  anti_patterns_path: references/anti-patterns.md
+user-invocable: false
+allowed-tools: "Read Grep Glob"
+---
+
+# {Skill_Name} AIO (All-In-One)
+
+## Purpose
+
+{Skill_Name} 관련 코드 작성/분석 시 소스 코드 기반 레퍼런스를 제공한다.
+
+> 이 스킬은 `/learn`과 `/study-skill`로 학습하면서 점진적으로 채워집니다.
+
+## Quick Reference
+
+| 개념 | 핵심 | 참조 |
+|------|------|------|
+| Architecture | 시스템 구조 | [architecture.md](references/architecture.md) |
+
+## References
+
+- [architecture.md](references/architecture.md) — 시스템 아키텍처
+- [patterns.md](references/patterns.md) — 권장 패턴
+- [anti-patterns.md](references/anti-patterns.md) — 안티패턴
+
+## Source of Truth
+
+- Source: {source_repo}
+```
+
+#### references/ 초기 파일
+
+각 파일은 플레이스홀더 내용으로 생성합니다:
+
+- `architecture.md`:
+  ```markdown
+  # Architecture
+
+  > 학습 진행 중. `/learn`과 `/study-skill`로 채워집니다.
+  ```
+
+- `patterns.md`:
+  ```markdown
+  # Recommended Patterns
+
+  > 학습 진행 중.
+  ```
+
+- `anti-patterns.md`:
+  ```markdown
+  # Anti-Patterns
+
+  > 학습 진행 중.
+  ```
+
+### 4. 생성 결과 출력
+
+```
+## Skill Scaffold Created: {SKILL_NAME}-aio
+
+생성된 파일:
+- ~/.claude/skills/{SKILL_NAME}-aio/SKILL.md
+- ~/.claude/skills/{SKILL_NAME}-aio/references/architecture.md
+- ~/.claude/skills/{SKILL_NAME}-aio/references/patterns.md
+- ~/.claude/skills/{SKILL_NAME}-aio/references/anti-patterns.md
+
+> 학습을 진행하면서 레퍼런스가 점진적으로 채워집니다.
+```
+
+### 5. Phase 1로 복귀
+
+생성 완료 후 Phase 1의 3단계(metadata 추출)부터 재실행하여 정상 흐름으로 합류합니다.
 
 ---
 
@@ -252,6 +380,45 @@ Phase 1에서 SKILL_NAME과 TOPIC이 결정되면, **기존 세션 파일 존재
 ### 다음 단계 진행
 
 사용자가 "다음" 또는 다음 단계 의사를 표현하면:
+
+#### Step 4-A: 스킬 레퍼런스 보강 확인
+
+다음 Step으로 넘어가기 전에, 현재 Step에서 학습한 내용을 스킬 레퍼런스와 대조합니다:
+
+1. **핵심 내용 정리**: 현재 Step에서 다룬 핵심 개념/코드/경로를 내부적으로 정리합니다.
+2. **매칭 레퍼런스 확인**: `~/.claude/skills/{SKILL_NAME}-aio/references/` 에서 현재 서브토픽과 매칭되는 파일을 탐색합니다.
+   - 파일명 매칭 (예: 서브토픽 "fiber" → `references/fiber.md`)
+   - 내용 Grep으로 관련 섹션 식별
+3. **대조 결과에 따라 분기**:
+
+**레퍼런스 파일이 없는 경우**:
+- 새 파일 생성을 제안합니다 (AskUserQuestion):
+
+질문: "이 토픽에 해당하는 스킬 레퍼런스 파일이 없습니다. 학습 내용을 바탕으로 `references/{topic}.md`를 생성할까요?"
+- header: "Skill Ref"
+- 옵션:
+  - "생성" — 학습한 핵심 내용으로 최소 레퍼런스 파일 생성
+  - "건너뛰기" — 다음 Step으로 바로 진행
+
+**레퍼런스 파일이 있는 경우**:
+- 파일을 Read로 읽고 학습 내용과 대조합니다.
+- 보강/수정이 필요하면 변경 사항을 요약하여 제안합니다 (AskUserQuestion):
+
+질문: "스킬 레퍼런스에 보강할 내용이 있습니다. 업데이트할까요?"
+- header: "Skill Update"
+- 옵션:
+  - "업데이트" — 최소 변경 적용 (틀린 것만 고치고, 없는 것만 추가)
+  - "건너뛰기" — 다음 Step으로 바로 진행
+
+- 보강/수정이 불필요하면 별도 질문 없이 다음으로 진행합니다.
+
+**스킬 레퍼런스 변경 원칙**:
+- 최소 변경: 학습에서 확인된 내용만 반영. 추측으로 추가하지 않는다.
+- 소스 근거 필수: 추가/수정하는 모든 내용에 소스 코드 경로(`file:line`)를 포함한다.
+- `patterns.md`, `anti-patterns.md`는 사용자가 명시적으로 요청한 경우에만 수정한다.
+
+#### Step 4-B: 다음 Step 진행
+
 1. 현재 Step의 Q&A 기록을 내부적으로 유지합니다.
 2. 다음 Step의 설명을 Phase 4 형식으로 시작합니다.
 3. 마지막 Step 완료 시:
@@ -427,6 +594,6 @@ Phase 5 완료 직후, **이 세션에서 생성/수정한 파일**과 **CLAUDE.
 
 - **소스 근거 원칙**: 설명의 모든 주장은 소스 코드 경로를 포함해야 합니다. 근거 없는 설명은 "소스에서 확인하지 못했지만"으로 시작합니다.
 - **Graceful Degradation**: ref/ 소스 없으면 스킬 references 기반, 그것도 없으면 일반 지식 기반으로 설명합니다. 어떤 소스를 사용 중인지 항상 명시합니다.
-- **읽기 전용**: 이 커맨드는 소스 코드나 스킬 레퍼런스를 수정하지 않습니다. 학습 기록(`docs/{SKILL_NAME}/{Topic-Name}.md`)만 생성/추가합니다.
+- **소스 코드 읽기 전용**: 소스 코드(`ref/`)는 절대 수정하지 않습니다. 스킬 레퍼런스(`~/.claude/skills/`)는 각 Step 완료 후 학습 내용을 바탕으로 **사용자 승인 후에만** 보강합니다 (Phase 4 Step 4-A 참조). 학습 기록(`docs/{SKILL_NAME}/{Topic-Name}.md`)은 자동 생성/추가합니다.
 - **세션 재개 필수 확인**: Phase 1.5에서 기존 세션 파일을 **반드시** 확인합니다. 미완료 단계가 있으면 새로 시작하지 않고 재개 여부를 사용자에게 물어봅니다. 이 단계를 건너뛰면 안 됩니다.
 - **세션 연속성**: 각 토픽 파일의 "학습 로드맵"과 "연결 토픽" 섹션이 다음 학습 가이드 역할을 합니다.
