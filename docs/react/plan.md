@@ -52,9 +52,9 @@
 
 > React가 외부에 무엇을 노출하는지 파악
 
-- [ ] 소스 학습 완료
+- [x] 소스 학습 완료
 - [ ] react.dev 교차 확인
-- [ ] react-aio 검증/개선
+- [x] react-aio 검증/개선 (해당 target 없음 — 기초 맥락)
 
 **Source Files** (`ref/react-fork/packages/react/src/`):
 
@@ -90,8 +90,8 @@
 
 > React의 핵심 자료구조 이해
 
-- [ ] 소스 학습 완료
-- [ ] react-aio 검증/개선 (`references/fiber.md`)
+- [x] 소스 학습 완료
+- [x] react-aio 검증/개선 (`references/fiber.md`) — WorkTag 테이블 확장, Flags/Mode/Double Buffering 섹션 추가, Lane 값 수정
 
 **Source Files** (`ref/react-fork/packages/react-reconciler/src/`):
 
