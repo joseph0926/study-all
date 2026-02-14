@@ -204,7 +204,6 @@ A: Git 커밋 히스토리에서 찾았다. Sebastian Markbåge의 커밋 `94e4a
 
 - https://github.com/facebook/react/pull/30942
 - https://github.com/facebook/react/issues/14365
-- 내부 연구 패키지: `docs/react/research/fiber-profiler-double-init/README.md`
 
 ### 연결 토픽
 
@@ -452,12 +451,14 @@ React 내부적으로 안 깨지고, 서드파티도 대부분 같은 truthy 체
 ## 2026-02-14 (재개 — Step 3부터)
 
 ### 학습 로드맵
+
 - [x] Step 1: Fiber Node 구조 — FiberNode 생성자, 필드 5개 카테고리(Instance/Tree/Props/Effects/Priority)
 - [x] Step 2: WorkTag 전체 목록과 type→tag 변환 — 31개 태그 상수, createFiberFromTypeAndProps 분기 로직
 - [x] Step 3: Flags & Mode 비트마스크 — 부작용 플래그, 모드 플래그, Commit Phase 마스크
 - [ ] Step 4: Double Buffering — createWorkInProgress — current ↔ workInProgress 쌍, 노드 재사용/복제 전략
 
 ### 학습 요약
+
 - Flags는 2의 거듭제곱(비트마스크) — 각 flag가 하나의 비트(스위치)만 차지하므로 `|=`로 조합, `&`로 확인 가능. WorkTag(순차 정수)와 근본적 차이
 - Flags는 클라이언트 Fiber Reconciler 전용 — `react-server` 패키지에서 `ReactFiberFlags` import 0건, 서버에는 Fiber 자체가 없으므로 flags도 없음
 - Flags 3계층: Commit Flags(렌더별 수명) / Non-effect Flags(부작용은 아니지만 필드 재사용) / Static Flags(Fiber 수명 동안 유지, bailout 시에도 버블업)
@@ -467,6 +468,7 @@ React 내부적으로 안 깨지고, 서드파티도 대부분 같은 truthy 체
 - Mode: 비트마스크이지만 Flags와 반대 — 위→아래 상속, 한 번 설정되면 불변, "어떤 환경에서 돌아가는가"를 표현 (ConcurrentMode, ProfileMode, StrictLegacyMode 등)
 
 ### 소스 코드 경로
+
 - `ref/react-fork/packages/react-reconciler/src/ReactFiberFlags.js:18-50` — Commit Flags (DevTools 호환 4개 + 변경 가능한 나머지)
 - `ref/react-fork/packages/react-reconciler/src/ReactFiberFlags.js:42-51` — 비트 재사용 (Hydrate=Callback, ScheduleRetry=StoreConsistency 등)
 - `ref/react-fork/packages/react-reconciler/src/ReactFiberFlags.js:60-64` — Non-effect Flags (Incomplete, ShouldCapture 등)
@@ -487,10 +489,10 @@ React 내부적으로 안 깨지고, 서드파티도 대부분 같은 truthy 체
 
 A: 맞다. RSC(Server Components)에서는 Fiber 자체가 없으므로 Flags도 없다. SSR(`react-dom/server`)과 RSC는 구분이 필요하다:
 
-| | SSR (`react-dom/server`) | RSC (Server Components) |
-|---|---|---|
-| Fiber 사용 | 사용함 | 사용 안 함 — Fiber 없이 직접 스트림 생성 |
-| Flags | 일부 사용 | 해당 없음 |
+|            | SSR (`react-dom/server`) | RSC (Server Components)                  |
+| ---------- | ------------------------ | ---------------------------------------- |
+| Fiber 사용 | 사용함                   | 사용 안 함 — Fiber 없이 직접 스트림 생성 |
+| Flags      | 일부 사용                | 해당 없음                                |
 
 소스에서 확인: `react-server` 패키지에서 `ReactFiberFlags`를 import하는 파일이 0개. SSR 서버 코드(`react-dom/src/server`)에서도 0개.
 
@@ -509,8 +511,8 @@ A: 거의 맞지만 더 정확하게는 "각 flag가 2진수에서 서로 다른
 A: JavaScript의 비트 OR 대입 연산자. `+=`와 같은 패턴:
 
 ```javascript
-flags |= Update;       // = flags = flags | Update;
-count += 1;            // = count = count + 1;
+flags |= Update; // = flags = flags | Update;
+count += 1; // = count = count + 1;
 ```
 
 `|`(비트 OR)는 "해당 비트를 켠다":
@@ -539,6 +541,7 @@ A: 아니다. 코드적으로는 전혀 막지 않았다. `const`는 런타임 �
 주석이 경고하는 진짜 대상은 "다음 PR에서 이 비트 위치를 바꾸는 React 팀 동료"인데, 이건 어떤 코드 메커니즘으로도 막을 수 없다. 소스를 열어서 `0b010`을 `0b100`으로 고치는 걸 JavaScript가 막을 방법은 없다.
 
 React는 `Object.freeze`를 쓸 곳에는 적극 사용한다:
+
 - `ReactJSXElement.js:276-278` — element props/element freeze
 - `ReactBaseClasses.js:13` — 빈 객체 freeze
 - `ReactFiberLegacyContext.js:27` — 빈 컨텍스트 freeze
@@ -609,10 +612,10 @@ A: "안 한 것"도 "못 한 것"도 "놓친 것"도 아니다. 원래 코드로
 
 "Don't change these values"가 말하는 "변경"은 두 가지:
 
-| | 런타임 변경 | 소스 코드 변경 |
-|---|---|---|
-| 의미 | 코드 실행 중 값을 바꿈 | 다음 버전에서 비트 위치를 바꿈 |
-| 방어 수단 | `const` (이미 적용) | 주석 + 코드 리뷰 (유일한 방법) |
+|           | 런타임 변경            | 소스 코드 변경                 |
+| --------- | ---------------------- | ------------------------------ |
+| 의미      | 코드 실행 중 값을 바꿈 | 다음 버전에서 비트 위치를 바꿈 |
+| 방어 수단 | `const` (이미 적용)    | 주석 + 코드 리뷰 (유일한 방법) |
 
 `Object.freeze`는 객체 속성 변경 방지이지 원시값(숫자)에는 의미가 없다. 주석이 경고하는 "소스 코드 변경"은 어떤 JavaScript 메커니즘으로도 막을 수 없다.
 
@@ -621,6 +624,7 @@ A: "안 한 것"도 "못 한 것"도 "놓친 것"도 아니다. 원래 코드로
 React 생태계 동일 패턴: `__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED` — 이름 컨벤션으로만 보호. React 19에서 `_DO_NOT_USE_OR_WARN_USERS_THEY_CANNOT_UPGRADE`로 변경.
 
 참고:
+
 - https://github.com/reactjs/react.dev/issues/3896
 - https://overreacted.io/how-does-the-development-mode-work/
 
@@ -632,11 +636,11 @@ A: 이전 설명의 프레이밍이 부정확했다. 정정:
 
 subtreeFlags는 "성능 최적화를 위해 도입"이 아니라, 이전 방식(effect list)을 대체하면서 Suspense/Concurrent 기능을 가능하게 하려고 도입된 것.
 
-| | 이전 방식 (React 16 — effect list) | 현재 방식 (React 18+ — subtreeFlags) |
-|---|---|---|
-| 구조 | 부작용 있는 Fiber만 연결 리스트로 연결 | 트리 순회 + subtreeFlags로 스킵 |
-| Commit 방문 노드 | 딱 부작용 있는 노드만 | 약간 더 많음 (트리 구조 따라감) |
-| Suspense 지원 | 평면 목록으로는 트리 구조 기반 결정 어려움 | 자연스럽게 지원 |
+|                  | 이전 방식 (React 16 — effect list)         | 현재 방식 (React 18+ — subtreeFlags) |
+| ---------------- | ------------------------------------------ | ------------------------------------ |
+| 구조             | 부작용 있는 Fiber만 연결 리스트로 연결     | 트리 순회 + subtreeFlags로 스킵      |
+| Commit 방문 노드 | 딱 부작용 있는 노드만                      | 약간 더 많음 (트리 구조 따라감)      |
+| Suspense 지원    | 평면 목록으로는 트리 구조 기반 결정 어려움 | 자연스럽게 지원                      |
 
 subtreeFlags의 트리 스킵이 성능에 기여하는 것은 맞지만, 그것이 도입 동기는 아니다.
 
@@ -663,22 +667,172 @@ A: 두 가지 비유:
 쇼핑몰 3층=도서관 구역("조용히" 모드 ON). 열람실, 회의실, 화장실 전부 자동으로 "조용히". 1층=게임 구역(OFF) → 오락실, VR룸 시끄러워도 OK.
 
 Mode 핵심 3가지:
+
 1. 위→아래 상속: 도서관(부모) → 열람실(자식) → 개인석(손자) 전부 "조용히"
 2. 한 번 정해지면 불변: 영업 중에 도서관이 갑자기 클럽으로 안 바뀜
 3. 여러 규칙 동시 적용: "조용히"(StrictMode) + "출입 기록"(ProfileMode) + "자유 이동"(ConcurrentMode)
 
 Flags vs Mode 비유 비교:
 
-| | Flags | Mode |
-|---|---|---|
+|      | Flags                          | Mode                           |
+| ---- | ------------------------------ | ------------------------------ |
 | 비유 | 택배 표시판 "배송건 있음/없음" | 건물 구역 규칙 "도서관/게임존" |
-| 방향 | 아래→위 (가정→허브→전국) | 위→아래 (건물→층→방) |
-| 수명 | 매번 새로 (오늘 배송건 ≠ 내일) | 고정 (도서관은 계속 도서관) |
+| 방향 | 아래→위 (가정→허브→전국)       | 위→아래 (건물→층→방)           |
+| 수명 | 매번 새로 (오늘 배송건 ≠ 내일) | 고정 (도서관은 계속 도서관)    |
 
 ### 연결 토픽
+
 - Step 4 (미완료): Double Buffering — createWorkInProgress — current ↔ workInProgress 쌍, 노드 재사용/복제 전략
 - Commit Phase 세부 흐름: BeforeMutation → Mutation → Layout → Passive 각 단계에서 마스크별 flags 처리
 - effect list → subtreeFlags 전환: PR #19322, Suspense/Concurrent 지원 동기
 - Lanes 시스템: Priority 카테고리의 lanes/childLanes도 비트마스크 — Flags와 유사한 원리이지만 "우선순위" 표현
+
+---
+
+## 2026-02-14 (재개 — Step 4부터)
+
+### 학습 로드맵
+
+- [x] Step 1: Fiber Node 구조 — FiberNode 생성자, 필드 5개 카테고리(Instance/Tree/Props/Effects/Priority)
+- [x] Step 2: WorkTag 전체 목록과 type→tag 변환 — 31개 태그 상수, createFiberFromTypeAndProps 분기 로직
+- [x] Step 3: Flags & Mode 비트마스크 — 부작용 플래그, 모드 플래그, Commit Phase 마스크
+- [x] Step 4: Double Buffering — createWorkInProgress — current ↔ workInProgress 쌍, 노드 재사용/복제 전략
+
+### 학습 요약
+
+- Double Buffering: 화면에 보이는 트리(current)와 작업 중인 트리(workInProgress) 두 벌을 유지하여, Commit 시 `root.current = finishedWork` 포인터 한 줄로 트리를 교체
+- `createWorkInProgress`의 두 경로: alternate가 없으면(최초) 새 Fiber 생성 + 쌍 연결, 있으면(리렌더) flags/subtreeFlags만 리셋하고 재사용 — "pooling" 전략으로 메모리 할당/GC 부담 감소
+- `stateNode`는 current와 workInProgress가 공유 — 같은 DOM 노드를 가리킴
+- alternate 생성은 lazy — 실제로 렌더 경로에서 방문된 노드만 alternate를 가짐. 한 번도 업데이트가 도달하지 않은 깊은 서브트리는 alternate가 없을 수 있음
+- alternate 소멸은 언마운트 시(`detachFiberAfterEffects`) — 한 번 생기면 컴포넌트가 제거될 때까지 재사용
+- `NoFlags`는 `number` 타입, 값은 `0`(2진수 31자리 전부 0) — "아무 부작용도 없다"
+- `createFiber` 인자가 4개(tag, pendingProps, key, mode)인 이유: 모든 생성 경로의 공통분모만 인자로 받고, `elementType`/`type`/`stateNode`는 경로마다 다르게 설정
+
+### 소스 코드 경로
+
+- `ref/react-fork/packages/react-reconciler/src/ReactFiber.js:327-444` — createWorkInProgress (경로 A: 새 생성, 경로 B: 재사용, 공통: 필드 복사)
+- `ref/react-fork/packages/react-reconciler/src/ReactFiber.js:330-334` — "lazily created" 주석 (alternate 생성 시점 근거)
+- `ref/react-fork/packages/react-reconciler/src/ReactFiber.js:138-150` — FiberNode 생성자 시그니처 (4개 인자 + 3개 null 초기화)
+- `ref/react-fork/packages/react-reconciler/src/ReactFiber.js:446-515` — resetWorkInProgress (second pass용 리셋)
+- `ref/react-fork/packages/react-reconciler/src/ReactFiberWorkLoop.js:2229-2230` — prepareFreshStack에서 루트 alternate 생성
+- `ref/react-fork/packages/react-reconciler/src/ReactFiberWorkLoop.js:4020-4024` — root.current = finishedWork (포인터 스왑, Mutation 후 Layout 전)
+- `ref/react-fork/packages/react-reconciler/src/ReactFiberFlags.js:15,18` — NoFlags 타입(number)과 값(0b000...0)
+- `ref/react-fork/packages/react-reconciler/src/ReactFiberBeginWork.js:3780-3801` — bailoutOnAlreadyFinishedWork (childLanes 체크 → cloneChildFibers 또는 null 리턴)
+- `ref/react-fork/packages/react-reconciler/src/ReactChildFiber.js:2114-2139` — cloneChildFibers (직계 자식만 createWorkInProgress)
+- `ref/react-fork/packages/react-reconciler/src/ReactFiberCommitWork.js:1310-1314` — detachFiberAfterEffects (언마운트 시 alternate = null, GC 대상)
+
+### Q&A 전체 기록
+
+#### Step 4: Double Buffering — createWorkInProgress
+
+**Q: createFiber에 current.tag, pendingProps, current.key, current.mode는 인자로 넘기는데, 아래 3개는 왜 직접 할당하나요?**
+
+A: `createFiber`(= `FiberNode` 생성자)의 시그니처(`ReactFiber.js:138-144`)를 보면, 인자로 받는 4개(`tag`, `pendingProps`, `key`, `mode`)는 **모든 Fiber 생성 경로에서 공통**이다. `createFiberFromTypeAndProps`, `createFiberFromElement`, `createFiberFromText`, `createWorkInProgress` — 어디서 만들든 이 4개는 항상 필요.
+
+반면 `elementType`, `type`, `stateNode`는 **생성 경로마다 다르게 설정**된다:
+
+| 생성 경로 | elementType | type | stateNode |
+|-----------|------------|------|-----------|
+| `createFiberFromTypeAndProps` | `element.type` | `resolvedType` (HMR/lazy 처리) | null (나중에 설정) |
+| `createWorkInProgress` | `current.elementType` | `current.type` | `current.stateNode` (공유) |
+| `createFiberFromText` | 설정 안 함 (null) | 설정 안 함 (null) | null |
+
+만약 이것들까지 인자로 받으면 7개 인자가 되고, 호출하는 쪽마다 대부분 `null, null, null`을 넘기게 됨. 생성자는 "모든 경로의 공통분모"만 받고, 나머지는 각 경로에서 필요한 것만 설정하는 것이 더 깔끔.
+
+---
+
+**Q: NoFlags << 는 무슨 타입? 무슨 값인가요?**
+
+A: `ReactFiberFlags.js:15, 18`:
+
+```javascript
+export type Flags = number;
+export const NoFlags = /*  */ 0b0000000000000000000000000000000;
+```
+
+- 타입: `number` (Flow 타입 별칭 `Flags`로 선언, 실체는 그냥 숫자)
+- 값: `0` (2진수 31자리가 전부 0)
+
+의미: "아무 부작용도 없다" — Step 3의 스위치 패널 비유에서 모든 스위치가 꺼진 상태. `createWorkInProgress` 경로 B에서 `workInProgress.flags = NoFlags`는 이전 렌더의 부작용 표시를 전부 지우고, 바로 다음 공통 경로에서 `workInProgress.flags = current.flags & StaticMask`로 Static flags만 복원.
+
+---
+
+**Q: 화이트보드가 첫렌더 이후는 무조건 2개라 확정적으로 봐도되나요?**
+
+A: 아니다. 2개가 보장되는 것은 **실제로 방문(work)된 노드만**. `createWorkInProgress`는 lazy하게 alternate를 만든다 — 소스 주석(`ReactFiber.js:330-334`)이 직접 말함:
+
+> "This is **lazily created** to avoid allocating extra objects for things that are **never updated**."
+
+`bailoutOnAlreadyFinishedWork`(`ReactFiberBeginWork.js:3780`)에서 `childLanes === NoLanes`이면 `return null`로 서브트리 전체를 스킵 — 그 아래 노드는 `createWorkInProgress`가 호출되지 않으므로 alternate가 생기지 않음.
+
+`cloneChildFibers`(`ReactChildFiber.js:2114-2139`)는 **직계 자식만** clone하므로, bailout된 노드의 자식까지는 생기지만 그 아래 손자는 안 생김.
+
+| 상황 | alternate 존재 |
+|------|---------------|
+| 한 번이라도 렌더 경로에서 방문된 노드 | 있음 |
+| 한 번도 업데이트 필요 없었던 깊은 서브트리 | 없을 수 있음 |
+| 루트 Fiber | 항상 있음 (매 렌더 시작점) |
+
+화이트보드 비유 수정: 2개가 항상 전체에 있는 게 아니라, "수정이 필요했던 부분"에만 2번째 보드가 생기고, 한 번도 안 바뀐 구석은 1번째 보드만 있는 상태.
+
+---
+
+**Q: 한 번도 업데이트 필요 없었던 깊은 서브트리 < 여기서 "한번도"가 어느 타임라인 기준에서의 한번인가요? 앱이 종료되기전까지?**
+
+A: **"Fiber가 마운트된 시점 ~ 현재 시점"**이 기준. 앱 종료까지가 아니라, 동적이다.
+
+타임라인 예시:
+
+```
+[초기 마운트]
+  모든 Fiber가 createFiberFromElement 등으로 "새로" 생성
+  → alternate = null (전부)
+  → 예외: 루트 HostRoot만 prepareFreshStack에서 alternate 생성
+
+[1번째 리렌더 — Sidebar에서 setState]
+  App: bailout → cloneChildFibers → Sidebar, Content에 alternate 생성
+  Content: childLanes === NoLanes → return null (완전 스킵)
+  Content의 자식 Header, Logo: 방문 안 됨 → alternate 없음
+
+[2번째 리렌더 — 또 Sidebar에서 setState]
+  같은 경로 → Header, Logo 여전히 alternate 없음
+
+[3번째 리렌더 — 이번엔 Content에서 setState 발생!]
+  Content: beginWork 진입 → 자식 처리
+  Header: 이때 처음으로 createWorkInProgress → alternate 생성! ✅
+```
+
+오늘 alternate가 없는 노드도, 내일 업데이트가 도달하면 그때 생긴다. "한 번도"는 "지금까지 한 번도"이지, "영원히"가 아님.
+
+alternate 소멸은 언마운트 시에만 — `detachFiberAfterEffects`(`ReactFiberCommitWork.js:1310-1314`):
+
+```javascript
+function detachFiberAfterEffects(fiber: Fiber) {
+  const alternate = fiber.alternate;
+  if (alternate !== null) {
+    fiber.alternate = null;          // 연결 끊기
+    detachFiberAfterEffects(alternate); // 상대쪽도 정리
+  }
+  fiber.child = null;
+  fiber.deletions = null;
+  // ... 모든 참조 제거 → GC 대상
+}
+```
+
+소스 주석의 "reclaim the extra memory if needed"(`ReactFiber.js:333-334`)는 이 언마운트 시 GC를 가리킴.
+
+| 질문 | 답 |
+|------|-----|
+| alternate 생성 시점 | 해당 노드가 렌더 경로에서 처음 방문될 때 (lazy) |
+| alternate 소멸 시점 | 컴포넌트가 언마운트될 때 |
+| 그 사이 | 한 번 생기면 계속 재사용 (쌍이 번갈아감) |
+
+### 연결 토픽
+
+- Work Loop (beginWork/completeWork): createWorkInProgress로 만든 workInProgress를 실제 순회하는 루프 — child/sibling/return 구조를 따라감
+- Reconciliation (diffing): reconcileChildFibers에서 자식 Fiber를 재사용/생성/삭제하는 알고리즘 — createWorkInProgress 호출 지점
+- Commit Phase: root.current = finishedWork 스왑 타이밍과 BeforeMutation/Mutation/Layout/Passive 단계 흐름
+- Lanes 시스템: childLanes가 0이면 서브트리 스킵 — alternate lazy 생성의 전제 조건
+- Bailout 메커니즘: bailoutOnAlreadyFinishedWork와 cloneChildFibers의 관계 — 어디까지 alternate가 전파되는가
 
 ---
