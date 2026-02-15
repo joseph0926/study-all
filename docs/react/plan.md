@@ -122,7 +122,7 @@
 
 > React의 렌더링 엔진 — 가장 중요한 파일
 
-- [ ] 소스 학습 완료
+- [ ] 소스 학습 완료 (Step 1/5 완료 — FiberRoot와 전역 상태 변수)
 - [ ] react-aio 검증/개선 (`references/fiber.md` Work Loop 섹션)
 
 **Source Files** (`ref/react-fork/packages/react-reconciler/src/`):
