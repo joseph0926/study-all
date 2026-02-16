@@ -217,7 +217,7 @@
 > 분할 사유: react-reconciler 파일 그룹 분할
 > 기존 학습 기록: `docs/react/Work-Loop.md` (2026-02-15~16, Step 2/5 완료)
 
-- [ ] 소스 학습 완료 (Step 2/5 — FiberRoot/전역변수 + 업데이트 진입점 완료. 미완료: Step 3 Render Phase, Step 4 performUnitOfWork, Step 5 Commit Phase)
+- [ ] 소스 학습 완료 (Step 3/5 — FiberRoot/전역변수 + 업데이트 진입점 + Render Phase 완료. 미완료: Step 4 performUnitOfWork, Step 5 Commit Phase)
 - [ ] skill 검증/개선 (`references/fiber.md` Work Loop 섹션)
 
 **Source Files** (`ref/react-fork/packages/react-reconciler/src/`):

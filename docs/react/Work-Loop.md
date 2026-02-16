@@ -425,3 +425,253 @@ eagerState 조건에서 `alternate.lanes`도 확인하는 이유:
 - **Render Phase (Step 3)**: Step 2에서 스케줄링된 태스크가 실제로 renderRootSync/renderRootConcurrent에서 어떻게 실행되는지
 - **Lanes & Priority**: `requestUpdateLane`이 어떻게 Lane을 결정하는지, Lane이 Scheduler 우선순위로 어떻게 매핑되는지
 - **Hooks 내부 동작**: `mountState`/`updateState`에서 hook 링크드 리스트와 update 큐가 어떻게 관리되는지
+
+---
+
+## 2026-02-16 (재개 — Step 3부터)
+
+### 학습 로드맵
+- [x] Step 1: FiberRoot와 전역 상태 변수 — FiberRoot 구조, 모듈 레벨 상태(workInProgress, executionContext 등)
+- [x] Step 2: 업데이트 진입점 — scheduleUpdateOnFiber → ensureRootIsScheduled — setState가 렌더링을 트리거하는 경로
+- [x] Step 3: Render Phase — renderRootSync / renderRootConcurrent — Sync vs Concurrent 분기, 시간 분할
+- [ ] Step 4: performUnitOfWork와 트리 순회 — beginWork → completeUnitOfWork 순회 패턴
+- [ ] Step 5: Commit Phase — completeRoot → commitRoot — 커밋 단계 구조 (mutation, layout, passive effects)
+
+### 학습 요약
+- `performWorkOnRoot`에서 `shouldTimeSlice` 판단: `!forceSync && !includesBlockingLane(lanes) && !includesExpiredLane(root, lanes)` → true면 Concurrent, false면 Sync.
+- `renderRootSync`는 `workLoopSync()` 호출 — `while (workInProgress !== null) { performUnitOfWork(workInProgress); }` — 중단 없이 모든 Fiber를 처리.
+- `renderRootConcurrent`는 `workLoopConcurrent()` 호출 — `while (workInProgress !== null && now() < yieldAfter)` — 시간 예산(nonIdle: 25ms, Idle: 5ms) 초과 시 메인 스레드에 양보.
+- 두 workLoop의 차이는 **딱 하나**: 시간 체크 조건(`now() < yieldAfter`)의 유무.
+- Lane 만료 시간은 하드코딩: SyncLane 250ms, TransitionLane 5000ms, IdleLane은 만료 안 함. Meta 프로덕션 메트릭 기반 경험적 결정.
+- Concurrent 모드에서 Suspend 시 `isThenableResolved`로 먼저 확인 → 이미 resolve되었으면 `replaySuspendedUnitOfWork`로 재실행, 아니면 리스너 등록 후 루프 탈출.
+- Fiber 개념 재정립: Fiber 1개 = React 엘리먼트 1개(컴포넌트뿐 아니라 `<div>`, `<span>` 등 HTML 태그도 각각 Fiber). `workInProgress`는 지금 처리할 Fiber를 가리키는 포인터, `performUnitOfWork`는 그 Fiber 1개를 처리하고 포인터를 다음으로 옮기는 함수.
+
+### 소스 코드 경로
+- `ref/react-fork/packages/react-reconciler/src/ReactFiberWorkLoop.js:1117-1305` — performWorkOnRoot (shouldTimeSlice 판단, renderRoot 호출, exitStatus 분기)
+- `ref/react-fork/packages/react-reconciler/src/ReactFiberWorkLoop.js:1148-1157` — shouldTimeSlice 결정 로직
+- `ref/react-fork/packages/react-reconciler/src/ReactFiberWorkLoop.js:2596-2741` — renderRootSync (Sync 렌더링 루프)
+- `ref/react-fork/packages/react-reconciler/src/ReactFiberWorkLoop.js:2745-2750` — workLoopSync (중단 없는 루프, 3줄)
+- `ref/react-fork/packages/react-reconciler/src/ReactFiberWorkLoop.js:2752-3026` — renderRootConcurrent (Concurrent 렌더링 루프, Suspend 처리 포함)
+- `ref/react-fork/packages/react-reconciler/src/ReactFiberWorkLoop.js:3029-3043` — workLoopConcurrent (시간 예산 기반 루프)
+- `ref/react-fork/packages/react-reconciler/src/ReactFiberLane.js:477-539` — computeExpirationTime (Lane별 만료 시간 계산)
+- `ref/react-fork/packages/react-reconciler/src/ReactFiberLane.js:541-588` — markStarvedLanesAsExpired (만료된 Lane을 expiredLanes에 표시)
+- `ref/react-fork/packages/react-reconciler/src/ReactFiberLane.js:696-700` — includesExpiredLane
+- `ref/react-fork/packages/shared/ReactFeatureFlags.js:137-138` — syncLaneExpirationMs=250, transitionLaneExpirationMs=5000
+
+### Q&A 전체 기록
+
+#### Step 3: Render Phase — renderRootSync / renderRootConcurrent
+
+**Q: 너무 오래 대기의 기준이 뭔가요? / 그리고 대기가 길어진 이유가 있을거같은데 그거 상관없이 특정 대기 기간이 넘으면 무조건 실행인가요?**
+
+A: 만료 시간은 Lane 종류별로 하드코딩되어 있다. `computeExpirationTime` (`ReactFiberLane.js:477-539`):
+
+| Lane 종류 | 만료 시간 | 비유 |
+|-----------|----------|------|
+| SyncLane, InputContinuousLane, GestureLane | 250ms | 사용자 입력 — 즉시 반응 |
+| DefaultLane, TransitionLane (1-14) | 5000ms (5초) | 비동기 전환 |
+| IdleLane, OffscreenLane, DeferredLane | 만료 안 함 | 한가할 때만 |
+
+이유 상관없이 만료되면 강제 Sync 실행. `markStarvedLanesAsExpired` (`ReactFiberLane.js:556`)의 주석: "assume the update is being starved and mark it as expired to force it to finish".
+
+단, 예외로 suspended된 Lane(데이터 대기 중)은 만료 타이머를 시작하지 않음 (`ReactFiberLane.js:574`):
+```js
+if ((lane & suspendedLanes) === NoLanes || (lane & pingedLanes) !== NoLanes) {
+  expirationTimes[index] = computeExpirationTime(lane, currentTime);
+}
+```
+
+---
+
+**Q: "중단없는" << 이 말은 한 렌더링 사이클동안을 의미하나요?**
+
+A: 맞다. `workLoopSync`가 도는 동안 메인 스레드를 놓지 않는다. 사용자 클릭, 키 입력은 큐에 쌓이고, 애니메이션 프레임은 건너뛰며, setTimeout/Promise 콜백도 대기. Fiber 트리 순회가 끝나야(`workInProgress === null`) 메인 스레드가 해방된다.
+
+---
+
+**Q: "양보없음", "모든 Fiber를 한 번에 처리" << 이말은 순차적으로 대기열 모든 job을 실행한다는 의미일까요?**
+
+A: "대기열의 모든 job"이 아니라, 이번 렌더에서 처리해야 할 Fiber 트리 전체를 한 번에 순회한다는 뜻.
+
+```
+workLoopSync:
+  performUnitOfWork(HostRoot)      ← 트리 최상단부터
+  performUnitOfWork(App)
+  performUnitOfWork(Header)
+  performUnitOfWork(Nav)
+  performUnitOfWork(Main)
+  performUnitOfWork(Footer)
+  ... workInProgress === null      ← 트리 순회 완료, 루프 종료
+```
+
+`performUnitOfWork`는 한 번에 Fiber 1개를 처리. `workLoopSync`는 이걸 모든 Fiber에 대해 중단 없이 반복. 반면 `workLoopConcurrent`는 중간에 시간 체크(`now() < yieldAfter`)를 하므로 25ms 초과 시 루프를 탈출하고, 다음 Scheduler 태스크에서 이어서 진행.
+
+---
+
+**Q: workLoopSync와 workLoopConcurrent가 각각 어떨때 어떤게 실행될지는 사용자가 컨트롤합니까? 리액트 내부 로직이 컨트롤합니까?**
+
+A: 둘 다. 사용자가 API 선택으로 간접 결정하고, React가 그 선택을 바탕으로 내부 판단.
+
+| 사용자 API | → 할당되는 Lane | → 결과 |
+|-----------|----------------|-------|
+| `setState()` (이벤트 핸들러 내) | SyncLane | Sync (Blocking Lane) |
+| `startTransition(() => setState())` | TransitionLane | Concurrent |
+| `flushSync(() => setState())` | SyncLane + forceSync | Sync (강제) |
+| `useDeferredValue` | TransitionLane | Concurrent |
+
+판단 로직 (`ReactFiberWorkLoop.js:1148-1157`):
+```
+shouldTimeSlice = !forceSync
+                  && !includesBlockingLane(lanes)
+                  && !includesExpiredLane(root, lanes)
+```
+사용자가 "무엇을"(어떤 API) 결정하고, React가 "어떻게"(Sync/Concurrent) 실행. `startTransition`을 쓰면 Concurrent의 "자격"을 얻지만, 만료되면 React가 Sync로 강등.
+
+---
+
+**Q: Step 2에서 scheduleTaskForRootDuringMicrotask가 Scheduler에 등록한 콜백 → performWorkOnRootViaSchedulerTask → performWorkOnRoot 흐름을 시각화해주세요**
+
+A:
+
+```
+사용자: setCount(5)
+    │
+    ▼
+dispatchSetState(fiber, queue, 5)           ← bind로 고정된 fiber
+    │
+    ├── Eager State 체크 (값 같으면 여기서 끝)
+    │
+    ▼
+scheduleUpdateOnFiber(fiber, lane)
+    │
+    ├── markRootUpdated(root, lane)          ← root.pendingLanes |= lane
+    │
+    ▼
+ensureRootIsScheduled(root)
+    │
+    ├── root를 링크드 리스트에 추가
+    │
+    ▼
+[microtask 경계] ─────────────────────────────
+    │
+    ▼
+processRootScheduleInMicrotask()
+    │
+    ├── 각 root 순회
+    │
+    ▼
+scheduleTaskForRootDuringMicrotask(root)
+    │
+    ├── getNextLanes(root) → 처리할 Lane 결정
+    ├── Lane → Scheduler 우선순위 매핑
+    │
+    ├── Sync Lane?  ──YES──▶ syncQueue에 추가
+    │                         │
+    │                         ▼
+    │                       flushSyncWorkAcrossRoots()
+    │                         │
+    │                         ▼
+    │                       performWorkOnRoot(root, lanes, forceSync=true)
+    │                         │
+    │                         ▼
+    │                       shouldTimeSlice = false (forceSync)
+    │                         │
+    │                         ▼
+    │                       renderRootSync()
+    │                         │
+    │                         ▼
+    │                       workLoopSync()
+    │                         while (wip !== null)
+    │                           performUnitOfWork(wip)   ← 중단 없음
+    │
+    └── Transition Lane? ──YES──▶ scheduleCallback(priority, callback)
+                                   │
+                                   ▼
+                                 [Scheduler 큐에 등록]
+                                   │
+                                   ▼ (Scheduler가 꺼내서 실행)
+                                 performWorkOnRootViaSchedulerTask()
+                                   │
+                                   ▼
+                                 performWorkOnRoot(root, lanes, forceSync=false)
+                                   │
+                                   ▼
+                                 shouldTimeSlice = true
+                                   │
+                                   ▼
+                                 renderRootConcurrent()
+                                   │
+                                   ▼
+                                 workLoopConcurrent()
+                                   while (wip !== null && now() < yieldAfter)
+                                     performUnitOfWork(wip)   ← 25ms/5ms 후 양보
+```
+
+---
+
+**Q: 하드코딩된 만료시간 기준이 뭘까요? PR이나 주석등에 있나요?**
+
+A: 이론적 공식이 아니라, Meta의 프로덕션 메트릭에서 경험적으로 결정된 값. `ReactFiberLane.js:484-492`의 주석:
+
+> "This is set to the corresponding constant as in Scheduler.js. When we made it larger, a product metric in www regressed, suggesting there's a user interaction that's being starved by a series of synchronous updates."
+
+- 250ms (`syncLaneExpirationMs`): Scheduler의 `userBlockingPriorityTimeout`과 동일 (`SchedulerFeatureFlags.js:13`). Meta가 이 값을 늘렸더니 프로덕션에서 사용자 인터랙션 반응성이 떨어져서 250ms 유지.
+- 5000ms (`transitionLaneExpirationMs`): Transition은 "느려도 괜찮은 작업"이므로 넉넉하게 5초. 구체적인 PR 근거는 소스에서 확인하지 못했지만, "사용자가 인지하기 시작하는 지연" 기준으로 보임.
+
+---
+
+**Q: fiber에 대한 개념과 범위를 아직 완벽히 이해 못해서 실생활 예시로 완벽히 이해하고 싶습니다**
+
+A: 레스토랑 "주문 티켓 시스템" 비유로 설명:
+
+- **Fiber 하나 = 주문 티켓 1장**: 메뉴 종류(tag), 주문 내용(pendingProps), 지난번 결과(memoizedState), 해야 할 작업(flags), 긴급도(lanes) 등이 적혀 있음.
+- **Fiber 트리 = 티켓들의 연결**: child(첫 하위 항목), sibling(같은 레벨 다음), return(상위). 배열이 아니라 링크드 리스트이므로 한 장씩 처리하다 멈출 수 있음 — Concurrent 렌더링의 핵심.
+- **Double Buffering = 서빙 트레이 2개**: current(테이블 위, 손님이 보는 것) ↔ workInProgress(주방에서 준비 중). 완성되면 트레이 교체(Commit).
+- **workLoopSync = 모든 티켓 쉬지 않고 처리** (주방 문 잠금).
+- **workLoopConcurrent = 25ms마다 주방 문 열고 VIP 주문 확인**.
+- **Fiber 이전(Stack Reconciler)**: 재귀 호출로 전체 트리를 한 숨에 처리, 중단 불가. **Fiber 이후**: 각 엘리먼트가 독립 티켓이므로 아무 티켓 사이에서든 멈출 수 있음.
+
+한 줄 정리: **Fiber는 컴포넌트를 "한 번에 처리해야 하는 재귀 호출"에서 "하나씩 처리할 수 있는 독립 작업 단위"로 바꾼 자료구조.**
+
+---
+
+**Q: fiber 1개가 그러면 하나의 컴포넌트라고 매핑해서 이해해도됩니까?**
+
+A: 거의 맞지만, 정확히는 아니다. Fiber 1개 = 컴포넌트 1개가 아니라, **React 엘리먼트 1개**.
+
+```jsx
+function App() {
+  return (
+    <div>              // ← Fiber 1개 (HostComponent)
+      <Header />       // ← Fiber 1개 (FunctionComponent)
+      <span>hello</span> // ← Fiber 1개 (HostComponent)
+    </div>
+  );
+}
+```
+
+Fiber 트리: App(Fiber) → div(Fiber) → Header(Fiber) → h1(Fiber), span(Fiber). **Fiber 5개, 컴포넌트는 2개**(App, Header). `<div>`, `<span>` 같은 HTML 태그도 각각 Fiber.
+
+---
+
+**Q: React 엘리먼트 1개가 하나의 fiber이고, performUnitOfWork는 지금 처리해야할 fiber(리액트 엘리먼트)의 포인터를 가리킨다 << 이렇게 이해하면되나요?**
+
+A: 맞다. 한 가지만 정밀하게 하면:
+
+- `performUnitOfWork`는 **함수** (Fiber 1개를 처리하는 함수)
+- `workInProgress`가 **포인터** (지금 처리할 Fiber를 가리킴)
+
+```js
+function workLoopSync() {
+  while (workInProgress !== null) {       // ← 포인터가 null이 아닌 동안
+    performUnitOfWork(workInProgress);    // ← 그 Fiber를 처리
+  }
+}
+```
+
+정리: React 엘리먼트 1개 = Fiber 1개, `workInProgress` = 지금 처리할 Fiber를 가리키는 포인터, `performUnitOfWork` = 그 포인터가 가리키는 Fiber 1개를 처리하고 포인터를 다음으로 옮기는 함수.
+
+### 연결 토픽
+- **performUnitOfWork와 트리 순회 (Step 4)**: Fiber 트리를 어떤 순서로 순회하는지 — beginWork(내려가기) → completeUnitOfWork(올라오기) 패턴
+- **Commit Phase (Step 5)**: Render Phase에서 flags가 표시된 Fiber들을 실제 DOM에 반영하는 단계
+- **Reconciliation (Topic 6)**: beginWork 내부에서 자식 Fiber를 어떻게 비교/재활용하는지 — key와 diffing 알고리즘
