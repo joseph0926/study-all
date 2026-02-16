@@ -83,12 +83,16 @@ study-all/
 
 소스 코드/공식 문서와 스킬 레퍼런스를 대조하여 검증하고 개선하는 위자드.
 
-**흐름**: Skill Discovery → Source Material Setup → Inventory → Topic Plan Generation → Per-Topic Study Loop → Final Verification
+**흐름**: Skill Discovery → Source Material Setup → Inventory (MODULE_MAP + COVERAGE_MAP 생성) → Topic Plan Generation → Per-Topic Study Loop → Final Verification
 
-**출력**: `docs/{skill}/plan.md`에 학습 플랜, 스킬 레퍼런스 파일 직접 개선
+**출력**: `docs/{skill}/plan.md`에 학습 플랜 (Coverage Analysis 포함), 스킬 레퍼런스 파일 직접 개선
 
 **핵심 규칙**:
-- 토픽 순서는 bottom-up (기초 → 내부 메커니즘 → 사용자 기능 → 고급)
+- 토픽의 기본 단위는 ref/ 소스의 MODULE_MAP 모듈 (references/ 파일이 아님). 모든 모듈이 plan에 포함되어야 한다
+- MODULE_MAP은 ref/ 디렉토리 구조에서 기계적으로 추출 — AI의 "주요/핵심" 주관 판단 금지
+- Study Points는 모듈의 export/import/디렉토리명에서 기계적으로 도출 — AI 일반 지식 사용 금지
+- COVERAGE_MAP으로 모듈 ↔ references/ 매칭 → 미커버 모듈은 "신규 생성 필요"로 표시
+- 토픽 순서는 모듈 간 import 의존 관계 Grep으로 결정 (폴백: bottom-up)
 - 최소 변경 원칙: 틀린 것만 고치고, 없는 것만 추가
 - `patterns.md`, `anti-patterns.md`는 사용자 명시 요청 시에만 수정
 
@@ -127,6 +131,12 @@ study-all/
 
 `~/.claude/skills/{name}-aio/references/` 에서 토픽과 매칭되는 파일을 탐색한다.
 
+### MODULE_MAP & COVERAGE_MAP (`/study-skill` 전용)
+
+`/study-skill`의 Inventory 단계에서 생성:
+- **MODULE_MAP**: SOURCE_DIR의 디렉토리 구조에서 기계적으로 모듈 추출 (`packages/*/`, `src/*/`, `lib/*/` 패턴). AI 주관 필터링 금지.
+- **COVERAGE_MAP**: MODULE_MAP의 각 모듈 ↔ references/ 파일 교차 대조 → COVERED / UNCOVERED / ORPHAN_REFS 분류
+
 ---
 
 ## docs/ 파일 규칙
@@ -135,6 +145,7 @@ study-all/
 
 - 경로: `docs/{skill-name}/plan.md`
 - 토픽별 체크리스트로 진행 상태 추적
+- Coverage Analysis 테이블 포함 (커버/미커버/고아 ref, 커버율 %)
 - `/study-skill`이 생성/관리
 
 ### {Topic-Name}.md (세션 기록)
@@ -203,3 +214,5 @@ study-all/
 - `/learn` 세션에서 소스 코드 수정 (스킬 레퍼런스는 사용자 승인 후 보강 가능)
 - 세션 재개 확인 단계(Phase 1.5) 건너뛰기
 - Post-Session Consistency Check 건너뛰기
+- `/study-skill` plan 생성 시 AI 일반 지식으로 Study Points 작성 (ref/ 소스 구조에서 기계적 도출만 허용)
+- `/study-skill` plan 생성 시 ref/ 모듈을 "주요/핵심" 기준으로 필터링 (MODULE_MAP에 전부 포함)
