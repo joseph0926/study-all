@@ -51,7 +51,7 @@ argument-hint: "<skill-name> [topic]"
 질문: "어떤 토픽을 복습할까요?"
 - header: "Topic"
 - 옵션: 파일명 기반으로 동적 생성 (최대 4개)
-  - 예: `React-Core-API-Surface.md` → "React Core API Surface"
+  - 예: `React-Core-API.md` → "React Core API"
   - 메타 파일이 있으면 복습 상태를 라벨에 포함:
     - "(복습 권장 — {N}일 경과)" — 다음 복습 예정일이 지난 토픽
     - "(첫 복습)" — 메타 파일이 없는 토픽
@@ -439,7 +439,7 @@ L1일 때는 난이도 표시를 생략합니다 (첫 복습에서 불필요한 
 `docs/{SKILL_NAME}/{Topic-Name}-quiz.md`
 
 - `{Topic-Name}`은 원본 학습 기록 파일명에서 `.md`를 제거한 것
-- 예: `React-Core-API-Surface.md` → `React-Core-API-Surface-quiz.md`
+- 예: `React-Core-API.md` → `React-Core-API-quiz.md`
 
 #### 파일 구조
 

@@ -465,7 +465,7 @@ Phase 1에서 SKILL_NAME과 TOPIC이 결정되면, **기존 세션 파일 존재
 `docs/{SKILL_NAME}/{Topic-Name}.md`에 기록합니다.
 
 - **파일명 규칙**: TOPIC의 공백을 `-`(하이픈)으로 치환, 단어 첫 글자 대문자(Title-Case)
-  - 예: `/learn react React Core API Surface` → `docs/react/React-Core-API-Surface.md`
+  - 예: `/learn react React Core API` → `docs/react/React-Core-API.md`
   - 예: `/learn nextjs server components` → `docs/nextjs/Server-Components.md`
 - 디렉토리(`docs/{SKILL_NAME}/`)가 없으면 생성합니다.
 - **파일이 이미 존재하면**: 기존 내용 뒤에 `---` 구분선 + 새 세션을 append합니다.

@@ -1,7 +1,7 @@
-# Fiber Node And Tags — 복습 퀴즈
+# Fiber Structure — 복습 퀴즈
 
 > 생성일: 2026-02-15
-> 소스: `docs/react/Fiber-Node-And-Tags.md`
+> 소스: `docs/react/Fiber-Structure.md`
 
 ---
 

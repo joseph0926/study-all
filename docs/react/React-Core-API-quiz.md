@@ -1,7 +1,7 @@
-# React Core API Surface — 복습 퀴즈
+# React Core API — 복습 퀴즈
 
 > 생성일: 2026-02-12
-> 소스: `docs/react/React-Core-API-Surface.md`
+> 소스: `docs/react/React-Core-API.md`
 
 ---
 
