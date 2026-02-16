@@ -211,3 +211,217 @@ Scheduler가 우선순위 큐(min heap)에서 꺼내서 실행하며, Concurrent
 - **scheduleUpdateOnFiber → ensureRootIsScheduled**: Step 1에서 다룬 FiberRoot/전역 변수가 실제로 어떻게 사용되는지 — setState가 렌더링을 트리거하는 전체 경로
 - **Scheduler (Topic 6)**: FiberRoot 스케줄링 대기열에서 등록된 태스크가 Scheduler의 min heap에서 어떻게 우선순위별로 실행되는지
 - **Lanes & Priority (Topic 5)**: pendingLanes, expiredLanes 등 FiberRoot의 Lane 필드가 스케줄링 결정에 어떻게 관여하는지
+
+---
+
+## 2026-02-16 (재개 — Step 2부터)
+
+### 학습 로드맵
+- [x] Step 1: FiberRoot와 전역 상태 변수 — FiberRoot 구조, 모듈 레벨 상태(workInProgress, executionContext 등)
+- [ ] Step 2: 업데이트 진입점 — scheduleUpdateOnFiber → ensureRootIsScheduled — setState가 렌더링을 트리거하는 경로
+- [ ] Step 3: Render Phase — renderRootSync / renderRootConcurrent — Sync vs Concurrent 분기, 시간 분할
+- [ ] Step 4: performUnitOfWork와 트리 순회 — beginWork → completeUnitOfWork 순회 패턴
+- [ ] Step 5: Commit Phase — completeRoot → commitRoot — 커밋 단계 구조 (mutation, layout, passive effects)
+
+### 학습 요약
+- `setState`의 정체는 `dispatchSetState.bind(null, currentlyRenderingFiber, queue)`로 생성된 함수. `.bind()`로 컴포넌트의 Fiber를 영구 고정하여, 나중에 호출 시에도 올바른 Fiber를 참조한다.
+- Eager State 최적화: 큐가 비어있을 때(`fiber.lanes === NoLanes && alternate.lanes === NoLanes`) 렌더링 없이 state를 미리 계산하여 값이 같으면 bailout. 단, update는 큐에 보존되어 나중에 다른 이유로 리렌더 시 재처리된다.
+- `fiber.lanes`는 해당 Fiber 자신의 대기 업데이트만 추적. 다른 Fiber의 업데이트와는 독립적.
+- alternate는 Double Buffering 메커니즘 — current(화면)와 workInProgress(새로 그리는 중)가 서로를 `alternate`로 참조하며, 커밋 시 포인터 교체로 역할이 바뀐다.
+- 전체 경로: `setState` → `dispatchSetState` → `scheduleUpdateOnFiber` → `markRootUpdated` → `ensureRootIsScheduled` → microtask → `processRootScheduleInMicrotask` → `scheduleTaskForRootDuringMicrotask` (Sync는 즉시 flush, Concurrent는 Scheduler 태스크 등록)
+
+### 소스 코드 경로
+- `ref/react-fork/packages/react-reconciler/src/ReactFiberHooks.js:1922-1934` — mountState (dispatchSetState.bind로 setter 생성)
+- `ref/react-fork/packages/react-reconciler/src/ReactFiberHooks.js:261` — currentlyRenderingFiber 전역 변수
+- `ref/react-fork/packages/react-reconciler/src/ReactFiberHooks.js:3598-3626` — dispatchSetState (setState 진입점)
+- `ref/react-fork/packages/react-reconciler/src/ReactFiberHooks.js:3628-3698` — dispatchSetStateInternal (Eager State 최적화, Update 큐 등록, scheduleUpdateOnFiber 호출)
+- `ref/react-fork/packages/react-reconciler/src/ReactFiberConcurrentUpdates.js:104-110` — fiber.lanes 업데이트 (eager bailout용)
+- `ref/react-fork/packages/react-reconciler/src/ReactFiberWorkLoop.js:967-1093` — scheduleUpdateOnFiber (Suspended 감지, markRootUpdated, 렌더 중 업데이트 분기)
+- `ref/react-fork/packages/react-reconciler/src/ReactFiberLane.js:825-849` — markRootUpdated (root.pendingLanes |= lane)
+- `ref/react-fork/packages/react-reconciler/src/ReactFiberRootScheduler.js:116-152` — ensureRootIsScheduled (루트 링크드 리스트 추가 + microtask 예약)
+- `ref/react-fork/packages/react-reconciler/src/ReactFiberRootScheduler.js:154-169` — ensureScheduleIsScheduled (중복 microtask 방지)
+- `ref/react-fork/packages/react-reconciler/src/ReactFiberRootScheduler.js:650-695` — scheduleImmediateRootScheduleTask (microtask 또는 Scheduler macrotask 등록)
+- `ref/react-fork/packages/react-reconciler/src/ReactFiberRootScheduler.js:259-348` — processRootScheduleInMicrotask (루트 순회 + 태스크 등록 + Sync flush)
+- `ref/react-fork/packages/react-reconciler/src/ReactFiberRootScheduler.js:384-509` — scheduleTaskForRootDuringMicrotask (Lane→Scheduler 우선순위 매핑)
+- `ref/react-fork/packages/react-reconciler/src/ReactFiber.js:327-355` — createWorkInProgress (alternate/Double Buffering 구현)
+
+### Q&A 전체 기록
+
+#### Step 2: 업데이트 진입점 — scheduleUpdateOnFiber → ensureRootIsScheduled
+
+**Q: requestUpdateLane(fiber); << 여기서 넘기는 fiber는 (dispatchSetState가 받는 fiber는) 어디서 오는거고 값이 뭔가요?**
+
+A: `ReactFiberHooks.js:1927-1931`의 `mountState`에서 `.bind()`로 미리 고정된 것이다:
+
+```js
+// mountState — useState()가 최초 호출될 때
+const dispatch = dispatchSetState.bind(
+  null,
+  currentlyRenderingFiber,  // ← 이 순간의 값 = 지금 렌더링 중인 Fiber 노드
+  queue,
+);
+```
+
+`currentlyRenderingFiber` (`ReactFiberHooks.js:261`)는 모듈 레벨 전역 변수로, beginWork가 컴포넌트를 렌더링하기 직전에 설정된다. `.bind()`는 함수의 인자를 영구적으로 고정하므로, 나중에 `setCount(5)`를 호출하면 실제로 `dispatchSetState(FiberA, queue, 5)`가 된다. fiber의 값은 그 `useState`를 가진 컴포넌트의 Fiber 노드다.
+
+---
+
+**Q: eagerState는 뭔가요?**
+
+A: "미리 계산해보는 state". 비유: 택배 주문을 넣기 전에 "지금 재고랑 똑같은 물건을 주문하는 거 아니야?"라고 미리 확인하는 것. 같으면 주문 자체를 취소.
+
+소스 (`ReactFiberHooks.js:3648-3678`):
+
+```js
+if (fiber.lanes === NoLanes && (alternate === null || alternate.lanes === NoLanes)) {
+  const currentState = queue.lastRenderedState;
+  const eagerState = lastRenderedReducer(currentState, action);
+  update.hasEagerState = true;
+  update.eagerState = eagerState;
+  if (is(eagerState, currentState)) {
+    enqueueConcurrentHookUpdateAndEagerlyBailout(fiber, queue, update);
+    return false;  // 렌더링 안 함
+  }
+}
+```
+
+큐가 비어있을 때만(= 대기 중인 다른 업데이트가 없을 때만) eager 계산을 하고, 값이 같으면 렌더링 스케줄링 자체를 하지 않는다. 큐에 대기 업데이트가 있으면 이전 업데이트 결과에 따라 현재 state가 달라질 수 있어 eager 계산을 건너뛴다.
+
+---
+
+**Q: alternate는 저번 학습중에 배운거같은데 아직 어떤 개념인지 명확히 잘 이해가 안됩니다**
+
+A: **Double Buffering(이중 버퍼링)** 개념. 비유: 화이트보드 2개 — 하나는 관객에게 보여주는 보드(current), 다른 하나는 뒤에서 새로운 내용을 그리는 보드(workInProgress). 그리기가 끝나면 교체.
+
+소스 (`ReactFiber.js:327-355`):
+
+```js
+export function createWorkInProgress(current, pendingProps) {
+  let workInProgress = current.alternate;
+  if (workInProgress === null) {
+    workInProgress = createFiber(current.tag, pendingProps, current.key, current.mode);
+    workInProgress.alternate = current;    // wip → current 연결
+    current.alternate = workInProgress;    // current → wip 연결
+  } else {
+    // 이미 있으면 재활용 (GC 부담 감소)
+    workInProgress.pendingProps = pendingProps;
+    workInProgress.flags = NoFlags;
+  }
+}
+```
+
+current는 "화면에 커밋된 트리", workInProgress는 "새로 그리는 중인 트리". 커밋 시 `root.current = workInProgress`로 포인터 교체. 이전 current는 다음 렌더의 alternate(재활용 대상)가 된다.
+
+---
+
+**Q: 제가 잘못 이해한걸수있지만, "지금 렌더링 중인 Fiber" < 만약 지금 렌더링중인 Fiber에서의 setState가 트리거되지 않고 갑자기 다른 fiber의 setState가 트리거되면 어떻게되나요? (가능한지는 모르겠습니다)**
+
+A: 문제없다. `currentlyRenderingFiber`는 dispatch 시점에 읽는 게 아니라, `useState`가 마운트될 때 `.bind()`로 이미 고정되어 있기 때문이다:
+
+```
+t1: A 렌더링 중 → useState() → dispatch = dispatchSetState.bind(null, FiberA, queue)
+t2: B 렌더링 중 → currentlyRenderingFiber = FiberB
+t3: 사용자 클릭 → setCount(5) 호출 → dispatchSetState(FiberA, queue, 5)
+                                                       ↑
+                                              bind 때 고정된 값, B와 무관
+```
+
+setter 함수는 "자기가 태어난 컴포넌트의 Fiber"를 평생 기억한다. `currentlyRenderingFiber`가 나중에 다른 값으로 바뀌어도 이미 바인딩된 함수에는 영향 없다.
+
+---
+
+**Q: bind때 고정이라는게 어떠한 의미를 가집니까?**
+
+A: JavaScript의 `.bind()` 메서드는 함수의 인자를 영구적으로 고정한다:
+
+```js
+function add(a, b) { return a + b; }
+const add5 = add.bind(null, 5);   // a = 5로 영구 고정
+add5(3);   // add(5, 3) → 8
+add5(10);  // add(5, 10) → 15
+// 5는 절대 바뀌지 않음
+```
+
+React에서도 동일:
+
+```js
+const setCount = dispatchSetState.bind(null, FiberA, queue);
+setCount(5);    // → dispatchSetState(FiberA, queue, 5)
+setCount(10);   // → dispatchSetState(FiberA, queue, 10)
+```
+
+setter 함수는 "자기가 태어난 컴포넌트의 Fiber"를 평생 기억한다. 이것이 `useState`가 올바른 컴포넌트의 state를 업데이트할 수 있는 메커니즘이다.
+
+---
+
+**Q: "대기 중인 다른 업데이트가 없을 때만" 해당 로직을 실행하는 이유가 -> "이전 업데이트 결과에 따라 현재 state가 달라질 수 있어서"라면 대기중인 다른 업데이트가 해당 setState와 전혀 상관없는 업데이트여도 마찬가지입니까?**
+
+A: `fiber.lanes`는 **이 fiber 자신의** 대기 업데이트만 추적한다. 소스 (`ReactFiberConcurrentUpdates.js:104-110`):
+
+```js
+// The fiber's `lane` field is used in some places to check if any work is
+// scheduled, to perform an eager bailout, so we need to update it immediately.
+fiber.lanes = mergeLanes(fiber.lanes, lane);
+```
+
+다른 fiber에 대기 업데이트가 있어도 이 fiber의 eager 계산에는 영향 없다:
+
+```
+Fiber A: lanes = SyncLane  (대기 업데이트 있음)
+Fiber B: lanes = NoLanes   (대기 업데이트 없음)
+B에서 setState(5) → B.lanes === NoLanes → eager 계산 진행 ✅
+```
+
+같은 fiber에서 연속 setState가 발생하면:
+
+```
+Fiber B: setState(5)  → B.lanes = SyncLane
+Fiber B: setState(10) → B.lanes !== NoLanes → eager 건너뜀 ❌
+```
+
+---
+
+**Q: state만 같으면 렌더링을 스킵하는게 안전한가요? (엣지 케이스 여부?)**
+
+A: 완전히 "버리는" 것은 아니라 안전하다. 2가지 안전장치가 있음:
+
+1. Update 객체는 큐에 남겨둔다:
+```js
+enqueueConcurrentHookUpdateAndEagerlyBailout(fiber, queue, update);
+// 렌더링은 스케줄링하지 않지만, update는 큐에 넣어둠
+```
+
+2. 나중에 다른 이유로 리렌더되면 큐에 남아있던 update도 재처리된다. 소스의 주석 (`ReactFiberHooks.js:3672-3675`):
+```js
+// Fast path. We can bail out without scheduling React to re-render.
+// It's still possible that we'll need to rebase this update later,
+// if the component re-renders for a different reason and by that
+// time the reducer has changed.
+```
+
+eager bailout은 "렌더링 스케줄링을 건너뛴다"는 것이지 "업데이트를 완전히 무시한다"는 것이 아니다.
+
+---
+
+**Q: alternate는 그러면 대기중인 화이트보드의 값을 들고있는건가요?**
+
+A: 시점에 따라 역할이 바뀐다:
+
+```
+[렌더링 중이 아닐 때]
+  current (화면) ←→ alternate (이전 렌더의 잔여 값, 재활용 대기)
+
+[렌더링 중일 때]
+  current (화면)  ←→  workInProgress (새로 그리는 중)
+  memoizedState: 3     memoizedState: 5 (새 값)
+```
+
+eagerState 조건에서 `alternate.lanes`도 확인하는 이유:
+- `fiber` = current 쪽, `alternate` = workInProgress 쪽 (있다면)
+- 양쪽 다 대기 업데이트가 없어야 "현재 state가 확정됨"을 보장할 수 있다
+- `alternate === null`은 아직 한 번도 리렌더된 적 없는 것(최초 마운트 후 첫 업데이트). 이때는 current 쪽만 확인하면 된다.
+
+### 연결 토픽
+- **Render Phase (Step 3)**: Step 2에서 스케줄링된 태스크가 실제로 renderRootSync/renderRootConcurrent에서 어떻게 실행되는지
+- **Lanes & Priority**: `requestUpdateLane`이 어떻게 Lane을 결정하는지, Lane이 Scheduler 우선순위로 어떻게 매핑되는지
+- **Hooks 내부 동작**: `mountState`/`updateState`에서 hook 링크드 리스트와 update 큐가 어떻게 관리되는지
