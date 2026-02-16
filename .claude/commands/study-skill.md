@@ -155,26 +155,60 @@ AskUserQuestion으로 소스 자료를 확인합니다:
 
 각 reference 파일의 **첫 10줄** (제목, 구조)을 빠르게 스캔합니다.
 
-### 3-2. Source Directory 분석 (SOURCE_DIR 있을 때만)
+### 3-2. Source Directory 모듈 맵 생성 (SOURCE_DIR 있을 때만)
 
-- 핵심 디렉토리 구조 파악 (depth 2)
-- 패키지/모듈별 파일 수 집계
-- 주요 엔트리포인트 파일 식별
+SOURCE_DIR의 디렉토리 구조에서 **기계적으로** 모듈을 추출합니다. AI의 주관적 "핵심" 판단을 하지 않습니다.
+
+1. **모듈 식별 규칙** (순서대로 시도, 첫 매칭 사용):
+   - `packages/*/` 또는 `packages/*/src/` — 모노레포 패키지
+   - `src/*/` — 모듈/피처 디렉토리
+   - `lib/*/` — 라이브러리 모듈
+   - 위 패턴 해당 없으면: SOURCE_DIR depth 1 디렉토리를 모듈로 사용
+
+2. **각 모듈에서 추출** (Glob/Grep으로 기계적 추출):
+   - 모듈명 (디렉토리명 그대로)
+   - 엔트리포인트: `index.{ts,js,tsx}`, `{module-name}.{ts,js}`, `package.json`의 `main`/`exports`
+   - 파일 목록 (depth 2까지, 파일 수 포함)
+   - export 파일: `export` 키워드가 있는 파일 (Grep 추출)
+
+3. **결과 저장**: `MODULE_MAP` — 모듈명 → {엔트리포인트, 파일 목록, export 파일}
+
+> **금지**: "주요", "핵심", "중요" 등의 주관적 필터링을 하지 않습니다. 발견된 모듈을 **전부** MODULE_MAP에 포함합니다.
 
 ### 3-3. Docs Directory 분석 (DOCS_DIR 있을 때만)
 
 - 가이드/레퍼런스 구조 파악
 - 섹션별 문서 수 집계
 
-### 3-4. 현재 상태 요약 출력
+### 3-4. Coverage Analysis (SOURCE_DIR 있을 때만)
+
+MODULE_MAP의 각 모듈과 REF_FILES(references/ 파일)를 교차 대조합니다.
+
+1. **매칭 규칙** (순서대로 시도):
+   - 모듈명과 references/ 파일명 일치 (예: `fiber` → `references/fiber.md`)
+   - 모듈명이 references/ 파일 내용에 포함 (Grep으로 확인)
+
+2. **결과 저장**: `COVERAGE_MAP` — 모듈명 → {매칭된 references/ 파일 또는 `null`}
+
+3. **분류**:
+   - `COVERED_MODULES`: references/ 파일이 매칭된 모듈
+   - `UNCOVERED_MODULES`: references/ 파일이 없는 모듈
+   - `ORPHAN_REFS`: MODULE_MAP의 어떤 모듈과도 매칭되지 않는 references/ 파일
+
+### 3-5. 현재 상태 요약 출력
 
 ```
 ## Inventory Summary
 
 - **Skill**: {N}개 reference docs, {M}개 patterns/rules
-- **Source**: {N}개 packages, {M}개 files (해당 시)
+- **Source**: {N}개 모듈 (MODULE_MAP) — {총 파일 수}개 files
 - **Docs**: {N}개 guides, {M}개 references (해당 시)
 - **Study Mode**: {STUDY_MODE}
+
+### Coverage
+- **커버됨**: {COVERED_MODULES 수}개 모듈 — {모듈명 목록}
+- **미커버**: {UNCOVERED_MODULES 수}개 모듈 — {모듈명 목록}
+- **고아 refs**: {ORPHAN_REFS 수}개 — {파일명 목록}
 ```
 
 ---
@@ -190,19 +224,30 @@ AskUserQuestion으로 소스 자료를 확인합니다:
 
 ### RESUME=false인 경우 (새로 생성)
 
-references/ 파일 구조와 소스/문서 디렉토리를 분석하여 토픽 플랜을 생성합니다.
+**MODULE_MAP과 COVERAGE_MAP**을 기반으로 토픽 플랜을 생성합니다. AI의 일반 지식이 아닌 ref/ 소스 구조가 토픽의 근거입니다.
 
 #### 토픽 생성 규칙:
-1. 각 reference 파일을 기본 토픽 단위로 합니다 (큰 파일은 분할, 관련 파일은 그룹핑 가능).
-2. 각 토픽에 포함할 내용:
-   - **Source Files**: SOURCE_DIR에서 해당 토픽과 관련된 파일 테이블 (있을 때만)
-   - **Docs**: DOCS_DIR에서 해당 토픽과 관련된 문서 목록 (있을 때만)
-   - **Study Points**: 학습 포인트 (3-5개 bullet)
-   - **Skill Target**: 검증 대상 reference 파일
+
+1. **기본 단위**: MODULE_MAP의 각 모듈 = 1 토픽. 모든 모듈이 토픽에 포함되어야 합니다.
+   - 파일 수가 많은 모듈(20+)은 하위 디렉토리 기준으로 분할 가능 (사유 명시)
+   - 파일 수가 적은 모듈(3개 이하)은 관련 모듈과 그룹핑 가능 (사유 명시)
+   - SOURCE_DIR이 없으면: references/ 파일을 기본 토픽 단위로 사용 (기존 동작)
+
+2. **각 토픽에 포함할 내용**:
+   - **Source Files**: MODULE_MAP에서 해당 모듈의 파일 목록을 **그대로** 사용 (AI가 "관련" 판단하지 않음)
+   - **Docs**: DOCS_DIR에서 모듈명으로 Grep 매칭된 문서 목록 (있을 때만)
+   - **Study Points**: 모듈의 엔트리포인트/export에서 **기계적으로 도출** (아래 규칙 참조)
+   - **Skill Target**: COVERAGE_MAP에서 매칭된 `references/{file}.md` 또는 `"신규 생성 필요"`
    - **Checklist**: `[ ] 소스 학습 완료` / `[ ] docs 교차 확인` / `[ ] skill 검증/개선`
 
-3. 토픽 순서는 **bottom-up** 제안:
-   - 기초 자료구조/설정 → 내부 메커니즘 → 사용자 기능 → 고급 기능/최적화
+3. **Study Points 도출 규칙** (AI 일반 지식 사용 금지):
+   - 모듈 엔트리포인트에서 export되는 API/함수/클래스 목록
+   - 모듈 내부의 하위 디렉토리 구조 (역할 추정은 디렉토리명 기반)
+   - 다른 모듈과의 의존 관계 (import 문 Grep으로 추출)
+   - 테스트 파일이 있으면: 테스트 파일명에서 테스트 대상 추출
+
+4. **토픽 순서**: 모듈 간 **import 의존 관계**를 Grep으로 추출하여 의존되는 모듈부터 배치합니다.
+   - 의존 관계를 추출할 수 없으면: 기초 자료구조/설정 → 내부 메커니즘 → 사용자 기능 → 고급 기능 순서로 폴백
 
 #### plan.md 생성
 
@@ -217,8 +262,18 @@ references/ 파일 구조와 소스/문서 디렉토리를 분석하여 토픽 �
 ## Current State
 
 - **Skill**: {name}-aio — {N}개 참조 문서, {M}개 패턴 (v{version} 기준)
-- **Source**: {SOURCE_DIR 요약} (해당 시)
+- **Source**: {SOURCE_DIR 요약} — {MODULE_MAP 모듈 수}개 모듈 (해당 시)
 - **Docs**: {DOCS_DIR 요약} (해당 시)
+
+## Coverage Analysis
+
+| Status | Module | Skill Target |
+|--------|--------|--------------|
+| ✅ 커버 | {모듈명} | `references/{file}.md` |
+| ⬜ 미커버 | {모듈명} | 신규 생성 필요 |
+| 🔗 고아 ref | — | `references/{orphan}.md` (매칭 모듈 없음) |
+
+- **커버율**: {COVERED}/{TOTAL} 모듈 ({퍼센트}%)
 
 ## Core Principles
 
@@ -238,7 +293,30 @@ references/ 파일 구조와 소스/문서 디렉토리를 분석하여 토픽 �
 
 ## Part 1: Source Code Study ({N} Topics)
 
-{토픽별 섹션 — Phase 4 토픽 생성 규칙에 따라 생성}
+### Topic 1: {모듈명} {✅|⬜ 커버 상태}
+
+**Source Files** (MODULE_MAP에서 추출):
+| File | Role |
+|------|------|
+| {엔트리포인트} | 모듈 진입점 |
+| {export 파일} | {Grep으로 추출한 export 내용 요약} |
+
+**Study Points** (소스 구조에서 도출):
+- 엔트리포인트 export: {export 목록}
+- 내부 구조: {하위 디렉토리명 기반}
+- 의존 모듈: {import Grep 결과}
+
+**Docs**: {DOCS_DIR에서 모듈명 Grep 매칭 결과} (해당 시)
+
+**Skill Target**: `references/{file}.md` 또는 "신규 생성 필요"
+
+**Checklist**:
+- [ ] 소스 학습 완료
+- [ ] docs 교차 확인
+- [ ] skill 검증/개선
+
+### Topic 2: {모듈명} ...
+{이하 MODULE_MAP의 모든 모듈에 대해 반복}
 
 ---
 
@@ -250,10 +328,11 @@ references/ 파일 구조와 소스/문서 디렉토리를 분석하여 토픽 �
 
 ## Files To Modify
 
-| Action | File |
-|--------|------|
-| Verify/Improve | `skills/{name}-aio/references/{file}.md` |
-| ... | ... |
+| Action | File | Source |
+|--------|------|--------|
+| Verify/Improve | `skills/{name}-aio/references/{file}.md` | 기존 커버된 모듈 |
+| Create (신규) | `skills/{name}-aio/references/{uncovered-module}.md` | 미커버 모듈 |
+| Review (고아) | `skills/{name}-aio/references/{orphan}.md` | 매칭 모듈 없음 — 삭제/병합 검토 |
 
 ## Verification
 
