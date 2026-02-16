@@ -115,6 +115,7 @@ for plan_file in "$ROOT"/docs/*/plan.md; do
     fname="$(basename "$f" .md)"
     [[ "$fname" == "plan" ]] && continue
     [[ "$fname" =~ -quiz$ ]] && continue
+    [[ "$fname" =~ -meta$ ]] && continue
 
     search_term="${fname//-/ }"
 

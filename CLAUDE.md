@@ -19,7 +19,8 @@ study-all/
 │   └── {skill-name}/                  # 학습 기록
 │       ├── plan.md
 │       ├── {Topic-Name}.md
-│       └── {Topic-Name}-quiz.md
+│       ├── {Topic-Name}-quiz.md
+│       └── {Topic-Name}-meta.md
 └── ref/                               # 소스 코드/공식 문서
     ├── {name}-fork/
     └── {name}.dev/
@@ -96,21 +97,24 @@ study-all/
 - 최소 변경 원칙: 틀린 것만 고치고, 없는 것만 추가
 - `patterns.md`, `anti-patterns.md`는 사용자 명시 요청 시에만 수정
 
-### `/review <skill-name> [topic]` — 복습
+### `/review <skill-name> [topic]` — 적응형 복습
 
-학습 기록(`docs/`)을 기반으로 1문제씩 출제하는 적응형 복습 세션.
+학습 기록(`docs/`)과 복습 이력(`-meta.md`)을 기반으로 1문제씩 출제하는 적응형 복습 세션.
 
-**흐름**: Input Parsing → Study Record Discovery → Content Extraction → Review Session (1문제씩 반복) → Session End → Quiz Save ("정리" 시)
+**흐름**: Input Parsing → Study Record Discovery → Content Extraction & Session Planning (메타 로딩, 졸업 필터링, 우선순위/난이도 결정) → Review Session (1문제씩 반복) → Session End → Quiz & Meta Save ("정리" 시)
 
-**소스**: `docs/{skill}/{Topic-Name}.md`의 학습 요약, Q&A 기록, 소스 경로
+**소스**: `docs/{skill}/{Topic-Name}.md`의 학습 요약/Q&A 기록/소스 경로, `docs/{skill}/{Topic-Name}-meta.md`의 복습 이력
 
 **핵심 규칙**:
 - 한 턴에 1문제만 출제
 - 통과 → 다음 개념, 오답/부분 답변 → 같은 개념 변형 질문
-- AI가 통과 여부를 판단하고 다음으로 넘김
 - 3회 연속 실패 시 원문 전체 제공 후 다음 개념으로 (무한 루프 방지)
-- "정리" 시 퀴즈 기록을 `docs/{skill}/{Topic-Name}-quiz.md`에 저장
-- "정리" 외에는 읽기 전용
+- 난이도 4단계 (L1 회상 → L2 이해 → L3 적용/코드 → L4 합성/연결) — 메타 이력 기반 자동 조절
+- 졸업 시스템: 3회 연속 첫 시도 통과 시 출제 제외
+- 간격 반복: 오답 1일, 재시도 3일, 통과 7일(×2 증가, 최대 30일)
+- 확신도 + 착각 영역: 2회차부터, "안다고 생각했지만 틀린" 개념 식별
+- **자연스러움 우선**: 모든 강화 기능은 조건 충족 시에만. 첫 복습은 L1 순차 출제로 심플하게
+- "정리" 시 퀴즈(`-quiz.md`) + 메타(`-meta.md`) 저장. "정리" 외에는 읽기 전용
 
 ---
 
@@ -154,6 +158,12 @@ study-all/
 - 파일명: TOPIC의 공백을 `-`로 치환, Title-Case
 - `/learn`이 생성/관리
 - 기존 파일이 있으면 `---` 구분선 뒤에 새 세션 append
+
+### {Topic-Name}-meta.md (복습 메타)
+
+- 경로: `docs/{skill-name}/{Topic-Name}-meta.md`
+- `/review`가 "정리" 시 생성/갱신
+- 개념별 난이도(L1~L4), 연속통과 횟수, 졸업 상태, 다음 복습일, 착각 영역 이력을 추적
 
 ### 세션 기록 구조
 
