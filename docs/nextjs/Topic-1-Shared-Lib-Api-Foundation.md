@@ -268,3 +268,528 @@ A: 이 토픽(shared/lib/api Foundation)의 범위를 벗어나는 내용이고,
 - Step 2.1 (app-router-types.ts): 레이어별로 다르게 빌드된 코드가 사용하는 타입 구조
 
 ---
+
+## 2026-02-17 (재개 — Step 2.1부터)
+
+### 학습 로드맵
+- Step 1: 전역 상수 체계 (Constants)
+  - [x] 1.1: `shared/lib/constants.ts` — 빌드 페이즈, 매니페스트, 컴파일러 상수
+  - [x] 1.2: `lib/constants.ts` — Webpack 레이어, 헤더, 캐시 태그 상수
+- Step 2: App Router 타입과 Context
+  - [x] 2.1: `app-router-types.ts` — CacheNode, FlightData 타입 구조
+  - [ ] 2.2: `app-router-context.shared-runtime.ts` — 5개 핵심 React Context
+- Step 3: api/ — Public API 진입점
+  - [ ] 3.1: api/ 디렉토리 re-export 패턴 — next/dynamic, next/image 등
+  - [ ] 3.2: 환경별 API 분리 — navigation.ts vs navigation.react-server.ts
+- Step 4: lib/ — 프로젝트 탐색과 번들러 선택
+  - [ ] 4.1: find-config, find-root, find-pages-dir — 설정/디렉토리 탐색
+  - [ ] 4.2: bundler.ts — Turbopack/Webpack/Rspack 선택 로직
+- Step 5: shared/lib/ 핵심 유틸리티
+  - [ ] 5.1: dynamic.tsx + loadable — 동적 로딩 구현
+  - [ ] 5.2: image-config.ts, magic-identifier.ts — 이미지 설정과 Turbopack 식별자
+
+### 학습 요약
+- `app-router-types.ts`는 App Router의 클라이언트 측 데이터 모델을 정의 — CacheNode(캐시 트리 노드)와 Flight 타입들(서버→클라이언트 전송 형식)
+- CacheNode는 `rsc`(실제 데이터)와 `prefetchRsc`(정적 프리페치 데이터)의 이중 구조. `useDeferredValue`로 prefetch → 실제 데이터로 전환
+- 둘 다 null이면 `unresolvedThenable`로 무한 suspend → 라우터가 별도로 서버 요청 → CacheNode 업데이트 → suspend 해제 (무한루프 아님)
+- Flight 타입들이 객체가 아닌 튜플(배열)인 이유: 와이어 포맷 크기 최적화 (키 이름 생략). InitialRSCPayload도 단일 문자 키(`b`, `c`, `q` 등) 사용
+- DynamicParamTypesShort(`'d'`, `'c'`, `'oc'`)는 URL에서 몇 개 세그먼트를 소비할지 결정. paramName만으로는 불충분
+- staticSiblings는 production에서 optimistic routing(prefetch 최적화)을 위해 사용. dev 모드에서는 null → 서버 폴백 (결과는 동일, 속도만 차이)
+
+### 소스 코드 경로
+- `ref/next.js/packages/next/src/shared/lib/app-router-types.ts:23-52` — CacheNode 타입 정의 (rsc, prefetchRsc, slots)
+- `ref/next.js/packages/next/src/shared/lib/app-router-types.ts:54-100` — DynamicParamTypes, DynamicSegmentTuple 정의
+- `ref/next.js/packages/next/src/shared/lib/app-router-types.ts:107-141` — FlightRouterState 튜플 타입 (라우터 상태 트리)
+- `ref/next.js/packages/next/src/shared/lib/app-router-types.ts:188-213` — CacheNodeSeedData (서버→클라이언트 seed 데이터)
+- `ref/next.js/packages/next/src/shared/lib/app-router-types.ts:215-236` — FlightDataSegment, FlightDataPath, FlightData
+- `ref/next.js/packages/next/src/shared/lib/app-router-types.ts:240-261` — InitialRSCPayload (단일 문자 키 최적화)
+- `ref/next.js/packages/next/src/client/components/layout-router.tsx:311-347` — useDeferredValue로 rsc/prefetchRsc 전환, null 시 unresolvedThenable suspend
+- `ref/next.js/packages/next/src/client/components/router-reducer/ppr-navigations.ts:1180-1193` — createCacheNode 함수
+- `ref/next.js/packages/next/src/client/components/router-reducer/ppr-navigations.ts:860-944` — 초기 hydration 시 CacheNode 생성
+- `ref/next.js/packages/next/src/client/components/router-reducer/ppr-navigations.ts:1042-1074` — 네비게이션 시 rsc/prefetchRsc 할당 (createDeferredRsc)
+- `ref/next.js/packages/next/src/client/route-params.ts:52-128` — DynamicParamTypesShort별 URL 파싱 분기 (d=1개, c=전부, oc=0+개)
+- `ref/next.js/packages/next/src/client/components/segment-cache/optimistic-routes.ts:582-596` — staticChildren null 시 optimistic match 포기 주석
+- `ref/next.js/packages/next/src/client/components/segment-cache/optimistic-routes.ts:599-627` — 정적 자식 우선 매칭 로직
+- `ref/next.js/packages/next/src/build/webpack/loaders/next-app-loader/index.ts:550-559` — dev 모드 staticSiblings null, production에서만 계산
+- `ref/next.js/packages/next/src/server/app-render/get-short-dynamic-param-type.tsx:6-21` — DynamicParamTypes → Short 매핑
+- `ref/next.js/packages/next/src/server/dev/on-demand-entry-handler.ts:84-106` — Short 타입으로 파일시스템 세그먼트명 복원
+- `ref/next.js/packages/next/src/client/flight-data-helpers.ts:270` — `null slightly more compact than undefined` 주석
+- `ref/next.js/packages/next/src/shared/lib/segment-cache/segment-value-encoding.ts:70-75` — `by default for compactness` 설계 철학
+
+### Q&A 전체 기록
+
+#### Step 2.1: `app-router-types.ts` — CacheNode, FlightData 타입 구조
+
+**Q: 책장 비유 관련 질문: 그러면 서버에서 보낸 RSC payload가 클라이언트 인메모리 캐시로 저장된다는건가요?**
+
+A: **네, 맞습니다.** 서버가 보낸 RSC payload는 클라이언트 메모리의 CacheNode 트리에 저장됩니다.
+
+실제 생성 코드 — `ppr-navigations.ts:1180-1193`:
+
+```ts
+function createCacheNode(
+  rsc: React.ReactNode | null,
+  prefetchRsc: React.ReactNode | null,
+  head: React.ReactNode | null,
+  prefetchHead: HeadData | null
+): CacheNode {
+  return { rsc, prefetchRsc, head, prefetchHead, slots: null }
+}
+```
+
+**흐름**: 서버 응답 → `createCacheNodeForSegment()` → `createCacheNode()` → CacheNode 트리에 삽입
+
+초기 수화(hydration) 시 (`ppr-navigations.ts:860-944`):
+
+```ts
+case FreshnessPolicy.Hydration: {
+  const rsc = seedRsc          // SSR 페이로드에서 온 데이터
+  const prefetchRsc = null
+  return {
+    cacheNode: createCacheNode(rsc, prefetchRsc, head, prefetchHead),
+    needsDynamicRequest: false,
+  }
+}
+```
+
+네비게이션 시에는 prefetch 데이터가 있으면 `prefetchRsc`에, 동적 데이터가 아직 안 왔으면 `rsc`에 미해결 Promise를 넣습니다:
+
+```ts
+// ppr-navigations.ts:1042-1074
+if (isCachedRscPartial) {
+  prefetchRsc = cachedRsc        // 부분 캐시 → prefetch로
+  rsc = createDeferredRsc()      // 미해결 Promise (서버 응답 대기)
+}
+```
+
+CacheNode는 순수 JS 객체 트리로 브라우저 메모리에 존재합니다. localStorage나 IndexedDB가 아닌 React 상태 안의 인메모리 캐시입니다.
+
+---
+
+**Q: "렌더링 시 useDeferredValue로 둘 중 하나를 선택합니다 — prefetch 데이터를 먼저 보여주다가 실제 데이터가 오면 교체." < 이건 default or 고정인가요? 예를들어 이게 강제되면 레이아웃 시프트가 심할수있지 않을까요? (물론 그걸 잡는것도 개발자 목표지만 일반적인 관점에서 질문드립니다)**
+
+A: 소스를 보면 **App Router 내부 동작으로 고정**되어 있고, 개발자가 끄거나 변경할 수 있는 옵션이 아닙니다.
+
+`layout-router.tsx:311-327`:
+
+```ts
+// If this segment has a `prefetchRsc`, it's the statically prefetched data.
+// We should use that on initial render instead of `rsc`. Then we'll switch
+// to `rsc` when the dynamic response streams in.
+const resolvedPrefetchRsc =
+  cacheNode.prefetchRsc !== null ? cacheNode.prefetchRsc : cacheNode.rsc
+
+// useDeferredValue의 두 번째 인자는 초기 렌더 시 반환값
+const rsc = useDeferredValue(cacheNode.rsc, resolvedPrefetchRsc)
+```
+
+**레이아웃 시프트 우려에 대해**: 이 설계가 오히려 레이아웃 시프트를 **줄이는** 방향입니다:
+
+1. `prefetchRsc`는 **같은 라우트의 정적 버전**. 완전히 다른 콘텐츠가 아니라, 동적 부분만 "구멍"인 상태 (예: 사용자 이름 자리가 비어있지만 레이아웃 구조는 동일).
+2. `useDeferredValue`는 **이전 UI를 유지하면서** 새 데이터가 준비되면 교체. 갑자기 빈 화면이 뜨는 게 아니라, prefetch 버전을 보여주다가 매끄럽게 전환.
+3. prefetchRsc도 없으면 → `cacheNode.rsc`로 바로 가고, 그것도 없으면 Suspense fallback(loading.tsx) 표시. 빈 화면이 아니라 loading 상태.
+
+정리: **prefetch 있으면 → 정적 껍데기를 먼저 보여주고 동적 부분만 채움**, **prefetch 없으면 → loading.tsx fallback** → 어느 쪽이든 레이아웃 구조는 유지.
+
+---
+
+**Q: "둘 다 null이면 "데이터 없음" → Suspense가 트리거되어 서버에 lazy fetch 요청." < null -> lazy fetch 요청 -> null 응답 -> ... 무한루프 위험성은 없나요?**
+
+A: **무한루프가 발생하지 않습니다.** 이유는 `null`일 때 fetch를 다시 보내는 게 아니라, **영원히 suspend**하기 때문입니다.
+
+`layout-router.tsx:331-347`:
+
+```ts
+if (rsc === null) {
+  // 절대 resolve되지 않는 thenable → 무한 suspend
+  use(unresolvedThenable) as never
+}
+```
+
+이 `unresolvedThenable`의 정의 (`unresolved-thenable.ts`):
+
+```ts
+export const unresolvedThenable = {
+  then: () => {},    // resolve 콜백을 호출하지 않음 → 영원히 pending
+} as PromiseLike<void>
+```
+
+**핵심**: `null` → "fetch를 다시 보낸다"가 아니라 → "이 컴포넌트를 무한정 suspend 상태로 두고, **라우터가 별도로** 서버에 동적 요청을 보내서 데이터가 오면 CacheNode를 업데이트하고 새 상태를 dispatch한다".
+
+흐름:
+```
+1. rsc === null → use(unresolvedThenable) → 컴포넌트 suspend
+2. 부모의 Suspense boundary가 loading.tsx를 표시
+3. 라우터가 SERVER_PATCH 액션으로 서버에 동적 요청
+4. 응답이 오면 CacheNode.rsc에 실제 데이터를 채움
+5. React 상태 업데이트 → suspend 해제 → 실제 콘텐츠 렌더링
+```
+
+만약 서버가 정말로 데이터를 안 보내면? → 컴포넌트는 계속 suspend 상태(loading 표시)로 남아있을 뿐, **fetch를 반복하지는 않습니다.**
+
+---
+
+**Q: "네트워크 전송 크기를 줄이기 위함" < 그러면 그냥 string으로 보내고 역직렬화하는게 제일 크기가 줄지 않나요?**
+
+**Q: "네트워크 전송 크기를 줄이기 위함" < 튜플이 객체보다 의미있게 크기가 준다는 근거가 소스코드, 주석, PR등에 있나요?**
+
+A: **명시적으로 "튜플 vs 객체" 비교를 설명하는 주석은 없습니다.** 하지만 소스 곳곳에서 **와이어 포맷 크기 최적화가 설계 우선순위**라는 증거가 있습니다:
+
+**증거 1** — `CompressedRefreshState` 타입명 자체가 "압축"을 명시 (`app-router-types.ts:153`):
+
+```ts
+export type CompressedRefreshState = [url: string, renderedSearch: string]
+```
+
+**증거 2** — `InitialRSCPayload`의 단일 문자 키 (`app-router-types.ts:240-261`):
+
+```ts
+export type InitialRSCPayload = {
+  b?: string    // buildId
+  c: string[]   // initialCanonicalUrlParts
+  q: string     // initialRenderedSearch
+  i: boolean    // couldBeIntercepted
+  f: FlightDataPath[]  // initialFlightData
+}
+```
+
+객체 키마저도 `buildId` 대신 `b`로 줄이고 있습니다. 튜플과 같은 맥락의 최적화.
+
+**증거 3** — `flight-data-helpers.ts:270`의 명시적 주석:
+
+```ts
+result[2] = null // null slightly more compact than undefined
+```
+
+`null`이 `undefined`보다 JSON에서 더 작다는 이유로 선택할 정도로 바이트 단위 최적화.
+
+**증거 4** — `segment-value-encoding.ts:70-75`의 설계 철학:
+
+> "by default for compactness, and for easier debugging"
+
+**"string으로 보내고 역직렬화하면 더 작지 않냐"는 질문에 대해**: 이 데이터는 이미 React의 **Flight 프로토콜** 위에서 전송됩니다. React의 `react-server-dom-webpack`이 자체 직렬화를 수행하므로, Next.js가 추가로 JSON.stringify를 하는 게 아닙니다. Flight 프로토콜 안에서의 JS 값 표현 크기를 줄이는 것이 목표이고, 그 맥락에서 `["dashboard", {}]`가 `{"segment": "dashboard", "parallelRoutes": {}}`보다 작습니다.
+
+---
+
+**Q: dynamicParamType, staticSiblings < 이 두개는 왜 보내는지 모르겠습니다, 이미 동적이라 튜플로 보내는거면 paramName으로 dynamicParamType이 대체되는거 아닌가요? 아니면 "d" < 이 값이 특수한 값인가요? 또한 staticSiblings < 이건 왜 보내는건가요?**
+
+A: **dynamicParamType이 필요한 이유** — `paramName`만으로는 **URL에서 몇 개의 세그먼트를 소비해야 하는지** 알 수 없습니다.
+
+`route-params.ts:52-128`에서 타입별 파싱 로직이 완전히 다릅니다:
+
+```ts
+switch (paramType) {
+  case 'c':   // catchall [...slug] → 나머지 URL 전부 소비
+    return pathnameParts.slice(partIndex)
+  case 'oc':  // optional catchall [[...slug]] → 0개도 OK → null 반환
+    return partIndex < pathnameParts.length
+      ? pathnameParts.slice(partIndex) : null
+  case 'd':   // dynamic [id] → 정확히 1개만 소비
+    return encodeURIComponent(pathnameParts[partIndex])
+}
+```
+
+예를 들어 `/products/a/b/c` URL에서:
+- `[slug]` (`'d'`) → slug = `"a"`, 나머지 `/b/c`는 자식 라우트
+- `[...slug]` (`'c'`) → slug = `["a", "b", "c"]`, 전부 소비
+- `[[...slug]]` (`'oc'`) → slug = `["a", "b", "c"]` 또는 비어있으면 `null`
+
+**paramName은 `"slug"`로 동일**하지만, 타입이 `'d'`냐 `'c'`냐에 따라 결과가 완전히 다릅니다.
+
+**staticSiblings가 필요한 이유** — 클라이언트의 **prefetch 최적화**(optimistic routing)를 위해서입니다.
+
+예시 — 파일 시스템:
+```
+/products/[id]/page.tsx      ← 동적 라우트
+/products/sale/page.tsx      ← 정적 라우트
+```
+
+사용자가 `/products/sale`로 네비게이션할 때, 클라이언트는 이 URL이 `/products/[id]`에 매칭되는지 `/products/sale`에 매칭되는지 판단해야 합니다. `staticSiblings: ["sale"]`이 있으면 → "sale은 정적 라우트가 있으니 [id]로 매칭하지 마"라고 판단 가능.
+
+`optimistic-routes.ts:582-597`:
+
+```ts
+if (part.staticChildren === null) {
+  return null  // 보수적으로 포기
+}
+
+const staticChild = part.staticChildren.get(urlPart)
+if (staticChild !== undefined) {
+  // 정적 라우트로 매칭 시도
+}
+// 없으면 → 동적 라우트([id])로 매칭
+```
+
+dev 모드에서는 `staticSiblings`가 항상 `null` (`next-app-loader/index.ts:550`):
+
+```ts
+const staticSiblingsCode = isDev ? 'null' : `${JSON.stringify(getStaticSiblingSegments(...))}`
+```
+
+dev 모드에서는 라우트가 on-demand로 컴파일되므로 전체 형제 목록을 알 수 없어, 보수적으로 서버에 위임.
+
+---
+
+**Q: "dev 모드에서는 라우트가 on-demand로 컴파일되므로 전체 형제 목록을 알 수 없어, 보수적으로 서버에 위임합니다" < 그러면 Dev 모드에서는 의도한대로 라우트 안될수도있겠네요?**
+
+A: **"라우트가 안 된다"는 아닙니다.** `return null`이 의미하는 것은 **optimistic prefetch(사전 예측)를 포기**하는 것이지, 네비게이션 자체가 실패하는 게 아닙니다.
+
+소스의 주석이 정확히 이 시나리오를 설명합니다 (`optimistic-routes.ts:582-596`):
+
+```ts
+// If staticChildren is null, we don't know what static routes exist at this
+// level. This happens in webpack dev mode where routes are compiled
+// on-demand. We can't safely match a dynamicChild because the URL part might
+// be a static sibling we haven't discovered yet. Example: We know
+// /blog/[slug] exists, but haven't compiled /blog/featured. A request for
+// /blog/featured would incorrectly match /blog/[slug].
+if (part.staticChildren === null) {
+  return null  // ← 매칭 포기, 서버에 위임
+}
+```
+
+차이는 "속도"입니다:
+
+```
+[Production — staticSiblings 있음]
+Link hover → prefetch → 캐시에 미리 저장 → 클릭 시 즉시 전환
+
+[Dev — staticSiblings null]
+Link hover → prefetch 시도 → optimistic match 실패 → prefetch 포기
+클릭 → 서버에 직접 요청 → 응답 대기 → 전환 (약간 느림)
+```
+
+라우팅 **결과**는 동일하고, **경험 속도**만 차이. dev 모드에서는 어차피 로컬이라 네트워크 지연이 거의 없으므로 실질적으로 체감하기 어렵습니다.
+
+### 연결 토픽
+- Topic 10 (client — App Router Runtime): CacheNode가 실제로 관리되는 라우터 리듀서, SERVER_PATCH 액션 흐름
+- Topic 4 (server — App Render): 서버 측에서 FlightData를 생성하는 RSC 렌더링 파이프라인
+- Topic 5 (server — Caching System): prefetchRsc와 서버 캐시 레이어의 관계
+- Step 2.2 (app-router-context): CacheNode 트리를 공유하는 React Context 구조
+
+---
+
+## 2026-02-17 (재개 — Step 2.2부터)
+
+### 학습 로드맵
+- Step 1: 전역 상수 체계 (Constants)
+  - [x] 1.1: `shared/lib/constants.ts` — 빌드 페이즈, 매니페스트, 컴파일러 상수
+  - [x] 1.2: `lib/constants.ts` — Webpack 레이어, 헤더, 캐시 태그 상수
+- Step 2: App Router 타입과 Context
+  - [x] 2.1: `app-router-types.ts` — CacheNode, FlightData 타입 구조
+  - [x] 2.2: `app-router-context.shared-runtime.ts` — 5개 핵심 React Context
+- Step 3: api/ — Public API 진입점
+  - [ ] 3.1: api/ 디렉토리 re-export 패턴 — next/dynamic, next/image 등
+  - [ ] 3.2: 환경별 API 분리 — navigation.ts vs navigation.react-server.ts
+- Step 4: lib/ — 프로젝트 탐색과 번들러 선택
+  - [ ] 4.1: find-config, find-root, find-pages-dir — 설정/디렉토리 탐색
+  - [ ] 4.2: bundler.ts — Turbopack/Webpack/Rspack 선택 로직
+- Step 5: shared/lib/ 핵심 유틸리티
+  - [ ] 5.1: dynamic.tsx + loadable — 동적 로딩 구현
+  - [ ] 5.2: image-config.ts, magic-identifier.ts — 이미지 설정과 Turbopack 식별자
+
+### 학습 요약
+- `app-router-context.shared-runtime.ts`는 5개 React Context를 정의: AppRouterContext, GlobalLayoutRouterContext, LayoutRouterContext, TemplateContext, MissingSlotContext
+- AppRouterContext는 네비게이션 API(useRouter() 반환값)만 담당. usePathname/useSearchParams는 별도 파일(`hooks-client-context.shared-runtime.ts`)의 별도 Context — Context 분리 + useMemo로 리렌더링 범위 최소화
+- GlobalLayoutRouterContext의 `nextUrl`은 인터셉팅 라우트 구분을 위한 캐시 키 구성요소. 같은 href라도 출발 페이지에 따라 별도 캐시
+- LayoutRouterContext는 레이아웃이 중첩될 때마다 **좁아지며(narrows down)** 교체. 자식은 부모의 CacheNode.slots에서 자기 키로 자신의 CacheNode를 조회
+- 두 Context 파일의 분리 이유는 설계 원칙이 아닌 **코드 성장 순서**: app-router-context(PR#37238, 2022-05)가 먼저 생성되고, hooks-client-context(PR#37551, 2022-07)가 나중에 추가됨
+
+### 소스 코드 경로
+- `ref/next.js/packages/next/src/shared/lib/app-router-context.shared-runtime.ts:65-67` — AppRouterContext 정의
+- `ref/next.js/packages/next/src/shared/lib/app-router-context.shared-runtime.ts:68-77` — LayoutRouterContext 정의 (parentCacheNode, parentTree 등)
+- `ref/next.js/packages/next/src/shared/lib/app-router-context.shared-runtime.ts:79-84` — GlobalLayoutRouterContext 정의 (tree, nextUrl 등)
+- `ref/next.js/packages/next/src/shared/lib/app-router-context.shared-runtime.ts:86` — TemplateContext 정의
+- `ref/next.js/packages/next/src/shared/lib/app-router-context.shared-runtime.ts:95` — MissingSlotContext 정의
+- `ref/next.js/packages/next/src/shared/lib/hooks-client-context.shared-runtime.ts:7-9` — SearchParamsContext, PathnameContext, PathParamsContext 정의
+- `ref/next.js/packages/next/src/client/components/navigation.ts:146-149` — useRouter()가 AppRouterContext를 useContext로 소비
+- `ref/next.js/packages/next/src/client/components/navigation.ts:56-59` — useSearchParams()가 SearchParamsContext를 소비
+- `ref/next.js/packages/next/src/client/components/app-router.tsx:162-172` — useMemo로 searchParams/pathname 계산
+- `ref/next.js/packages/next/src/client/components/app-router.tsx:421-437` — useMemo로 layoutRouterContext value 생성
+- `ref/next.js/packages/next/src/client/components/app-router.tsx:439-446` — useMemo로 globalLayoutRouterContext value 생성
+- `ref/next.js/packages/next/src/client/components/app-router.tsx:97-103` — useEffect로 nextUrl/tree 변경 시 prefetch 재실행
+- `ref/next.js/packages/next/src/client/components/segment-cache/cache-key.ts:9-18` — RouteCacheKey에 nextUrl 포함 (인터셉팅 라우트 캐시 키)
+- `ref/next.js/packages/next/src/client/components/layout-router.tsx:373-393` — LayoutRouterContext.Provider (narrows down)
+- `ref/next.js/packages/next/src/client/components/layout-router.tsx:551-562` — parentCacheNode.slots에서 자식 CacheNode 조회
+
+### Q&A 전체 기록
+
+#### Step 2.2: `app-router-context.shared-runtime.ts` — 5개 핵심 React Context
+
+**Q: AppRouterInstance인터페이스가 useRouter() 훅의 반환 타입인 이유가 뭘까요? > AppRouterContext라는 이름만 보면 AppRouter에서 사용 가능한 모든 클라이언트 기능들의 컨텍스트처럼 보이는데요,**
+
+A: Next.js는 클라이언트 기능을 **여러 Context로 분리**하고 있습니다. `AppRouterContext`는 "App Router의 **모든 것**"이 아니라 "App Router의 **라우터 인스턴스**"입니다.
+
+`navigation.ts`에서 확인:
+
+```ts
+// navigation.ts:146-149
+export function useRouter(): AppRouterInstance {
+  const router = useContext(AppRouterContext)   // ← AppRouterContext
+}
+
+// navigation.ts:56-59
+export function useSearchParams(): ReadonlyURLSearchParams {
+  const searchParams = useContext(SearchParamsContext)  // ← 별도 Context
+}
+```
+
+분리한 이유는 **리렌더링 범위 최소화**. URL 경로가 바뀌면 `PathnameContext` 구독 컴포넌트만 리렌더링되고, `useRouter()`만 쓰는 컴포넌트는 영향 없음.
+
+이름은 "AppRouter**Context**"가 아니라 "App**Router**Context" — **라우터 인스턴스**(네비게이션 액션 객체)를 담는 Context로 읽는 게 정확.
+
+---
+
+**Q: nextUrl < 이것의 역할은 뭔가요?**
+
+A: `nextUrl`은 **prefetch 캐시 키 생성**에 쓰이는 "현재 페이지 URL". 핵심 용도는 **인터셉팅 라우트** 구분.
+
+`cache-key.ts:9-18`:
+
+```ts
+export type RouteCacheKey = Opaque<'RouteCacheKey', {
+  pathname: NormalizedPathname
+  search: NormalizedSearch
+  nextUrl: NormalizedNextUrl | null   // ← 캐시 키의 일부
+}>
+```
+
+같은 `/photo/123` 경로라도:
+- `/feed`에서 `<Link>`로 네비게이션 → 모달로 인터셉트
+- 직접 URL 입력 → 전체 페이지로 렌더링
+
+서버는 "어디서 왔는지"에 따라 다른 결과를 줄 수 있으므로, `nextUrl`이 캐시 키에 포함되어야 같은 href라도 **출발 페이지에 따라 별도 캐시**.
+
+`nextUrl`이 바뀌면 화면에 보이는 `<Link>`들의 prefetch를 다시 실행 (`app-router.tsx:102-103`):
+
+```ts
+useEffect(() => {
+  pingVisibleLinks(appRouterState.nextUrl, appRouterState.tree)
+}, [appRouterState.nextUrl, appRouterState.tree])
+```
+
+---
+
+**Q: 부모의 CacheNode와 라우터 상태를 전달 << 그러면 이건 중첩될때마다 CacheNode, 라우터 상태가 계속 쌓이는건가요?**
+
+A: **쌓이는 게 아니라 좁아집니다(narrows down).** `layout-router.tsx:374` 주석:
+
+```ts
+// The layout router context narrows down tree and childNodes at each level.
+<LayoutRouterContext.Provider
+  value={{
+    parentTree: tree,           // ← 이 레이아웃의 서브트리
+    parentCacheNode: cacheNode, // ← 이 레이아웃의 캐시 노드
+  }}
+>
+```
+
+각 레이아웃은 부모의 Context를 자기 레벨의 데이터로 **교체(replace)**. 비유: 파일 탐색기에서 폴더를 열어 들어가는 것:
+
+```
+/app              → CacheNode { slots: {dashboard: ..., settings: ...} }
+  /dashboard      → CacheNode { slots: {analytics: ..., profile: ...} }  ← 좁아짐
+    /analytics    → CacheNode { slots: ... }                              ← 더 좁아짐
+```
+
+전체 트리가 필요한 경우는 `GlobalLayoutRouterContext.tree`(앱 전체에서 1개)로 접근.
+
+---
+
+**Q: SearchParamsContext가 위에서 말한 "5개 Context"에 포함안된건 SearchParamsContext 같은건 use client 전용이 아니라 공용이라 그런가요?**
+
+A: **아닙니다.** `hooks-client-context.shared-runtime.ts`도 `'use client'` 선언이 있습니다. 다른 **파일**에 있는 것이 이유입니다:
+
+```
+app-router-context.shared-runtime.ts  ← 5개 (라우터 구조: 트리, 캐시, 슬롯)
+hooks-client-context.shared-runtime.ts ← SearchParamsContext, PathnameContext, PathParamsContext
+```
+
+```ts
+// hooks-client-context.shared-runtime.ts:1-9
+'use client'                          // ← 역시 클라이언트 전용
+export const SearchParamsContext = createContext<URLSearchParams | null>(null)
+export const PathnameContext = createContext<string | null>(null)
+export const PathParamsContext = createContext<Params | null>(null)
+```
+
+---
+
+**Q: 리렌더링 최적화를 위함이라면 슬라이스한건 이해가되는데, 혹시 각 컨텍스트 내부에도 useMemo등을 이용한 추가 최적화가있나요?**
+
+A: **네, 모든 Context value에 `useMemo`가 적용되어 있습니다.** `app-router.tsx`:
+
+```ts
+// :421
+const layoutRouterContext = useMemo(() => {
+  return { parentTree: tree, parentCacheNode: cache, ... }
+}, [tree, cache, canonicalUrl])
+
+// :439
+const globalLayoutRouterContext = useMemo(() => {
+  return { tree, focusAndScrollRef, nextUrl, previousNextUrl }
+}, [tree, focusAndScrollRef, nextUrl, previousNextUrl])
+```
+
+2중 최적화 구조: (1) Context **분리** → 구독 범위 제한, (2) Context value에 **`useMemo`** → 불필요한 참조 변경 방지.
+
+---
+
+**Q: <Link>들의 prefetch를 다시 실행 << prefetch인데 useLayoutEffect가 아니라 useEffect인 이유가 뭔가요? 아니면 제가 약간 prefetch는 페인트전이어함 이라는 편견을 가지고있는걸수도있습니다**
+
+A: 주석이 직접 답함 — `app-router.tsx:98-101`:
+
+```ts
+useEffect(() => {
+  // In most cases, this will not result in any new network requests, only if
+  // the prefetch result actually varies on one of these inputs.
+  pingVisibleLinks(appRouterState.nextUrl, appRouterState.tree)
+}, [appRouterState.nextUrl, appRouterState.tree])
+```
+
+prefetch는 **미래 네비게이션을 위한 사전 로딩**이므로 현재 화면 페인트를 막을 이유가 없음. `useLayoutEffect`로 하면 오히려 현재 네비게이션의 페인트가 늦어져 사용자 경험이 나빠짐. 비유: `useLayoutEffect` = "벽을 칠하기 전에 못을 박아야 한다"(블로킹), `useEffect` = "벽을 칠한 후에 다음에 걸 그림을 미리 준비"(백그라운드).
+
+---
+
+**Q: 자기 부모(/dashboard)의 CacheNode << 가 왜필요한가요?**
+
+A: **자기 자신의 CacheNode를 부모의 `slots`에서 꺼내기 위해서.** `layout-router.tsx:551-562`:
+
+```ts
+const activeTree = parentTree[1][parallelRouterKey]
+const maybeParentSlots = parentCacheNode.slots       // ← 부모의 slots Map
+const activeCacheNode = maybeParentSlots![parallelRouterKey] ?? null  // ← 자기 CacheNode 추출
+```
+
+CacheNode는 자기 자신을 직접 알지 못하고, 부모의 `slots: Map<string, CacheNode>`에 자식으로 저장되어 있으므로, 부모의 slots를 열어서 자기 키(`parallelRouterKey`)로 조회. parallel routes(`@modal`과 `children`)가 같은 부모 아래 공존하므로 이 구조가 필요.
+
+---
+
+**Q: hooks-client-context.shared-runtime.ts < 이름만 보면 이게 훅인 useRouter()에 대한 Context가 포함되어야할거같네요**
+
+A: 맞는 지적. `useRouter()`도 훅이고 `usePathname()`도 훅인데 Context가 다른 파일에 있는 것은 **역사적 이유(코드 성장 순서)**.
+
+git 이력 확인 결과:
+- **PR #37238** (2022-05-29) — `app-router-context.ts` 먼저 생성, `AppRouterContext` 하나만 존재. App Router가 아직 없던 시점의 리팩토링.
+- **PR #37551** (2022-07-06) — 새 클라이언트 라우터 구현 시 `hooks-client-context.ts` 신규 생성. `usePathname`, `useSearchParams` 등 새 훅 API의 Context를 여기에 배치.
+
+`AppRouterContext`가 **이미 별도 파일에 존재**하는 상태에서 새 훅들이 추가되었기 때문에, 새 Context는 새 파일에 들어가고 기존 것은 옮기지 않은 것. 설계 원칙이 아닌 코드 성장 순서의 결과.
+
+---
+
+**Q: 확인 한번 해주시겠요? 없으면 없다 말해줘도됩니다**
+
+A: git 이력을 확인한 결과 위와 같이 **설계 문서나 주석은 없고**, 코드 성장 순서가 이유였음.
+
+---
+
+**Q: 솔직히 당신이 예쁘게 포장한거지 별 규칙없이 추가된게 이유군요**
+
+A: 네, 맞습니다. 처음에 "라우터 구조 vs URL 파생값으로 역할 분리"라고 설명한 건 현재 코드 상태를 보고 **사후적으로 패턴을 끼워맞춘 것**이었음. git 이력을 보면 "먼저 있던 파일에 안 옮기고 새 파일에 추가했다"가 전부. 문서나 설명만 보면 모든 구조에 의도가 있는 것처럼 보이지만, 실제로는 시간순으로 쌓인 경우가 많음.
+
+### 연결 토픽
+- Topic 10 (client — App Router Runtime): AppRouterContext의 Provider 측 — app-router.tsx에서 라우터 인스턴스 생성/주입 흐름
+- Topic 5 (server — Caching System): nextUrl과 인터셉팅 라우트의 서버 측 캐시 분리 메커니즘
+- Step 3.1 (api/ re-export): navigation.ts의 useRouter/usePathname이 next/navigation으로 re-export되는 경로
+
+---
