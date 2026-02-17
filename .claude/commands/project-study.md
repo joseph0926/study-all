@@ -44,9 +44,9 @@ argument-hint: "<project-path>"
 
 ---
 
-## Phase 2: Project Analysis (자동)
+## Phase 2: Project Analysis & Inventory (자동)
 
-프로젝트의 구조와 기술 스택을 분석합니다.
+프로젝트의 구조와 기술 스택을 분석하고, 모듈을 기계적으로 추출합니다.
 
 ### 2-1. 메타데이터 수집
 
@@ -76,7 +76,41 @@ argument-hint: "<project-path>"
 - **테스트**: Jest, Vitest, Playwright, pytest 등
 - **컴포넌트 구조**: 패턴 (atomic, feature-based, layered 등)
 
-### 2-4. 기존 plan.md 확인
+### 2-4. 모듈 맵 생성 (MODULE_MAP)
+
+프로젝트의 디렉토리 구조에서 **기계적으로** 모듈을 추출합니다. AI의 주관적 "핵심" 판단을 하지 않습니다.
+
+1. **모듈 식별 규칙** (순서대로 시도, 첫 매칭 사용):
+   - `packages/*/` 또는 `packages/*/src/` — 모노레포 패키지
+   - `apps/*/` — 모노레포 앱
+   - `src/*/` — 모듈/피처 디렉토리
+   - `lib/*/` — 라이브러리 모듈
+   - `app/*/` (Next.js App Router) — 라우트 세그먼트
+   - 위 패턴 해당 없으면: 프로젝트 루트 depth 1 디렉토리를 모듈로 사용
+
+2. **각 모듈에서 추출** (Glob/Grep으로 기계적 추출):
+   - 모듈명 (디렉토리명 그대로)
+   - 엔트리포인트: `index.{ts,js,tsx}`, `{module-name}.{ts,js}`, `package.json`의 `main`/`exports`
+   - 파일 목록 (depth 2까지, 파일 수 포함)
+   - export 파일: `export` 키워드가 있는 파일 (Grep 추출)
+
+3. **결과 저장**: `MODULE_MAP` — 모듈명 → {엔트리포인트, 파일 목록, export 파일}
+
+> **금지**: "주요", "핵심", "중요" 등의 주관적 필터링을 하지 않습니다. 발견된 모듈을 **전부** MODULE_MAP에 포함합니다.
+
+### 2-5. 학습 진행도 분석 (COVERAGE_MAP)
+
+기존 학습 기록(`{STUDY_DIR}/*.md`)이 있으면, MODULE_MAP의 각 모듈과 교차 대조합니다.
+
+1. **매칭 규칙** (순서대로 시도):
+   - 모듈명과 `.study/` 파일명 일치 (예: `auth` → `.study/Auth.md`)
+   - 모듈명이 `.study/` 파일 내용에 포함 (Grep으로 확인)
+
+2. **분류**:
+   - `STUDIED_MODULES`: 학습 기록이 있는 모듈
+   - `UNSTUDIED_MODULES`: 학습 기록이 없는 모듈
+
+### 2-6. 기존 plan.md 확인
 
 `{STUDY_DIR}/plan.md`가 이미 존재하는지 확인합니다.
 
@@ -88,7 +122,7 @@ argument-hint: "<project-path>"
   - "이어서 진행" — 미완료 토픽부터 계속
   - "새로 시작" — plan.md 재생성
 
-### 2-5. 분석 결과 출력
+### 2-7. 분석 결과 출력
 
 ```
 ## Project Analysis: {PROJECT_NAME}
@@ -104,8 +138,16 @@ argument-hint: "<project-path>"
 | Testing | {테스트 프레임워크} |
 | API | {API 통신 방식} |
 
-### Directory Structure
-{depth 2 트리 출력}
+### Module Map
+{MODULE_MAP 모듈 수}개 모듈 감지:
+| Module | Files | Entry Point |
+|--------|-------|-------------|
+| {모듈명} | {파일 수} | {엔트리포인트} |
+
+### 학습 진행도
+- **학습 완료**: {STUDIED_MODULES 수}개 모듈 — {모듈명 목록}
+- **미학습**: {UNSTUDIED_MODULES 수}개 모듈 — {모듈명 목록}
+- **진행률**: {STUDIED}/{TOTAL} 모듈 ({퍼센트}%)
 
 ### Key Entry Points
 - {주요 진입점 파일 목록}
@@ -122,30 +164,44 @@ argument-hint: "<project-path>"
 
 기존 `{STUDY_DIR}/plan.md`를 읽어서:
 1. 완료된 토픽(`[x]`)과 미완료 토픽(`[ ]`)을 분류합니다.
-2. 첫 번째 미완료 토픽을 다음 학습 대상으로 표시합니다.
-3. Phase 5로 바로 진행합니다.
+2. MODULE_MAP과 비교하여 **모듈 변경 감지**:
+   - 새로 추가된 모듈이 있으면: "새 모듈이 감지되었습니다: {목록}. plan에 추가할까요?"
+   - 삭제된 모듈이 있으면: "모듈이 삭제되었습니다: {목록}. plan에서 제거할까요?"
+   - 변경 없으면: 건너뜁니다.
+3. 첫 번째 미완료 토픽을 다음 학습 대상으로 표시합니다.
+4. Phase 4로 바로 진행합니다.
 
 ### RESUME=false인 경우 (새로 생성)
 
-Phase 2의 분석 결과를 기반으로 토픽 플랜을 생성합니다.
+**MODULE_MAP과 COVERAGE_MAP**을 기반으로 토픽 플랜을 생성합니다. AI의 일반 지식이 아닌 프로젝트 소스 구조가 토픽의 근거입니다.
 
 #### 토픽 생성 규칙:
 
-1. 프로젝트 구조와 기능 영역을 기준으로 토픽을 구성합니다.
-2. 각 토픽에 포함할 내용:
-   - **Source Files**: 해당 토픽과 관련된 소스 파일 테이블
-   - **Study Points**: 학습 포인트 (3-5개 bullet)
+1. **기본 단위**: MODULE_MAP의 각 모듈 = 1 토픽. 모든 모듈이 토픽에 포함되어야 합니다.
+   - 파일 수가 많은 모듈(20+)은 하위 디렉토리 기준으로 분할 가능 (사유 명시)
+   - 파일 수가 적은 모듈(3개 이하)은 관련 모듈과 그룹핑 가능 (사유 명시)
+
+2. **각 토픽에 포함할 내용**:
+   - **Source Files**: MODULE_MAP에서 해당 모듈의 파일 목록을 **그대로** 사용 (AI가 "관련" 판단하지 않음)
+   - **Study Points**: 모듈의 엔트리포인트/export에서 **기계적으로 도출** (아래 규칙 참조)
    - **Checklist**: `[ ] 소스 학습 완료` / `[ ] 패턴 분석 완료` / `[ ] 학습 기록 작성`
 
-3. 토픽 순서는 **bottom-up**:
-   1. Project Setup & Config
-   2. Architecture & Structure
-   3. Core/Shared Modules
-   4-N. Feature Modules (도메인별)
-   N+1. Styling & UI System
-   N+2. State Management
-   N+3. API & Data Layer
-   N+4. Testing
+3. **Study Points 도출 규칙** (AI 일반 지식 사용 금지):
+   - 모듈 엔트리포인트에서 export되는 API/함수/클래스/컴포넌트 목록
+   - 모듈 내부의 하위 디렉토리 구조 (역할 추정은 디렉토리명 기반)
+   - 다른 모듈과의 의존 관계 (import 문 Grep으로 추출)
+   - 테스트 파일이 있으면: 테스트 파일명에서 테스트 대상 추출
+
+4. **토픽 순서**: 모듈 간 **import 의존 관계**를 Grep으로 추출하여 의존되는 모듈부터 배치합니다.
+   - 의존 관계를 추출할 수 없으면: 아래 순서로 폴백
+     1. Project Setup & Config
+     2. Architecture & Structure
+     3. Core/Shared Modules
+     4-N. Feature Modules (도메인별)
+     N+1. Styling & UI System
+     N+2. State Management
+     N+3. API & Data Layer
+     N+4. Testing
 
 #### plan.md 생성
 
@@ -162,7 +218,17 @@ Phase 2의 분석 결과를 기반으로 토픽 플랜을 생성합니다.
 - **Name**: {PROJECT_NAME}
 - **Path**: {PROJECT_PATH}
 - **Tech Stack**: {감지된 기술 스택 요약}
+- **Modules**: {MODULE_MAP 모듈 수}개
 - **Created**: {오늘 날짜}
+
+## 학습 진행도
+
+| Status | Module | Study Record |
+|--------|--------|--------------|
+| ✅ 완료 | {모듈명} | `.study/{Topic-Name}.md` |
+| ⬜ 미학습 | {모듈명} | — |
+
+- **진행률**: {STUDIED}/{TOTAL} 모듈 ({퍼센트}%)
 
 ## Core Principles
 
@@ -186,17 +252,18 @@ Phase 2의 분석 결과를 기반으로 토픽 플랜을 생성합니다.
 
 ## Topics
 
-### 1. {토픽명}
+### 1. {토픽명 — 모듈명 기반}
 
-**Source Files**:
-| File | Description |
-|------|-------------|
-| {경로} | {설명} |
+**Source Files** (MODULE_MAP에서 추출):
+| File | Role |
+|------|------|
+| {엔트리포인트} | 모듈 진입점 |
+| {export 파일} | {Grep으로 추출한 export 내용 요약} |
 
-**Study Points**:
-- {포인트 1}
-- {포인트 2}
-- {포인트 3}
+**Study Points** (소스 구조에서 도출):
+- 엔트리포인트 export: {export 목록}
+- 내부 구조: {하위 디렉토리명 기반}
+- 의존 모듈: {import Grep 결과}
 
 **Checklist**:
 - [ ] 소스 학습 완료
@@ -212,7 +279,7 @@ Phase 2의 분석 결과를 기반으로 토픽 플랜을 생성합니다.
 `.study/` 디렉토리를 **처음 생성할 때**, 사용자에게 안내합니다:
 
 ```
-> 💡 `.study/` 디렉토리가 생성되었습니다.
+> `.study/` 디렉토리가 생성되었습니다.
 > 이 디렉토리를 `.gitignore`에 추가하는 것을 권장합니다:
 > `echo '.study/' >> {PROJECT_PATH}/.gitignore`
 ```
@@ -224,13 +291,13 @@ plan.md를 생성한 후 AskUserQuestion으로 확인합니다:
 질문: "학습 플랜을 생성했습니다. 토픽 순서/구성을 확인해주세요."
 - header: "Plan Review"
 - 옵션:
-  - "좋습니다, 시작합니다" — Phase 5로 진행
+  - "좋습니다, 시작합니다" — Phase 4로 진행
   - "순서 조정 필요" — 사용자 피드백 반영 후 재생성
   - "토픽 추가/제거 필요" — 사용자 피드백 반영
 
 ---
 
-## Phase 5: Per-Topic Study Loop (대화형 — 핵심)
+## Phase 4: Per-Topic Study Loop (대화형 — 핵심)
 
 각 토픽마다 아래 4단계를 반복합니다. **사용자가 학습을 주도합니다.**
 
@@ -250,7 +317,7 @@ plan.md를 생성한 후 AskUserQuestion으로 확인합니다:
 
 - `{STUDY_DIR}/{Topic-Name}.md`에 학습 내용을 기록합니다.
 - 세션 헤더: `## {날짜} (via /project-study)`
-- 기록 형식은 Phase 5의 학습 기록 형식(아래)을 따릅니다.
+- 기록 형식은 아래를 따릅니다.
 
 #### 학습 기록 형식
 
@@ -310,7 +377,7 @@ A: {답변 핵심 내용 — 코드 스니펫, 소스 경로, 비유, 결론 포
 
 ---
 
-## Phase 6: Final Summary (자동)
+## Phase 5: Final Summary (자동)
 
 모든 토픽 완료 시 (또는 사용자가 요청 시), 세션 변경 사항을 요약합니다:
 
@@ -327,6 +394,10 @@ A: {답변 핵심 내용 — 코드 스니펫, 소스 경로, 비유, 결론 포
 | .study/{Topic-Name}.md | {내용 요약} |
 | ... | ... |
 
+### 학습 진행도
+- **진행률**: {STUDIED}/{TOTAL} 모듈 ({퍼센트}%)
+- **미학습 모듈**: {남은 모듈 목록}
+
 ### 다음 단계
 - `/project-learn {PROJECT_PATH} {토픽}` — 특정 토픽 Q&A 튜터링
 - `/project-review {PROJECT_PATH}` — 학습 기록 기반 복습
@@ -334,9 +405,9 @@ A: {답변 핵심 내용 — 코드 스니펫, 소스 경로, 비유, 결론 포
 
 ---
 
-## Phase 7: Post-Session Consistency Check (자동)
+## Phase 6: Post-Session Consistency Check (자동)
 
-Phase 6 완료 직후, 이 세션에서 수정한 파일들을 검증합니다.
+Phase 5 완료 직후, 이 세션에서 수정한 파일들을 검증합니다.
 
 ### 검증 절차
 
@@ -348,6 +419,7 @@ Phase 6 완료 직후, 이 세션에서 수정한 파일들을 검증합니다.
 #### plan.md 정합성
 - [ ] 완료한 토픽의 체크리스트가 `[x]`로 업데이트되었는가
 - [ ] 체크리스트 항목(소스 학습/패턴 분석/학습 기록) 각각이 실제 수행 여부와 일치하는가
+- [ ] MODULE_MAP의 모든 모듈이 plan.md의 토픽에 포함되어 있는가
 
 #### 학습 기록 구조 검증
 - [ ] 필수 섹션이 모두 존재하는가: `학습 로드맵`, `학습 요약`, `소스 코드 경로`, `Q&A 전체 기록`, `연결 토픽`
@@ -375,6 +447,8 @@ Phase 6 완료 직후, 이 세션에서 수정한 파일들을 검증합니다.
 
 - **사용자 주도**: AI가 일방적으로 학습 기록을 작성하지 않습니다. 소스 읽기/분석은 항상 사용자가 주도합니다.
 - **프로젝트 소스 읽기 전용**: 프로젝트 소스 코드는 절대 수정하지 않습니다. `.study/` 파일만 생성/수정합니다.
+- **기계적 모듈 추출**: MODULE_MAP 생성 시 AI의 "주요/핵심" 주관 판단을 하지 않습니다. 발견된 모듈을 전부 포함합니다.
+- **Study Points 기계적 도출**: AI 일반 지식으로 Study Points를 작성하지 않습니다. 엔트리포인트 export, 디렉토리명, import 관계에서 기계적으로 도출합니다.
 - **세션 재개**: `plan.md` 체크리스트가 진행 상태 역할을 합니다. 다음 세션에서 `/project-study {path}`를 실행하면 미완료 토픽부터 계속합니다.
 - **대규모 프로젝트**: Phase 2 분석 시 depth/파일 수 상한을 준수합니다.
 - **민감 파일 제외**: `.env`, credentials, 키 파일 등은 읽지 않습니다.
