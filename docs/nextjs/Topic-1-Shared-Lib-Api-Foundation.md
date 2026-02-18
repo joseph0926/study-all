@@ -793,3 +793,206 @@ A: 네, 맞습니다. 처음에 "라우터 구조 vs URL 파생값으로 역할 
 - Step 3.1 (api/ re-export): navigation.ts의 useRouter/usePathname이 next/navigation으로 re-export되는 경로
 
 ---
+
+## 2026-02-18 (재개 — Step 3.1부터)
+
+### 학습 로드맵
+- Step 1: 전역 상수 체계 (Constants)
+  - [x] 1.1: `shared/lib/constants.ts` — 빌드 페이즈, 매니페스트, 컴파일러 상수
+  - [x] 1.2: `lib/constants.ts` — Webpack 레이어, 헤더, 캐시 태그 상수
+- Step 2: App Router 타입과 Context
+  - [x] 2.1: `app-router-types.ts` — CacheNode, FlightData 타입 구조
+  - [x] 2.2: `app-router-context.shared-runtime.ts` — 5개 핵심 React Context
+- Step 3: api/ — Public API 진입점
+  - [x] 3.1: api/ 디렉토리 re-export 패턴 — next/dynamic, next/image 등
+  - [x] 3.2: 환경별 API 분리 — navigation.ts vs navigation.react-server.ts
+- Step 4: lib/ — 프로젝트 탐색과 번들러 선택
+  - [ ] 4.1: find-config, find-root, find-pages-dir — 설정/디렉토리 탐색
+  - [ ] 4.2: bundler.ts — Turbopack/Webpack/Rspack 선택 로직
+- Step 5: shared/lib/ 핵심 유틸리티
+  - [ ] 5.1: dynamic.tsx + loadable — 동적 로딩 구현
+  - [ ] 5.2: image-config.ts, magic-identifier.ts — 이미지 설정과 Turbopack 식별자
+
+### 학습 요약
+- `api/` 디렉토리는 re-export 전용 계층. 모든 파일이 2~3줄의 re-export만 포함하며, `next/dynamic`, `next/image` 등 공개 API의 소스 레벨 진입점 역할
+- 3가지 re-export 패턴: default+named(컴포넌트), named만(훅/함수), 여러 소스 합침(`next/headers`가 3개 서버 모듈을 하나로)
+- 2단계 alias 시스템: `createNextApiEsmAliases()`가 base 매핑, `createAppRouterApiAliases()`가 App Router 전용 override. Webpack의 `resolve.alias`가 import 경로 문자열을 치환하여 환경별 다른 파일을 제공
+- `navigation.react-server.ts`는 Subset 패턴(공용 함수만), `link.react-server.tsx`는 Wrapper 패턴(클라이언트 컴포넌트를 감싸서 서버 전용 검증 추가)
+- `next` 패키지는 `exports` 필드 없이 루트 `.js` 파일 + Webpack alias로 환경별 분기 처리. `exports` 미사용 이유에 대한 명시적 설계 문서는 없음
+
+### 소스 코드 경로
+- `ref/next.js/packages/next/src/api/navigation.ts:1` — `export * from '../client/components/navigation'` (클라이언트 버전 re-export)
+- `ref/next.js/packages/next/src/api/navigation.react-server.ts:1` — `export * from '../client/components/navigation.react-server'` (서버 버전 re-export)
+- `ref/next.js/packages/next/src/api/headers.ts:1-3` — 3개 서버 모듈 합침 (cookies, headers, draft-mode)
+- `ref/next.js/packages/next/src/api/image.ts:1-2` — default+named export 패턴
+- `ref/next.js/packages/next/navigation.js:1` — 루트 shim (`module.exports = require('./dist/client/components/navigation')`)
+- `ref/next.js/packages/next/src/build/create-compiler-aliases.ts:203-229` — `createNextApiEsmAliases()` (모든 번들 레이어 공통 base 매핑)
+- `ref/next.js/packages/next/src/build/create-compiler-aliases.ts:231-250` — `createAppRouterApiAliases()` (App Router 전용 override, isServerOnlyLayer 분기)
+- `ref/next.js/packages/next/src/build/webpack-config.ts:1508-1525` — alias 규칙 적용 순서 (ESM → 서버 override → 클라이언트 override)
+- `ref/next.js/packages/next/src/build/webpack-config.ts:699-705` — `react-server` conditionNames 설정
+- `ref/next.js/packages/next/src/client/components/navigation.ts:287-301` — 서버 파일의 공용 함수를 re-export (`// Shared components APIs`)
+- `ref/next.js/packages/next/src/client/components/navigation.react-server.ts:1-19` — 서버 버전: redirect, notFound 등 환경 무관 함수만 export
+- `ref/next.js/packages/next/src/client/app-dir/link.react-server.tsx:1-31` — Wrapper 패턴: 서버 전용 검증 후 클라이언트 Link에 위임
+- `ref/next.js/packages/next/src/client/link.tsx:689` — `React.cloneElement(child, childProps)` (legacyBehavior의 핵심 동작)
+- `ref/next.js/packages/next/src/client/link.tsx:683` — legacyBehavior deprecated 경고
+- `ref/next.js/packages/next/taskfile-ncc.js:78` — exports 필드 패키지의 package.json 해석 문제 주석
+
+### Q&A 전체 기록
+
+#### Step 3.1: api/ 디렉토리 re-export 패턴 — next/dynamic, next/image 등
+
+**Q: import from 'next/navigation' → navigation.js → dist/... ← api/navigation.ts → client/components/navigation.ts << 이 관계도가 이해가 안갑니다**
+
+**Q: 저렇게 베럴 export 하면 트리쉐이킹 문제는 없나요? image쪽은 그렇다쳐도,,**
+
+**Q: mapping['navigation'] < 이게 isServerOnly 조건문 안에서만 할당되는데, server only가 아니면 빈값입니까?**
+
+A: 3개 질문을 함께 답변.
+
+**관계도 수정**: 실제로 2단계 alias 시스템이 있음. `webpack-config.ts:1508-1525`:
+
+```ts
+// 1단계: 모든 번들 레이어 공통 (ESM alias)
+{ issuerLayer: isWebpackBundledLayer,
+  resolve: { alias: createNextApiEsmAliases() }    // navigation → dist/api/navigation
+},
+// 2단계: 서버 레이어 override
+{ issuerLayer: shouldUseReactServerCondition,
+  resolve: { alias: createAppRouterApiAliases(true) }  // navigation → dist/api/navigation.react-server
+},
+// 2단계: 클라이언트 레이어 (navigation override 없음)
+{ issuerLayer: isWebpackClientOnlyLayer,
+  resolve: { alias: createAppRouterApiAliases(false) }  // navigation 키 없음 → 1단계 유지
+},
+```
+
+수정된 관계도:
+
+```
+import { useRouter } from 'next/navigation'
+         │
+    Webpack alias가 가로챔
+         │
+         ├─ 클라이언트 레이어 ─→ dist/api/navigation.js
+         │                        └─→ dist/client/components/navigation
+         │
+         └─ 서버 레이어 ──────→ dist/api/navigation.react-server.js
+                                  └─→ dist/client/components/navigation.react-server
+```
+
+루트의 `navigation.js`는 번들러 밖에서의 폴백. 번들러 안에서는 alias가 먼저 가로챔.
+
+**트리쉐이킹**: 이 경우 거의 문제 없음. (1) api/ 파일은 자체 코드 0줄의 pass-through, (2) 실제 구현 파일의 export 수가 적음(10여 개), (3) alias가 이미 레이어별로 범위를 좁혀줌. `package.json`에 `sideEffects` 필드는 없지만, Webpack의 `usedExports` 최적화로 충분히 처리.
+
+**mapping['navigation'] 빈값 아님**: 함수가 2개. `createNextApiEsmAliases()`가 모든 레이어에서 `navigation → dist/api/navigation`을 base로 설정. `createAppRouterApiAliases(false)`에서 navigation 키가 없는 건 base를 그대로 쓰겠다는 의미.
+
+---
+
+**Q: Webpack alias가 가로챔 < 어떻게 가로채나요? 또한 여기서 말하는 "가로채다"라는게 정확히 뭘 의미합니까?**
+
+A: Webpack이 `import` 문을 처리할 때, 실제 파일을 디스크에서 찾기 **전에** `resolve.alias` 테이블을 먼저 확인. 매칭되는 키가 있으면 **경로 문자열을 치환**한 후 치환된 경로로 파일을 찾음. "가로채다"는 **경로 문자열 치환**을 의미. `issuerLayer` 조건이 붙으면 "이 레이어에서 import할 때만 치환"하는 조건부 치환.
+
+```
+[alias 적용 전]  import from 'next/navigation'
+                        │
+                   alias 테이블 조회 → 매칭 발견
+                        │
+[alias 적용 후]  import from 'next/dist/api/navigation'
+                        │
+                   이 경로로 실제 파일을 찾음
+```
+
+---
+
+**Q: 지금 당신 설명을 보면 `createAppRouterApiAliases(false)`에서 navigation 키가 없는 건, 1단계 alias를 그대로 쓰겠다는 의미 < 이 로직이 필요한지 모르겠습니다 그냥 1단계 유지면 별 처리 안하는게 더 깔끔한거 아닌가요?**
+
+A: 설명이 navigation 키에만 초점을 맞춰 오해를 줌. 두 함수의 매핑을 비교하면:
+
+| 키 | 1단계: createNextApiEsmAliases() | 2단계: createAppRouterApiAliases(false) |
+|---|---|---|
+| **head** | `dist/api/head` | `dist/client/components/noop-head` |
+| **dynamic** | `dist/api/dynamic` | `dist/api/app-dynamic` |
+| **link** | `dist/api/link` | `dist/client/app-dir/link` |
+| **form** | `dist/api/form` | `dist/client/app-dir/form` |
+| navigation | `dist/api/navigation` | (없음 → 1단계 유지) |
+
+`createAppRouterApiAliases(false)`는 **navigation 때문이 아니라 head, dynamic, link, form을 App Router 전용 구현으로 override**하기 위해 존재. 예: App Router에서 `next/head`는 noop(Metadata API 사용), `next/dynamic`은 App Router 전용 버전. navigation에 대해서만 override가 불필요.
+
+---
+
+**Q: 왜 오버라이드를 굳이 하는지 궁금하네요, 그냥 depth을 한단계 더 뚫으면 되는거 아닌가요? next/navigation/server or client**
+
+A: `navigation.ts:287-301`이 핵심:
+
+```ts
+// Shared components APIs
+export {
+  notFound, forbidden, unauthorized,
+  redirect, permanentRedirect, RedirectType,
+  unstable_rethrow,
+} from './navigation.react-server'
+```
+
+클라이언트 버전이 서버 버전의 공용 함수를 re-export. `redirect()`는 Server Component에서도 Client Component에서도 쓸 수 있는 환경 무관 함수. 경로를 나누면 `redirect()`를 어디서 import할지(`/server`? `/client`? `/shared`?) 3번째 경로까지 필요해지고 개발자가 함수마다 경로를 외워야 함. 현재 방식은 항상 `next/navigation` 하나만 기억하면 됨. React도 같은 패턴 — `import { use } from 'react'`가 서버/클라이언트에서 다른 구현을 제공하지, `react/server`와 `react/client`로 나누지 않음.
+
+---
+
+**Q: shared 로직을 서버 파일에 놓고, client 파일에서 서버 파일에서 가져온다음 re-export한다 << 이렇게 이해하면되나요?**
+
+A: 네, 맞음. 클라이언트 파일이 서버 파일의 상위 집합(superset). 처음에 "서버 환경이 더 제한적이라 거기에 공용 로직을 둔다"고 한 건 이 파일 쌍의 구조적 특징이지 일반 원칙은 아님 — `cookies()`, `headers()` 같은 서버 전용 API는 존재함.
+
+---
+
+**Q: 그러면 이 파일(next/navigation) 한정에서는 "서버에서 사용가능하면 클라이언트에서도 사용가능" << 맞는 말이네요**
+
+A: 네, `next/navigation` 한정으로 맞음. 서버 파일의 모든 export가 클라이언트 파일에서 re-export되므로 서버에서 쓸 수 있는 건 클라이언트에서도 전부 쓸 수 있음.
+
+---
+
+#### Step 3.2: 환경별 API 분리 — navigation.ts vs navigation.react-server.ts
+
+**Q: Next.js의 .react-server.ts 파일은 이 조건을 직접 쓰는 게 아니라 alias 시스템으로 교체 < 왜 안쓸까요?**
+
+**Q: 서버 전용 검증해서 서버 전용이면 어떤 로직있나요?**
+
+A: **왜 `react-server` condition 안 쓰는가**: `next` 패키지의 `package.json`에 `exports` 필드가 아예 없음. `exports`가 있어야 조건부 분기 가능. alias 시스템은 `exports` 조건보다 세밀한 제어 가능 — `react-server`는 이진(서버/클라이언트)이지만 alias는 Webpack 레이어별 다른 매핑 가능. 다만 명시적 설계 문서 없음, 코드 구조에서 추론.
+
+**서버 전용 검증 로직** (`link.react-server.tsx:16-28`): `legacyBehavior && !childIsHostComponent && !childIsClientComponent` 조건에서 `console.error` 경고만 출력하고 정상 렌더링. 에러 throw나 렌더링 차단 아님. 서버 렌더링 시점에서만 `$$typeof === Symbol.for('react.client.reference')` 확인이 가능하므로 서버 파일에 배치.
+
+---
+
+**Q: Q1에 대한 근거를 찾아봐주세요**
+
+A: 소스에서 "왜 exports를 안 쓰는지" 직접 설명하는 주석/문서는 없음. 관련 증거:
+
+- `taskfile-ncc.js:78` — `exports` 필드 패키지에서 `package.json` 해석 문제 겪은 기록: `"some newer packages fail to include package.json in the exports so we can't reliably use require.resolve here"`
+- `cache.js` 같은 루트 shim 파일에 deprecation 경고 등 커스텀 로직 포함 — `exports` 필드는 단순 경로 매핑만 가능
+- 현재 구조(`files` 배열 + 루트 `.js` + alias)가 이미 동작하므로 전환할 강한 이유 없음
+
+---
+
+**Q: Server Component를 <Link legacyBehavior>의 직접 자식으로 넘기는 경우 < 이게 왜 warn 대상인가요?**
+
+A: 핵심은 `link.tsx:689`:
+
+```tsx
+if (legacyBehavior) {
+  return React.cloneElement(child, childProps)
+}
+```
+
+`legacyBehavior` 모드는 `React.cloneElement`로 자식에 href, onClick 등 props를 주입. Server Component는 서버에서 렌더링 후 `$$typeof: Symbol.for('react.client.reference')`라는 불투명한 참조로 전달되므로 `cloneElement`로 props 주입 불가. `legacyBehavior` 자체도 deprecated (`link.tsx:683`).
+
+---
+
+**Q: 그러면 디프리케이트까지 고려하면 최신 app router에서는 저 경고를 볼일이 없을 확률이 높고, 굳이 저 조건문도 필요없겠네요?**
+
+A: 맞음. `legacyBehavior`가 제거되면 `link.react-server.tsx`의 검증 로직 전체가 필요 없어지고, 파일 자체도 불필요해질 수 있음. 현재 코드는 Pages Router → App Router 전환 기간의 호환성 코드.
+
+### 연결 토픽
+- Topic 10 (client — App Router Runtime): alias로 선택된 navigation.ts의 useRouter가 실제로 동작하는 라우터 런타임
+- Topic 14-16 (build): Webpack alias 시스템이 빌드 파이프라인에서 resolve.alias로 적용되는 전체 흐름
+- Step 4.1 (find-config, find-root): api/ 계층이 의존하는 프로젝트 구조 탐색 유틸리티
+- Step 4.2 (bundler.ts): alias 시스템이 Turbopack/Webpack/Rspack 중 어떤 번들러에서 동작하는지
+
+---
