@@ -29,11 +29,14 @@ claude
 
 Claude Code 세션 안에서 슬래시 커맨드로 사용한다.
 
-| 커맨드                    | 역할                                      | 출력                                    |
-| ------------------------- | ----------------------------------------- | --------------------------------------- |
-| `/learn <skill> <topic>`  | 소스 코드 기반 토픽 Q&A 튜터링 + 스킬 보강 | `docs/{skill}/{Topic-Name}.md`          |
-| `/study-skill <skill>`    | 스킬 레퍼런스를 소스와 대조하여 검증/개선 | `docs/{skill}/plan.md` + 스킬 파일 개선 |
-| `/review <skill> [topic]` | 학습 기록 기반 복습 (AI 질문, 내가 답변)  | `docs/{skill}/{Topic-Name}-quiz.md`     |
+| 커맨드                              | 역할                                              | 출력                                    |
+| ----------------------------------- | ------------------------------------------------- | --------------------------------------- |
+| `/learn <skill> <topic>`            | 소스 코드 기반 토픽 Q&A 튜터링 + 스킬 보강         | `docs/{skill}/{Topic-Name}.md`          |
+| `/study-skill <skill>`              | 스킬 레퍼런스를 소스와 대조하여 검증/개선           | `docs/{skill}/plan.md` + 스킬 파일 개선 |
+| `/review <skill> [topic]`           | 학습 기록 기반 복습 (AI 질문, 내가 답변)            | `docs/{skill}/{Topic-Name}-quiz.md`     |
+| `/project-learn <path> <topic>`     | 프로젝트 소스 코드 기반 토픽 Q&A 튜터링             | 프로젝트 `.study/` 디렉토리             |
+| `/project-study <path>`             | 프로젝트 소스 딥스터디 → 학습 플랜 → 토픽별 딥스터디 | 프로젝트 `.study/` 디렉토리             |
+| `/project-review <path> [topic]`    | 프로젝트 학습 기록 기반 복습 (AI 질문, 내가 답변)    | 프로젝트 `.study/` 디렉토리             |
 
 ### `/learn` — 소스 기반 Q&A 튜터링
 
@@ -93,7 +96,10 @@ study-all/
 ├── .claude/commands/
 │   ├── learn.md                       # /learn 커맨드 정의
 │   ├── review.md                      # /review 커맨드 정의
-│   └── study-skill.md                 # /study-skill 커맨드 정의
+│   ├── study-skill.md                 # /study-skill 커맨드 정의
+│   ├── project-learn.md               # /project-learn 커맨드 정의
+│   ├── project-study.md               # /project-study 커맨드 정의
+│   └── project-review.md              # /project-review 커맨드 정의
 ├── scripts/
 │   └── check-docs.sh                  # 정합성 검증 (pre-commit 훅)
 ├── docs/                              # 학습 기록 (자동 생성)

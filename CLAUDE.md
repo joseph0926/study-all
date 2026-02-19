@@ -12,7 +12,10 @@ study-all/
 ├── .claude/commands/
 │   ├── learn.md                       # /learn — 소스 기반 Q&A 튜터링
 │   ├── review.md                      # /review — 학습 기록 기반 복습
-│   └── study-skill.md                 # /study-skill — 레퍼런스 검증/개선
+│   ├── study-skill.md                 # /study-skill — 레퍼런스 검증/개선
+│   ├── project-learn.md               # /project-learn — 프로젝트 소스 기반 Q&A 튜터링
+│   ├── project-study.md               # /project-study — 프로젝트 소스 딥스터디
+│   └── project-review.md              # /project-review — 프로젝트 학습 기록 기반 복습
 ├── scripts/
 │   └── check-docs.sh                  # 정합성 검증 (pre-commit 훅)
 ├── docs/
