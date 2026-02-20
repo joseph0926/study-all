@@ -10,6 +10,9 @@
 study-all/
 ├── CLAUDE.md                          # 이 파일
 ├── .claude/commands/
+│   ├── dashboard.md                   # /dashboard — 전체 학습 현황 대시보드
+│   ├── next.md                        # /next — 오늘의 학습 코치
+│   ├── plan.md                        # /plan — 마스터 학습 로드맵
 │   ├── learn.md                       # /learn — 소스 기반 Q&A 튜터링
 │   ├── review.md                      # /review — 학습 기록 기반 복습
 │   ├── study-skill.md                 # /study-skill — 레퍼런스 검증/개선
@@ -19,6 +22,7 @@ study-all/
 ├── scripts/
 │   └── check-docs.sh                  # 정합성 검증 (pre-commit 훅)
 ├── docs/
+│   ├── master-plan.md                 # /plan이 생성하는 크로스-스킬 마스터 로드맵
 │   └── {skill-name}/                  # 학습 기록
 │       ├── plan.md
 │       ├── {Topic-Name}.md
@@ -67,6 +71,48 @@ study-all/
 ---
 
 ## 커맨드
+
+### `/dashboard` — 전체 학습 현황 대시보드
+
+전체 스킬의 학습 진행 상태를 한눈에 보여주는 읽기 전용 스냅샷.
+
+**흐름**: Data Collection (docs/ 스캔) → Dashboard Rendering
+
+**출력**: 콘솔 출력만 (파일 생성/수정 없음)
+
+**핵심 규칙**:
+- 읽기 전용 — 어떤 파일도 수정하지 않음
+- 판단/추천 없이 사실만 표시
+- 스킬별 진행률, 커버율, 최근 활동, 복습 대기 현황
+- 추천이 필요하면 `/next`를 안내
+
+### `/plan` — 마스터 학습 로드맵
+
+여러 스킬을 묶은 크로스-스킬 마스터 로드맵 생성/갱신.
+
+**흐름**: State Collection → Goal Setting (대화형) → Cross-Skill Architecture → Master Plan Generation → Post-Generation Check
+
+**출력**: `docs/master-plan.md`에 마스터 플랜 저장
+
+**핵심 규칙**:
+- 개별 스킬의 `plan.md`가 최소 1개 이상 있어야 생성 가능
+- 스킬 간 의존 관계, Phase 인터리빙, 연결 토픽 근접 배치
+- 마일스톤과 주간 학습 템플릿 포함
+- 갱신 모드: 기존 구조 유지, 진행 상태만 업데이트
+
+### `/next` — 오늘의 학습 코치
+
+현재 학습 상태를 분석하여 다음 학습 추천 + 주간 스케줄을 제안하는 코치.
+
+**흐름**: State Collection → Decision Engine (우선순위 적용) → Recommendation Output
+
+**출력**: 콘솔 출력만 (파일 생성/수정 없음)
+
+**핵심 규칙**:
+- 우선순위: P1 복습 기한 경과 → P2 진행중 마무리 → P3 스킬 교차 → P4 의존 관계 순서 → P5 난이도 곡선 → P6 연결 토픽
+- 흥미 유지: 같은 스킬 연속 3세션 이상이면 전환 추천, 어려운 토픽 연속 방지
+- 모든 추천에 근거(사유) 명시
+- 읽기 전용 — 어떤 파일도 수정하지 않음
 
 ### `/learn <skill-name> <topic>` — Q&A 튜터링
 
@@ -148,7 +194,14 @@ study-all/
 
 ## docs/ 파일 규칙
 
-### plan.md (학습 플랜)
+### master-plan.md (마스터 로드맵)
+
+- 경로: `docs/master-plan.md`
+- 여러 스킬을 묶은 크로스-스킬 학습 로드맵
+- 스킬 간 의존 관계, Master Phase 배치, 마일스톤, 주간 템플릿
+- `/plan`이 생성/관리
+
+### plan.md (스킬별 학습 플랜)
 
 - 경로: `docs/{skill-name}/plan.md`
 - 토픽별 체크리스트로 진행 상태 추적

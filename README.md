@@ -31,12 +31,27 @@ Claude Code 세션 안에서 슬래시 커맨드로 사용한다.
 
 | 커맨드                              | 역할                                              | 출력                                    |
 | ----------------------------------- | ------------------------------------------------- | --------------------------------------- |
+| `/dashboard`                        | 전체 학습 현황 스냅샷 (읽기 전용)                   | 콘솔 출력                               |
+| `/next`                             | 오늘의 학습 추천 + 주간 스케줄 (읽기 전용)          | 콘솔 출력                               |
+| `/plan`                             | 크로스-스킬 마스터 학습 로드맵 생성/갱신             | `docs/master-plan.md`                   |
 | `/learn <skill> <topic>`            | 소스 코드 기반 토픽 Q&A 튜터링 + 스킬 보강         | `docs/{skill}/{Topic-Name}.md`          |
 | `/study-skill <skill>`              | 스킬 레퍼런스를 소스와 대조하여 검증/개선           | `docs/{skill}/plan.md` + 스킬 파일 개선 |
 | `/review <skill> [topic]`           | 학습 기록 기반 복습 (AI 질문, 내가 답변)            | `docs/{skill}/{Topic-Name}-quiz.md`     |
 | `/project-learn <path> <topic>`     | 프로젝트 소스 코드 기반 토픽 Q&A 튜터링             | 프로젝트 `.study/` 디렉토리             |
 | `/project-study <path>`             | 프로젝트 소스 딥스터디 → 학습 플랜 → 토픽별 딥스터디 | 프로젝트 `.study/` 디렉토리             |
 | `/project-review <path> [topic]`    | 프로젝트 학습 기록 기반 복습 (AI 질문, 내가 답변)    | 프로젝트 `.study/` 디렉토리             |
+
+### `/dashboard` — 현황 스냅샷 / `/next` — 학습 코치 / `/plan` — 마스터 플랜
+
+```
+/dashboard              # 스킬별 진행률, 최근 활동, 복습 대기 현황
+/next                   # "오늘 뭐 하지?" → 추천 + 주간 스케줄
+/plan                   # 여러 스킬을 묶은 마스터 학습 로드맵
+```
+
+- `/dashboard`: 사실만 보여줌 (읽기 전용, 빠름)
+- `/next`: 상태 분석 → 다음 학습 추천 (복습 기한, 스킬 교차, 난이도 곡선 고려)
+- `/plan`: 스킬 간 의존 관계, Phase 인터리빙, 마일스톤이 포함된 마스터 로드맵 생성
 
 ### `/learn` — 소스 기반 Q&A 튜터링
 
@@ -94,6 +109,9 @@ ref/
 study-all/
 ├── CLAUDE.md                          # AI 행동 규칙 및 프로젝트 규칙
 ├── .claude/commands/
+│   ├── dashboard.md                   # /dashboard 커맨드 정의
+│   ├── next.md                        # /next 커맨드 정의
+│   ├── plan.md                        # /plan 커맨드 정의
 │   ├── learn.md                       # /learn 커맨드 정의
 │   ├── review.md                      # /review 커맨드 정의
 │   ├── study-skill.md                 # /study-skill 커맨드 정의
@@ -103,6 +121,7 @@ study-all/
 ├── scripts/
 │   └── check-docs.sh                  # 정합성 검증 (pre-commit 훅)
 ├── docs/                              # 학습 기록 (자동 생성)
+│   ├── master-plan.md                 # 크로스-스킬 마스터 로드맵
 │   └── {skill-name}/
 │       ├── plan.md                    # 학습 플랜 & 체크리스트
 │       ├── {Topic-Name}.md            # 세션 기록 (Q&A 원문 포함)
