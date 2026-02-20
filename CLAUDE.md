@@ -51,7 +51,7 @@ study-all/
 
 ### 3. 세션 연속성
 
-- `docs/{skill}/plan.md` 체크리스트와 `docs/{skill}/{Topic}.md`의 학습 로드맵이 진행 상태를 추적한다.
+- `docs/{skill}/{Topic}.md`의 학습 로드맵이 진행 상태의 유일한 소스이다. `plan.md`의 Topic-Docs Mapping이 토픽과 학습 파일을 연결한다.
 - 새 세션 시작 시 기존 기록 파일을 **반드시 확인**하고, 미완료 항목이 있으면 재개 여부를 사용자에게 물어본다.
 - 세션 재개 시 기존 학습 요약과 소스 경로를 참조하여 맥락을 복원한다.
 
@@ -204,7 +204,7 @@ study-all/
 ### plan.md (스킬별 학습 플랜)
 
 - 경로: `docs/{skill-name}/plan.md`
-- 토픽별 체크리스트로 진행 상태 추적
+- 토픽 구조, Coverage Analysis, Topic-Docs Mapping 포함. 진행 상태는 학습 파일에서 동적 계산.
 - Coverage Analysis 테이블 포함 (커버/미커버/고아 ref, 커버율 %)
 - `/study-skill`이 생성/관리
 
@@ -253,7 +253,7 @@ study-all/
 - 세션 기록 필수 섹션 존재 여부 및 구조 준수
 - Q&A 원문 보존 (요약 테이블 축약 감지)
 - 소스 경로(`file:line`) 유효성 샘플링
-- plan.md 체크리스트 ↔ 세션 결과 동기화
+- Topic-Docs Mapping 등록 여부 확인
 - README.md / CLAUDE.md 업데이트 필요 여부 알림
 
 ---

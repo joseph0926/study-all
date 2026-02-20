@@ -553,6 +553,27 @@ Q&A: {질문 수}개
 미완료 단계가 있으면 `/learn {SKILL_NAME} {같은 토픽}`으로 이어서 할 수 있습니다.
 ```
 
+### 5-A. Topic-Docs Mapping 등록
+
+`docs/{SKILL_NAME}/plan.md`가 존재하면:
+
+1. plan.md의 `## Topic-Docs Mapping` 테이블을 읽는다
+2. 현재 세션의 파일명(`{Topic-Name}.md`)이 테이블에 없으면:
+   - 토픽의 Source Files/Study Points와 현재 세션의 소스 경로를 비교하여 가장 매칭되는 Topic을 찾는다
+   - 매핑을 등록한다: `| {Topic} | {파일명} |`
+3. 이미 등록되어 있으면 건너뛴다
+
+### 5-B. 복습 스케줄 부트스트랩 (토픽 완료 시)
+
+모든 마이크로 스텝이 `[x]`인 경우 (토픽 완료):
+
+1. `docs/{SKILL_NAME}/{Topic-Name}-meta.md`가 존재하지 않으면:
+   - 학습 로드맵의 각 마이크로 스텝을 개념으로 추출
+   - 최소 meta.md stub 생성:
+     - level: L1, consecutive_pass: 0, graduated: false
+     - next_review: 오늘 + 7일
+2. 이미 존재하면 건너뛴다
+
 ---
 
 ## Phase 6: Post-Session Consistency Check (자동)
@@ -583,7 +604,7 @@ Phase 5 완료 직후, **이 세션에서 생성/수정한 파일**과 **CLAUDE.
 
 #### 문서 간 정합성
 - [ ] `README.md`의 docs/ 예시 트리가 현재 파일 구조와 일치하는가 (불일치 시 알림만)
-- [ ] 이 토픽이 `plan.md`에 존재하면, 체크리스트 상태가 세션 결과와 일치하는가 (불일치 시 알림만)
+- [ ] 이 토픽이 `plan.md`에 존재하면, Topic-Docs Mapping에 이 파일이 등록되었는가 (미등록 시 알림)
 
 ### 결과 출력
 

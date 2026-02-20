@@ -58,7 +58,7 @@
 2. 공식 문서 교차 확인
 3. 스킬 reference 검증 (소스 코드 대조)
 4. 최소 개선 (사용자 결정)
-5. plan.md 체크리스트 업데이트
+5. Study-Skill Verification 테이블 업데이트
 
 ---
 
@@ -99,11 +99,6 @@
 
 **Skill Target**: `references/api-routes.md`
 
-**Checklist**:
-- [ ] 소스 학습 완료
-- [ ] docs 교차 확인
-- [ ] skill 검증/개선
-
 ---
 
 ### Topic 2: next/src/server — app-render ✅ 커버
@@ -135,11 +130,6 @@
 
 **Skill Target**: `references/server-components.md`, `references/rendering.md`
 
-**Checklist**:
-- [ ] 소스 학습 완료
-- [ ] docs 교차 확인
-- [ ] skill 검증/개선
-
 ---
 
 ### Topic 3: next/src/server — route-modules ✅ 커버
@@ -166,11 +156,6 @@
 **Docs**: `01-app/03-api-reference/03-file-conventions/`
 
 **Skill Target**: `references/routing.md`, `references/api-routes.md`
-
-**Checklist**:
-- [ ] 소스 학습 완료
-- [ ] docs 교차 확인
-- [ ] skill 검증/개선
 
 ---
 
@@ -199,11 +184,6 @@
 
 **Skill Target**: `references/caching.md`
 
-**Checklist**:
-- [ ] 소스 학습 완료
-- [ ] docs 교차 확인
-- [ ] skill 검증/개선
-
 ---
 
 ### Topic 5: next/src/server — proxy & middleware ✅ 커버
@@ -226,11 +206,6 @@
 **Docs**: `01-app/03-api-reference/03-file-conventions/proxy.mdx`, `middleware.mdx`
 
 **Skill Target**: `references/proxy.md`
-
-**Checklist**:
-- [ ] 소스 학습 완료
-- [ ] docs 교차 확인
-- [ ] skill 검증/개선
 
 ---
 
@@ -263,11 +238,6 @@
 
 **Skill Target**: `references/routing.md`, `references/error-handling.md`
 
-**Checklist**:
-- [ ] 소스 학습 완료
-- [ ] docs 교차 확인
-- [ ] skill 검증/개선
-
 ---
 
 ### Topic 7: font 패키지 ✅ 커버
@@ -297,11 +267,6 @@
 
 **Skill Target**: `references/optimization.md`
 
-**Checklist**:
-- [ ] 소스 학습 완료
-- [ ] docs 교차 확인
-- [ ] skill 검증/개선
-
 ---
 
 ### Topic 8: third-parties 패키지 + next/src/experimental ✅ 커버
@@ -329,11 +294,6 @@
 **Docs**: `01-app/03-api-reference/02-components/script.mdx`, `01-app/03-api-reference/01-directives/use-cache.mdx`
 
 **Skill Target**: `references/optimization.md`, `references/caching.md`
-
-**Checklist**:
-- [ ] 소스 학습 완료
-- [ ] docs 교차 확인
-- [ ] skill 검증/개선
 
 ---
 
@@ -375,11 +335,6 @@
 
 **Skill Target**: `references/architecture.md`
 
-**Checklist**:
-- [ ] 소스 학습 완료
-- [ ] docs 교차 확인
-- [ ] skill 검증/개선
-
 ---
 
 ### Topic 10: next/src/lib ✅ 커버 (부분)
@@ -402,11 +357,6 @@
 **Docs**: `01-app/03-api-reference/04-functions/generate-metadata.mdx`, `01-app/03-api-reference/08-turbopack.mdx`
 
 **Skill Target**: `references/architecture.md`
-
-**Checklist**:
-- [ ] 소스 학습 완료
-- [ ] docs 교차 확인
-- [ ] skill 검증/개선
 
 ---
 
@@ -438,11 +388,6 @@
 
 **Skill Target**: `references/architecture.md`
 
-**Checklist**:
-- [ ] 소스 학습 완료
-- [ ] docs 교차 확인
-- [ ] skill 검증/개선
-
 ---
 
 ### Topic 12: next/src/server — routing internals ✅ 커버 (부분)
@@ -466,11 +411,6 @@
 **Docs**: `01-app/03-api-reference/03-file-conventions/`
 
 **Skill Target**: `references/routing.md`
-
-**Checklist**:
-- [ ] 소스 학습 완료
-- [ ] docs 교차 확인
-- [ ] skill 검증/개선
 
 ---
 
@@ -504,11 +444,6 @@
 
 **Skill Target**: `references/build-compilation.md`
 
-**Checklist**:
-- [ ] 소스 학습 완료
-- [ ] docs 교차 확인
-- [ ] skill 검증/개선
-
 ---
 
 ### Topic 14: next/src/build — webpack & turbopack ✅ 커버
@@ -541,11 +476,6 @@
 
 **Skill Target**: `references/build-compilation.md`
 
-**Checklist**:
-- [ ] 소스 학습 완료
-- [ ] docs 교차 확인
-- [ ] skill 검증/개선
-
 ---
 
 ### Topic 15: next/src/export + next-routing ⬜ 미커버 (부분)
@@ -574,11 +504,6 @@
 **Docs**: `01-app/02-guides/static-exports.mdx`, `01-app/02-guides/internationalization.mdx`
 
 **Skill Target**: `references/rendering.md` (static export 부분), 신규 생성 필요 (next-routing)
-
-**Checklist**:
-- [ ] 소스 학습 완료
-- [ ] docs 교차 확인
-- [ ] skill 검증/개선
 
 ---
 
@@ -611,11 +536,6 @@
 
 **Skill Target**: 신규 생성 필요
 
-**Checklist**:
-- [ ] 소스 학습 완료
-- [ ] docs 교차 확인
-- [ ] skill 검증/개선
-
 ---
 
 ### Topic 17: next/src/server — dev server ⬜ 미커버
@@ -637,11 +557,6 @@
 **Docs**: `03-architecture/fast-refresh.mdx`, `01-app/02-guides/local-development.mdx`
 
 **Skill Target**: 신규 생성 필요
-
-**Checklist**:
-- [ ] 소스 학습 완료
-- [ ] docs 교차 확인
-- [ ] skill 검증/개선
 
 ---
 
@@ -665,11 +580,6 @@
 **Docs**: `01-app/03-api-reference/06-cli/`
 
 **Skill Target**: 신규 생성 필요
-
-**Checklist**:
-- [ ] 소스 학습 완료
-- [ ] docs 교차 확인
-- [ ] skill 검증/개선
 
 ---
 
@@ -696,11 +606,6 @@
 
 **Skill Target**: 신규 생성 필요
 
-**Checklist**:
-- [ ] 소스 학습 완료
-- [ ] docs 교차 확인
-- [ ] skill 검증/개선
-
 ---
 
 ### Topic 20: next/src/bundles + compiled ⬜ 미커버
@@ -722,11 +627,6 @@
 **Docs**: 해당 없음
 
 **Skill Target**: 신규 생성 필요 (또는 build-compilation.md에 추가)
-
-**Checklist**:
-- [ ] 소스 학습 완료
-- [ ] docs 교차 확인
-- [ ] skill 검증/개선
 
 ---
 
@@ -752,11 +652,6 @@
 
 **Skill Target**: 신규 생성 필요
 
-**Checklist**:
-- [ ] 소스 학습 완료
-- [ ] docs 교차 확인
-- [ ] skill 검증/개선
-
 ---
 
 ### Topic 22: create-next-app ⬜ 미커버
@@ -780,11 +675,6 @@
 
 **Skill Target**: 신규 생성 필요
 
-**Checklist**:
-- [ ] 소스 학습 완료
-- [ ] docs 교차 확인
-- [ ] skill 검증/개선
-
 ---
 
 ### Topic 23: next-codemod ⬜ 미커버
@@ -807,11 +697,6 @@
 **Docs**: `01-app/02-guides/upgrading.mdx`
 
 **Skill Target**: 신규 생성 필요
-
-**Checklist**:
-- [ ] 소스 학습 완료
-- [ ] docs 교차 확인
-- [ ] skill 검증/개선
 
 ---
 
@@ -870,11 +755,6 @@
 
 **Skill Target**: 신규 생성 필요
 
-**Checklist**:
-- [ ] 소스 학습 완료
-- [ ] docs 교차 확인
-- [ ] skill 검증/개선
-
 ---
 
 ## Docs Supplementary Study
@@ -910,6 +790,21 @@
 | Review (고아) | `skills/nextjs-aio/references/patterns.md` | 교차 관심사 — 삭제/병합 검토 불필요 (의도적 교차 참조) |
 | Review (고아) | `skills/nextjs-aio/references/anti-patterns.md` | 교차 관심사 — 삭제/병합 검토 불필요 |
 | Review (고아) | `skills/nextjs-aio/references/examples.md` | 교차 관심사 — 삭제/병합 검토 불필요 |
+
+## Topic-Docs Mapping
+
+> 학습 파일 ↔ 토픽 연결. `/learn` 첫 세션 시 자동 등록, `/study-skill` 생성 시 기존 파일 스캔.
+
+| Topic | docs_file |
+|-------|-----------|
+| Topic 1: next/src/api | Next-Src-Api.md |
+
+## Study-Skill Verification
+
+> `/study-skill` 검증 완료 기록. 토픽별 소스 대조/스킬 개선 완료 시 기록.
+
+| Topic | verified | 변경 파일 |
+|-------|----------|----------|
 
 ## Verification
 

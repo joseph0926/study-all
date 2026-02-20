@@ -23,7 +23,8 @@ description: "오늘의 학습 코치 — 다음 학습 추천 + 주간 스케�
 ### 1-1. 스킬별 plan.md 파싱
 
 각 `docs/{skill}/plan.md`에서:
-- 토픽 목록, Phase 분류, 진행 상태
+- 토픽 목록, Phase 분류
+- Topic-Docs Mapping + `docs/` 파일의 학습 로드맵에서 진행 상태 동적 계산
 - 스킬 간 의존 관계 (master-plan.md가 있으면 참조)
 
 ### 1-2. 학습 기록 파싱
@@ -49,9 +50,15 @@ description: "오늘의 학습 코치 — 다음 학습 추천 + 주간 스케�
 ### 1-5. 마스터 플랜 참조 (있을 때만)
 
 `docs/master-plan.md`가 존재하면:
-- 현재 Master Phase
+- 현재 Master Phase (Phase 순서만 참조 — 상태는 동적 계산)
 - 주간 학습 템플릿
 - 다음 마일스톤
+
+### 1-6. 데이터 정합성 확인
+
+Topic-Docs Mapping이 누락된 학습 파일이 있는지 확인:
+- `docs/{skill}/*.md` 중 Mapping에 없는 파일이 있으면:
+  `"⚠️ {파일명}이 plan.md Topic-Docs Mapping에 없습니다. /learn 또는 /study-skill 실행 시 자동 등록됩니다."`
 
 ---
 

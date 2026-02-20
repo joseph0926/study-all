@@ -218,8 +218,8 @@ MODULE_MAP의 각 모듈과 REF_FILES(references/ 파일)를 교차 대조합니
 ### RESUME=true인 경우
 
 기존 `docs/{name}/plan.md`를 읽어서:
-1. 완료된 토픽(`[x]`)과 미완료 토픽(`[ ]`)을 분류합니다.
-2. 첫 번째 미완료 토픽을 다음 학습 대상으로 표시합니다.
+1. Topic-Docs Mapping과 Study-Skill Verification 테이블을 파싱합니다.
+2. Verification에 기록되지 않은 첫 번째 토픽을 다음 학습 대상으로 표시합니다.
 3. Phase 5로 바로 진행합니다.
 
 ### RESUME=false인 경우 (새로 생성)
@@ -238,7 +238,7 @@ MODULE_MAP의 각 모듈과 REF_FILES(references/ 파일)를 교차 대조합니
    - **Docs**: DOCS_DIR에서 모듈명으로 Grep 매칭된 문서 목록 (있을 때만)
    - **Study Points**: 모듈의 엔트리포인트/export에서 **기계적으로 도출** (아래 규칙 참조)
    - **Skill Target**: COVERAGE_MAP에서 매칭된 `references/{file}.md` 또는 `"신규 생성 필요"`
-   - **Checklist**: `[ ] 소스 학습 완료` / `[ ] docs 교차 확인` / `[ ] skill 검증/개선`
+   - *(Checklist 없음 — 진행 상태는 학습 파일에서 동적 계산)*
 
 3. **Study Points 도출 규칙** (AI 일반 지식 사용 금지):
    - 모듈 엔트리포인트에서 export되는 API/함수/클래스 목록
@@ -319,7 +319,7 @@ MODULE_MAP의 각 모듈과 REF_FILES(references/ 파일)를 교차 대조합니
 2. 공식 문서 교차 확인
 3. 스킬 reference 검증 (소스 코드 대조)
 4. 최소 개선 (사용자 결정)
-5. plan.md 체크리스트 업데이트
+5. Study-Skill Verification 테이블 업데이트
 
 ---
 
@@ -347,11 +347,6 @@ MODULE_MAP의 각 모듈과 REF_FILES(references/ 파일)를 교차 대조합니
 **Docs**: {DOCS_DIR에서 모듈명 Grep 매칭 결과} (해당 시)
 
 **Skill Target**: `references/{file}.md` 또는 "신규 생성 필요"
-
-**Checklist**:
-- [ ] 소스 학습 완료
-- [ ] docs 교차 확인
-- [ ] skill 검증/개선
 
 {이하 Phase 1의 모든 모듈에 대해 반복}
 
@@ -387,6 +382,20 @@ Phase 1, 2에서 이미 간단히 다룬 개념들을 심화 학습.
 | Verify/Improve | `skills/{name}-aio/references/{file}.md` | 기존 커버된 모듈 |
 | Create (신규) | `skills/{name}-aio/references/{uncovered-module}.md` | 미커버 모듈 |
 | Review (고아) | `skills/{name}-aio/references/{orphan}.md` | 매칭 모듈 없음 — 삭제/병합 검토 |
+
+## Topic-Docs Mapping
+
+> 학습 파일 ↔ 토픽 연결. `/learn` 첫 세션 시 자동 등록, `/study-skill` 생성 시 기존 파일 스캔.
+
+| Topic | docs_file |
+|-------|-----------|
+
+## Study-Skill Verification
+
+> `/study-skill` 검증 완료 기록. 토픽별 소스 대조/스킬 개선 완료 시 기록.
+
+| Topic | verified | 변경 파일 |
+|-------|----------|----------|
 
 ## Verification
 
@@ -444,12 +453,11 @@ plan.md를 생성한 후 AskUserQuestion으로 확인합니다:
 - **사용자가 개선 여부와 범위를 결정**합니다.
 - 최소 변경 원칙: 틀린 것만 고치고, 없는 것만 추가합니다.
 
-### Step 5: 체크리스트 업데이트
+### Step 5: Verification 기록
 
-- `docs/{name}/plan.md`의 해당 토픽 체크리스트를 업데이트합니다.
-  - `[x] 소스 학습 완료`
-  - `[x] docs 교차 확인` (해당 시)
-  - `[x] skill 검증/개선`
+- `docs/{name}/plan.md`의 `Study-Skill Verification` 테이블에 행을 추가합니다:
+  - `| {Topic명} | {오늘 날짜} | {변경한 references/ 파일 목록} |`
+- Topic-Docs Mapping에 해당 토픽의 학습 파일이 없으면, 기존 `docs/{name}/*.md`를 Glob으로 스캔하여 매칭되는 파일을 등록합니다.
 
 ### 토픽 전환
 
@@ -498,8 +506,8 @@ Phase 6 완료 직후, 이 세션에서 수정한 파일들과 CLAUDE.md 규칙�
 ### 체크리스트
 
 #### plan.md 정합성
-- [ ] 완료한 토픽의 체크리스트가 `[x]`로 업데이트되었는가
-- [ ] 체크리스트 항목(소스 학습/docs 교차/skill 검증) 각각이 실제 수행 여부와 일치하는가
+- [ ] 완료한 토픽이 `Study-Skill Verification` 테이블에 기록되었는가
+- [ ] Topic-Docs Mapping에 기존 학습 파일이 등록되어 있는가 (docs/{skill}/*.md 스캔)
 
 #### 스킬 레퍼런스 변경 검증
 - [ ] 수정한 `references/*.md`의 변경 내용이 소스 코드와 일치하는가 (변경한 섹션 2-3개 샘플링)
@@ -528,5 +536,5 @@ Phase 6 완료 직후, 이 세션에서 수정한 파일들과 CLAUDE.md 규칙�
 
 - **사용자 주도**: AI가 일방적으로 레퍼런스를 작성/수정하지 않습니다. 소스 읽기/개선 결정은 항상 사용자가 합니다.
 - **Graceful Degradation**: 소스 fork가 없으면 docs-only, docs도 없으면 refs-only 모드로 동작합니다.
-- **세션 재개**: `plan.md` 체크리스트가 진행 상태 역할을 합니다. 다음 세션에서 `/study-skill {name}`을 실행하면 미완료 토픽부터 계속합니다.
+- **세션 재개**: `plan.md`의 `Study-Skill Verification` 테이블이 검증 완료 상태를 추적합니다. 다음 세션에서 `/study-skill {name}`을 실행하면 미검증 토픽부터 계속합니다.
 - **최소 변경**: `references/` 내용은 소스 코드와 대조하여 틀린 것만 고치고, 없는 것만 추가합니다. `patterns.md`, `anti-patterns.md`는 사용자가 명시 요청한 경우에만 수정합니다.

@@ -33,7 +33,7 @@ Glob: docs/*/
 `docs/{skill}/plan.md`가 존재하면:
 
 1. **전체 토픽 수**: `### Topic N:` 패턴 카운트
-2. **완료 토픽**: 체크리스트 3개(`소스 학습 완료`, `docs 교차 확인`, `skill 검증/개선`) 중 `[x]`가 1개 이상인 토픽
+2. **완료 토픽**: Topic-Docs Mapping의 docs_file을 읽어 모든 마이크로 스텝이 `[x]`인 토픽
 3. **커버율**: Coverage Analysis 테이블의 `커버율: N/M 모듈 (P%)` 파싱
 4. **Phase 분포**: Phase 1/2/3별 토픽 수
 

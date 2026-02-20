@@ -77,7 +77,7 @@
 2. 공식 문서 교차 확인
 3. 스킬 reference 검증 (소스 코드 대조)
 4. 최소 개선 (사용자 결정)
-5. plan.md 체크리스트 업데이트
+5. Study-Skill Verification 테이블 업데이트
 
 ## Phase Classification
 
@@ -100,10 +100,6 @@ DOCS_DIR 매칭 기반 (우선순위 1):
 
 > React 패키지의 공개 API Surface — 모든 React 앱의 진입점
 > 기존 학습 기록: `docs/react/React-Core-API.md` (2026-02-11, Step 1-6 완료)
-
-- [ ] 소스 학습 완료
-- [ ] docs 교차 확인
-- [ ] skill 검증/개선
 
 **Source Files** (`ref/react-fork/packages/react/`, 82 files):
 
@@ -139,10 +135,6 @@ DOCS_DIR 매칭 기반 (우선순위 1):
 > DOM 렌더링 진입점 — createRoot, hydrateRoot, Portals, flushSync, 리소스 프리로딩
 > Subdirs: src/client/, src/server/, src/shared/, npm/
 
-- [ ] 소스 학습 완료
-- [ ] docs 교차 확인
-- [ ] skill 검증/개선
-
 **Source Files** (`ref/react-fork/packages/react-dom/`, 221 files):
 
 | File | Role |
@@ -177,10 +169,6 @@ DOCS_DIR 매칭 기반 (우선순위 1):
 
 > RSC 직렬화/소비 프로토콜 — Fizz(스트리밍 SSR) + Flight(RSC 프로토콜) + 클라이언트 소비
 > 그룹핑 사유: Flight 프로토콜의 서버 측(react-server)과 클라이언트 측(react-client) — 양면 학습
-
-- [ ] 소스 학습 완료
-- [ ] docs 교차 확인
-- [ ] skill 검증/개선
 
 **Source Files**:
 
@@ -224,9 +212,6 @@ DOCS_DIR 매칭 기반 (우선순위 1):
 > Flight 프로토콜의 번들러별 구현 (webpack, turbopack, parcel, esm, unbundled, fb)
 > 그룹핑 사유: 6개 패키지가 동일 Flight 프로토콜의 번들러 어댑터 변형
 
-- [ ] 소스 학습 완료
-- [ ] skill 검증/개선
-
 **Source Files** (218 files 합계):
 
 | Package | Files | Role |
@@ -254,10 +239,6 @@ DOCS_DIR 매칭 기반 (우선순위 1):
 
 > 외부 상태 소스 동기화 Hook
 
-- [ ] 소스 학습 완료
-- [ ] docs 교차 확인
-- [ ] skill 검증/개선
-
 **Source Files** (`ref/react-fork/packages/use-sync-external-store/`, 22 files):
 
 | File | Role |
@@ -283,9 +264,6 @@ DOCS_DIR 매칭 기반 (우선순위 1):
 > 소규모 유틸리티 패키지
 > 그룹핑 사유: 각 2~6개 소스 파일의 소규모 패키지
 
-- [ ] 소스 학습 완료
-- [ ] skill 검증/개선
-
 **Source Files** (15 files 합계):
 
 | Package | Files | Key File | Exports |
@@ -309,10 +287,6 @@ DOCS_DIR 매칭 기반 (우선순위 1):
 ### Topic 7: eslint-plugin-react-hooks ⬜ 미커버
 
 > React Hooks ESLint 규칙
-
-- [ ] 소스 학습 완료
-- [ ] docs 교차 확인
-- [ ] skill 검증/개선
 
 **Source Files** (`ref/react-fork/packages/eslint-plugin-react-hooks/`, 26 files):
 
@@ -340,10 +314,6 @@ DOCS_DIR 매칭 기반 (우선순위 1):
 
 > React Compiler — 자동 메모이제이션 바벨 플러그인 (~2,000 files)
 > 분할 사유: 7개 하위 디렉토리 기준 분할 (src/ 하위)
-
-- [ ] 소스 학습 완료
-- [ ] docs 교차 확인
-- [ ] skill 검증/개선
 
 **Source Files** (`ref/react-fork/compiler/packages/babel-plugin-react-compiler/src/`):
 
@@ -375,9 +345,6 @@ DOCS_DIR 매칭 기반 (우선순위 1):
 
 > React Compiler 보조 패키지
 > 그룹핑 사유: babel-plugin-react-compiler 외 7개 소규모 보조 패키지
-
-- [ ] 소스 학습 완료
-- [ ] skill 검증/개선
 
 **Source Files** (61 files 합계):
 
@@ -415,10 +382,6 @@ DOCS_DIR 매칭 기반 (우선순위 1):
 > React 전체 패키지가 공유하는 유틸리티/상수 (의존 관계 없음 — 기초 레이어)
 > 기존 학습 기록: `docs/react/Topic-1-Shared.md` (2026-02-19, Step 1/5 완료)
 
-- [ ] 소스 학습 완료
-- [ ] docs 교차 확인
-- [ ] skill 검증/개선
-
 **Source Files** (`ref/react-fork/packages/shared/`, 52 files):
 
 | File | Role |
@@ -451,9 +414,6 @@ DOCS_DIR 매칭 기반 (우선순위 1):
 
 > 시간 분할(Time Slicing)과 우선순위 작업 큐 (의존 관계 없음)
 
-- [ ] 소스 학습 완료
-- [ ] skill 검증/개선 (`references/scheduler.md`)
-
 **Source Files** (`ref/react-fork/packages/scheduler/`, 28 files):
 
 | File | Role |
@@ -483,9 +443,6 @@ DOCS_DIR 매칭 기반 (우선순위 1):
 > 분할 사유: react-reconciler 170 files — 논리적 파일 그룹별 분할
 > 기존 학습 기록: `docs/react/Fiber-Structure.md` (2026-02-13~14, Step 1-4 완료)
 
-- [ ] 소스 학습 완료
-- [ ] skill 검증/개선 (`references/fiber.md`)
-
 **Source Files** (`ref/react-fork/packages/react-reconciler/src/`):
 
 | File | Role |
@@ -514,9 +471,6 @@ DOCS_DIR 매칭 기반 (우선순위 1):
 > 분할 사유: react-reconciler 파일 그룹 분할
 > 기존 학습 기록: `docs/react/Work-Loop.md` (2026-02-15~16, Step 3/5 완료)
 
-- [ ] 소스 학습 완료
-- [ ] skill 검증/개선 (`references/fiber.md` Work Loop 섹션)
-
 **Source Files** (`ref/react-fork/packages/react-reconciler/src/`):
 
 | File | Role |
@@ -541,10 +495,6 @@ DOCS_DIR 매칭 기반 (우선순위 1):
 
 > 변경 감지와 최소 업데이트 계산
 > 분할 사유: react-reconciler 파일 그룹 분할
-
-- [ ] 소스 학습 완료
-- [ ] docs 교차 확인
-- [ ] skill 검증/개선 (`references/reconciliation.md`)
 
 **Source Files** (`ref/react-fork/packages/react-reconciler/src/`):
 
@@ -573,9 +523,6 @@ DOCS_DIR 매칭 기반 (우선순위 1):
 > React의 우선순위 시스템
 > 분할 사유: react-reconciler 파일 그룹 분할
 
-- [ ] 소스 학습 완료
-- [ ] skill 검증/개선 (`references/scheduler.md` Lane 섹션)
-
 **Source Files** (`ref/react-fork/packages/react-reconciler/src/`):
 
 | File | Role |
@@ -599,10 +546,6 @@ DOCS_DIR 매칭 기반 (우선순위 1):
 
 > 모든 Hook의 내부 구현
 > 분할 사유: react-reconciler 파일 그룹 분할
-
-- [ ] 소스 학습 완료
-- [ ] docs 교차 확인
-- [ ] skill 검증/개선 (`references/hooks.md`)
 
 **Source Files** (`ref/react-fork/packages/react-reconciler/src/`):
 
@@ -629,10 +572,6 @@ DOCS_DIR 매칭 기반 (우선순위 1):
 
 > 커밋 단계와 Effect 실행 순서
 > 분할 사유: react-reconciler 파일 그룹 분할
-
-- [ ] 소스 학습 완료
-- [ ] docs 교차 확인
-- [ ] skill 검증/개선 (`references/effects.md`)
 
 **Source Files** (`ref/react-fork/packages/react-reconciler/src/`):
 
@@ -665,10 +604,6 @@ DOCS_DIR 매칭 기반 (우선순위 1):
 > Context 전파 메커니즘
 > 분할 사유: react-reconciler 파일 그룹 분할
 
-- [ ] 소스 학습 완료
-- [ ] docs 교차 확인
-- [ ] skill 검증/개선 (`references/context.md`)
-
 **Source Files** (`ref/react-fork/packages/react-reconciler/src/`):
 
 | File | Role |
@@ -694,10 +629,6 @@ DOCS_DIR 매칭 기반 (우선순위 1):
 
 > 비동기 렌더링, Suspense, Activity(Offscreen)
 > 분할 사유: react-reconciler 파일 그룹 분할
-
-- [ ] 소스 학습 완료
-- [ ] docs 교차 확인
-- [ ] skill 검증/개선 (`references/suspense.md`, `references/activity.md`)
 
 **Source Files** (`ref/react-fork/packages/react-reconciler/src/`):
 
@@ -729,10 +660,6 @@ DOCS_DIR 매칭 기반 (우선순위 1):
 > useTransition, useActionState, Gesture 스케줄링
 > 분할 사유: react-reconciler 파일 그룹 분할
 
-- [ ] 소스 학습 완료
-- [ ] docs 교차 확인
-- [ ] skill 검증/개선 (`references/transitions.md`, `references/actions.md`)
-
 **Source Files** (`ref/react-fork/packages/react-reconciler/src/`):
 
 | File | Role |
@@ -762,10 +689,6 @@ DOCS_DIR 매칭 기반 (우선순위 1):
 > Error Boundary와 에러 전파
 > 분할 사유: react-reconciler 파일 그룹 분할
 
-- [ ] 소스 학습 완료
-- [ ] docs 교차 확인
-- [ ] skill 검증/개선 (`references/error-handling.md`)
-
 **Source Files** (`ref/react-fork/packages/react-reconciler/src/`):
 
 | File | Role |
@@ -790,10 +713,6 @@ DOCS_DIR 매칭 기반 (우선순위 1):
 
 > DOM 연산, 이벤트 위임, CSS/속성 처리
 > Subdirs: src/client/, src/events/, src/server/, src/shared/
-
-- [ ] 소스 학습 완료
-- [ ] docs 교차 확인
-- [ ] skill 검증/개선 (`references/events.md`)
 
 **Source Files** (`ref/react-fork/packages/react-dom-bindings/`, 93 files):
 
@@ -833,9 +752,6 @@ Phase 1, 2에서 이미 간단히 다룬 개념들을 심화 학습.
 > 개발/유틸리티 패키지
 > 그룹핑 사유: 각 10~12개 소스 파일의 중소규모 유틸리티
 
-- [ ] 소스 학습 완료
-- [ ] skill 검증/개선
-
 **Source Files** (22 files 합계):
 
 | Package | Files | Key File | Exports |
@@ -858,9 +774,6 @@ Phase 1, 2에서 이미 간단히 다룬 개념들을 심화 학습.
 
 > React Reconciler 기반 대체 렌더러
 > 그룹핑 사유: react-noop-renderer(18 files), react-art(12 files)는 소규모; react-native-renderer(72 files)가 주 학습 대상
-
-- [ ] 소스 학습 완료
-- [ ] skill 검증/개선
 
 **Source Files** (102 files 합계):
 
@@ -887,9 +800,6 @@ Phase 1, 2에서 이미 간단히 다룬 개념들을 심화 학습.
 > 테스트 렌더러 및 테스트 인프라
 > 그룹핑 사유: 테스트 관련 5개 패키지
 
-- [ ] 소스 학습 완료
-- [ ] skill 검증/개선
-
 **Source Files** (39 files 합계):
 
 | Package | Files | Key File | Role |
@@ -915,9 +825,6 @@ Phase 1, 2에서 이미 간단히 다룬 개념들을 심화 학습.
 
 > DevTools 핵심 로직 (452 files)
 
-- [ ] 소스 학습 완료
-- [ ] skill 검증/개선
-
 **Source Files** (`ref/react-fork/packages/react-devtools-shared/`, 452 files):
 
 | Subdir | Role |
@@ -942,9 +849,6 @@ Phase 1, 2에서 이미 간단히 다룬 개념들을 심화 학습.
 
 > DevTools UI, 브라우저 확장, 타임라인
 > 그룹핑 사유: 7개 패키지가 모두 react-devtools-shared 기반 변형
-
-- [ ] 소스 학습 완료
-- [ ] skill 검증/개선
 
 **Source Files** (188 files 합계):
 
@@ -974,9 +878,6 @@ Phase 1, 2에서 이미 간단히 다룬 개념들을 심화 학습.
 
 > DevTools용 Hook 디버깅 유틸리티
 
-- [ ] 소스 학습 완료
-- [ ] skill 검증/개선
-
 **Source Files** (`ref/react-fork/packages/react-debug-tools/`, 8 files):
 
 | File | Role |
@@ -1000,9 +901,6 @@ Phase 1, 2에서 이미 간단히 다룬 개념들을 심화 학습.
 
 > Topic 12~21에서 다루지 않은 react-reconciler 잔여 파일들
 > Hydration, ClassComponent, Profiler, ViewTransition, MutationTracking 등
-
-- [ ] 소스 학습 완료
-- [ ] skill 검증/개선
 
 **Source Files** (`ref/react-fork/packages/react-reconciler/src/`):
 
@@ -1049,9 +947,6 @@ Phase 1~3에서 소스 코드로 내부 동작을 이해한 후, 공식 문서�
 
 > Phase 1~3에서 다루지 않은 실용적 가이드 학습
 
-- [ ] 학습 완료
-- [ ] skill 검증/개선 (`references/patterns.md`, `references/anti-patterns.md`)
-
 **Docs** (`ref/react.dev/src/content/learn/`):
 
 | File | Topic |
@@ -1078,9 +973,6 @@ Phase 1~3에서 소스 코드로 내부 동작을 이해한 후, 공식 문서�
 
 > 각 API의 공식 설명과 react-aio 내용 대조
 
-- [ ] 학습 완료
-- [ ] skill 검증/개선 (전체 `references/`)
-
 **Docs** (`ref/react.dev/src/content/reference/react/`):
 - 모든 훅 API 레퍼런스 (useState ~ useEffectEvent)
 - 컴포넌트 API (Suspense, StrictMode, Profiler, Fragment, Activity, ViewTransition)
@@ -1093,9 +985,6 @@ Phase 1~3에서 소스 코드로 내부 동작을 이해한 후, 공식 문서�
 ### Section C: Best Practices Cross-Check
 
 > 기존 best-practices 규칙 검증
-
-- [ ] 학습 완료
-- [ ] skill 검증/개선 (`references/best-practices/`)
 
 **Docs**: 소스 코드 학습 결과 + react.dev 가이드 기반으로 59개 규칙 교차 검증
 
@@ -1128,6 +1017,24 @@ Phase 1~3에서 소스 코드로 내부 동작을 이해한 후, 공식 문서�
 | Review (고아) | `references/patterns.md` | Section A |
 | Review (고아) | `references/anti-patterns.md` | Section A |
 | Review (고아) | `references/best-practices/` | Section C |
+
+## Topic-Docs Mapping
+
+> 학습 파일 ↔ 토픽 연결. `/learn` 첫 세션 시 자동 등록, `/study-skill` 생성 시 기존 파일 스캔.
+
+| Topic | docs_file |
+|-------|-----------|
+| Topic 1: react | React-Core-API.md |
+| Topic 10: shared | Topic-1-Shared.md |
+| Topic 12: Fiber Structure | Fiber-Structure.md |
+| Topic 13: Work Loop | Work-Loop.md |
+
+## Study-Skill Verification
+
+> `/study-skill` 검증 완료 기록. 토픽별 소스 대조/스킬 개선 완료 시 기록.
+
+| Topic | verified | 변경 파일 |
+|-------|----------|----------|
 
 ## Verification
 
