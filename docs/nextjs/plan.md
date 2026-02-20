@@ -1,49 +1,50 @@
 # Next.js Source Code & Documentation Study Plan
 
-> Next.js(v16.1.6, canary branch) 소스 코드와 공식 문서를 주제별로 학습하면서,
+> Next.js의 소스 코드(ref/next.js)와 공식 문서(ref/next.js/docs)를 주제별로 학습하면서,
 > 학습 결과를 바탕으로 `skills/nextjs-aio/`의 기존 참조 문서를 검증·보강한다.
 
 ## Current State
 
-- **Skill**: nextjs-aio — 14개 주요 참조 문서 + 22개 best-practices 문서 (v16.1.6 기준)
-- **Source**: `ref/next.js/` (branch: canary) — 18개 패키지, packages/next/src/ 17개 서브모듈
-- **Docs**: `ref/next.js/docs/` — 01-app(224), 02-pages(149), 03-architecture(5), 04-community(3) = 381 mdx files
+- **Skill**: nextjs-aio — 36개 참조 문서 (main 13 + best-practices 23), 패턴/안티패턴 (v16.1.6 기준)
+- **Source**: ref/next.js (canary, 16.2.0-canary.37) — 18개 패키지, packages/next/src/ 17개 서브디렉토리
+- **Docs**: ref/next.js/docs — 378개 문서 (01-app 221, 02-pages 148, 03-architecture 5, 04-community 3)
 
 ## Coverage Analysis
 
-| Status | Module (Topic) | Skill Target |
-|--------|---------------|--------------|
-| ✅ 커버 | shared + lib + api (Foundation) | `references/architecture.md` |
-| ✅ 커버 | server — Core Infrastructure | `references/architecture.md` |
-| ✅ 커버 | server — Route System | `references/routing.md` |
-| ✅ 커버 | server — App Render (RSC Pipeline) | `references/server-components.md`, `references/rendering.md` |
-| ✅ 커버 | server — Caching System | `references/caching.md` |
-| ✅ 커버 | server — Request & Data Fetching | `references/data-fetching.md`, `references/api-routes.md` |
-| ✅ 커버 | server — Proxy & Web Runtime | `references/proxy.md` |
-| ✅ 커버 | server — Error Handling & Dev | `references/error-handling.md` |
-| ⬜ 미커버 | server — Misc (after, og, mcp, instrumentation, stream-utils, normalizers) | 신규 생성 필요 |
-| ✅ 커버 | client — App Router Runtime | `references/routing.md` (client-side) |
-| ✅ 커버 | client — Components (Image, Link, Script, Form) | `references/optimization.md` |
-| ⬜ 미커버 | client — Dev Overlay | 신규 생성 필요 |
-| ⬜ 미커버 | client — Legacy & Pages Router Compat | 스킬 범위 외 (App Router 전용) |
-| ✅ 커버 | build — Core Pipeline | `references/build-compilation.md` |
-| ✅ 커버 | build — Bundlers (Webpack, Turbopack, SWC) | `references/build-compilation.md` |
-| ✅ 커버 | build — Analysis, Manifests & Templates | `references/build-compilation.md` |
-| ✅ 커버 | export (Static Export) | `references/rendering.md` |
-| ⬜ 미커버 | experimental | 신규 생성 필요 |
-| ⬜ 미커버 | cli + bin | 신규 생성 필요 |
-| ⬜ 미커버 | diagnostics + telemetry + trace | 신규 생성 필요 |
-| ⬜ 미커버 | compiled + bundles (Vendored Deps) | `references/build-compilation.md` (부분) |
-| ⬜ 미커버 | next-devtools | 신규 생성 필요 |
-| ✅ 커버 | font (next/font) | `references/optimization.md` |
-| ✅ 커버 | next-routing | `references/routing.md` |
-| ⬜ 미커버 | eslint-config-next + eslint-plugin-next | 신규 생성 필요 |
-| ⬜ 미커버 | create-next-app | 신규 생성 필요 |
-| ⬜ 미커버 | next-codemod | 신규 생성 필요 |
-| ⬜ 미커버 | Small Utilities (next-env, next-mdx, next-rspack 등) | 신규 생성 필요 |
+| Status | Module | Skill Target |
+|--------|--------|--------------|
+| ✅ 커버 | server | `references/server-components.md`, `rendering.md`, `data-fetching.md`, `caching.md`, `proxy.md` |
+| ✅ 커버 | client | `references/routing.md`, `server-components.md` |
+| ✅ 커버 | build | `references/build-compilation.md` |
+| ✅ 커버 | shared | `references/architecture.md` (부분) |
+| ✅ 커버 | lib | `references/architecture.md` (부분) |
+| ✅ 커버 | api | `references/api-routes.md` |
+| ✅ 커버 | export | `references/rendering.md` (부분) |
+| ✅ 커버 | experimental | `references/caching.md` (use cache) |
+| ✅ 커버 | font | `references/optimization.md` |
+| ✅ 커버 | third-parties | `references/optimization.md` (scripts) |
+| ⬜ 미커버 | next-devtools (186 files) | 신규 생성 필요 |
+| ⬜ 미커버 | cli + bin (12 files) | 신규 생성 필요 |
+| ⬜ 미커버 | bundles (62 files) | 신규 생성 필요 |
+| ⬜ 미커버 | compiled (704 files) | 신규 생성 필요 (pre-compiled deps) |
+| ⬜ 미커버 | telemetry+diagnostics+trace (31 files) | 신규 생성 필요 |
+| ⬜ 미커버 | pages (3 files) | 신규 생성 필요 |
+| ⬜ 미커버 | next-routing (19 files) | 신규 생성 필요 |
+| ⬜ 미커버 | create-next-app (81 files) | 신규 생성 필요 |
+| ⬜ 미커버 | next-codemod (502 files) | 신규 생성 필요 |
+| ⬜ 미커버 | eslint-plugin-next (26 files) | 신규 생성 필요 |
+| ⬜ 미커버 | react-refresh-utils (8 files) | 신규 생성 필요 |
+| ⬜ 미커버 | next-mdx (5 files) | 신규 생성 필요 |
+| ⬜ 미커버 | eslint-config-next (4 files) | 신규 생성 필요 |
+| ⬜ 미커버 | eslint-plugin-internal (4 files) | 신규 생성 필요 |
+| ⬜ 미커버 | runtime-utils (3 files) | next-env + polyfill-module + polyfill-nomodule |
+| ⬜ 미커버 | build-plugins (6 files) | next-rspack + next-bundle-analyzer + next-plugin-storybook |
+| ⬜ 미커버 | next-swc (Rust binary) | 신규 생성 필요 |
+| 🔗 고아 ref | — | `references/patterns.md` (교차 관심사) |
+| 🔗 고아 ref | — | `references/anti-patterns.md` (교차 관심사) |
+| 🔗 고아 ref | — | `references/examples.md` (교차 관심사) |
 
-- **커버율**: 16/28 토픽 (57%)
-- **고아 refs**: 없음 (patterns.md, anti-patterns.md, examples.md, best-practices/*는 크로스커팅 참조로 특정 모듈에 종속되지 않음)
+- **커버율**: 10/27 모듈 (37%)
 
 ## Core Principles
 
@@ -61,87 +62,42 @@
 
 ---
 
-## Part 1: Source Code Study (28 Topics)
+## Phase 1: Familiar — 사용자가 직접 쓰는 API (8 Topics)
 
-### Topic 1: shared + lib + api (Foundation) ✅ 커버
-
-**Source Files** (packages/next/src/):
-| Dir | Files | Role |
-|-----|-------|------|
-| `shared/` | 160 | 공유 타입, 유틸리티 (서버/클라이언트 공통) |
-| `lib/` | 136 | 설정 로딩, 유틸리티, 내부 공유 로직 |
-| `api/` | 16 | 공개 API surface (next/image, next/link 등 re-export) |
-
-**Study Points** (소스 구조에서 도출):
-- shared/lib/: 공유 타입 정의, 상수, 유틸리티 함수
-- lib/: next.config 로딩, turbopack/webpack 선택, metadata 유틸
-- api/: 각 public API 모듈의 re-export 구조
-
-**Docs**: `docs/01-app/03-api-reference/` 전반
-
-**Skill Target**: `references/architecture.md`
-
-**Checklist**:
-- [ ] 소스 학습 완료
-- [ ] docs 교차 확인
-- [ ] skill 검증/개선
+순서는 Phase 내 import 의존 관계 기반. 공식 문서에 직접 대응하는 모듈 우선.
 
 ---
 
-### Topic 2: server — Core Infrastructure ✅ 커버
+### Topic 1: next/src/api ✅ 커버
 
-**Source Files** (packages/next/src/server/):
+> Next.js 공개 API 재export 모듈 — `next/navigation`, `next/headers`, `next/image` 등 사용자가 import하는 진입점
+
+**Source Files** (MODULE_MAP에서 추출):
+
 | File | Role |
 |------|------|
-| `base-server.ts` | 서버 기본 클래스 |
-| `next-server.ts` | Node.js 서버 구현 |
-| `next.ts` | 서버 팩토리 |
-| `config.ts`, `config-shared.ts`, `config-schema.ts`, `config-utils.ts` | 설정 시스템 |
-| `load-components.ts` | 컴포넌트 로딩 |
-| `render.tsx` | 페이지 렌더링 |
-| `render-result.ts` | 렌더링 결과 래퍼 |
-| `send-payload.ts`, `send-response.ts` | 응답 전송 |
+| `src/api/navigation.ts` | useRouter, usePathname, useSearchParams (client) |
+| `src/api/navigation.react-server.ts` | redirect, notFound (server) |
+| `src/api/headers.ts` | Headers API |
+| `src/api/server.ts` | Server utilities re-export |
+| `src/api/image.ts` | Image component |
+| `src/api/link.ts` | Link component |
+| `src/api/script.ts` | Script component |
+| `src/api/form.ts` | Form actions |
+| `src/api/og.ts` | Open Graph generation |
+| `src/api/dynamic.ts` | Pages router dynamic() |
+| `src/api/app-dynamic.ts` | App router dynamic() |
+| `src/api/router.ts` | Pages router |
+| `src/api/constants.ts` | API constants |
 
-**Study Points**:
-- BaseServer → NextServer 상속 구조
-- 요청 처리 파이프라인 (receive → route → render → respond)
-- config 스키마 정의 및 검증 흐름
-- 컴포넌트 로딩 메커니즘
+**Study Points** (소스 구조에서 도출):
+- 각 API의 re-export 대상 파악 (실제 구현이 server/, client/, shared/ 중 어디에 있는지)
+- `navigation.ts` vs `navigation.react-server.ts` — React Server/Client 조건부 export
+- `dynamic.ts` vs `app-dynamic.ts` — Pages vs App Router 분기
 
-**Docs**: `docs/01-app/03-api-reference/05-config/`
+**Docs**: `01-app/03-api-reference/04-functions/`, `01-app/03-api-reference/02-components/`
 
-**Skill Target**: `references/architecture.md`
-
-**Checklist**:
-- [ ] 소스 학습 완료
-- [ ] docs 교차 확인
-- [ ] skill 검증/개선
-
----
-
-### Topic 3: server — Route System ✅ 커버
-
-**Source Files** (packages/next/src/server/):
-| Dir/File | Files | Role |
-|----------|-------|------|
-| `route-definitions/` | — | 라우트 정의 타입 |
-| `route-matchers/` | — | 라우트 매칭 로직 |
-| `route-matcher-managers/` | — | 매처 관리자 |
-| `route-matcher-providers/` | — | 매처 제공자 |
-| `route-modules/` | — | 라우트 모듈 (App Route, Pages Route 등) |
-| `route-matches/` | — | 매칭 결과 |
-| `route-kind.ts` | 1 | 라우트 종류 enum |
-| `server-route-utils.ts` | 1 | 라우트 유틸리티 |
-
-**Study Points**:
-- RouteKind enum (APP_PAGE, APP_ROUTE, PAGES 등)
-- RouteDefinition → RouteMatcher → RouteMatcherProvider 체인
-- RouteModule 시스템 (App Page Module, App Route Module 등)
-- 동적 라우트 매칭 알고리즘
-
-**Docs**: `docs/01-app/01-getting-started/02-routing.mdx`, `docs/01-app/02-guides/routing/`
-
-**Skill Target**: `references/routing.md`
+**Skill Target**: `references/api-routes.md`
 
 **Checklist**:
 - [ ] 소스 학습 완료
@@ -150,27 +106,32 @@
 
 ---
 
-### Topic 4: server — App Render (RSC Pipeline) ✅ 커버
+### Topic 2: next/src/server — app-render ✅ 커버
 
-**Source Files** (packages/next/src/server/app-render/):
-| Pattern | Role |
-|---------|------|
-| `app-render.tsx` | App Router 렌더링 진입점 |
-| `create-component-tree.tsx` | 컴포넌트 트리 생성 |
-| `create-server-components-renderer.tsx` | RSC 렌더러 |
-| `action-handler.ts` | Server Actions 처리 |
-| `static-renderer.ts` | 정적 렌더링 |
-| `dynamic-rendering.ts` | 동적 렌더링 판별 |
-| `work-*.ts` | 작업 단위 관리 |
+> App Router RSC 렌더링 핵심 — Server Component → HTML 변환 파이프라인
 
-**Study Points**:
-- RSC 렌더링 파이프라인 (서버 → 클라이언트 전달)
-- Server Actions 핸들링 메커니즘
-- Static vs Dynamic 렌더링 결정 로직
-- Streaming SSR 구현
-- PPR (Partial Prerendering) 관련 로직
+**Source Files** (MODULE_MAP에서 추출 — server/app-render/ 하위):
 
-**Docs**: `docs/01-app/01-getting-started/03-server-and-client-components.mdx`, `docs/01-app/02-guides/rendering/`
+| File | Role |
+|------|------|
+| `src/server/app-render/app-render.tsx` | RSC 렌더링 메인 엔트리 |
+| `src/server/app-render/create-component-tree.tsx` | 컴포넌트 트리 생성 |
+| `src/server/app-render/create-server-components-renderer.tsx` | RSC 렌더러 |
+| `src/server/app-render/action-handler.ts` | Server Actions 핸들러 |
+| `src/server/app-render/dynamic-rendering.ts` | 동적 렌더링 판단 |
+| `src/server/app-render/collect-segment-data.tsx` | 세그먼트 데이터 수집 |
+| `src/server/app-render/work-unit-async-storage.external.ts` | Async storage |
+
+> 사유: server/ (512 files)를 하위 디렉토리 기준으로 분할 — app-render/는 RSC 렌더링의 핵심
+
+**Study Points** (소스 구조에서 도출):
+- app-render.tsx의 렌더링 파이프라인 흐름
+- create-component-tree → create-server-components-renderer 관계
+- dynamic-rendering.ts의 동적/정적 판단 로직
+- action-handler.ts의 Server Actions 처리
+- work-unit-async-storage: Request scope 데이터 관리
+
+**Docs**: `01-app/03-api-reference/01-directives/`, `01-app/01-getting-started/`
 
 **Skill Target**: `references/server-components.md`, `references/rendering.md`
 
@@ -181,24 +142,60 @@
 
 ---
 
-### Topic 5: server — Caching System ✅ 커버
+### Topic 3: next/src/server — route-modules ✅ 커버
 
-**Source Files** (packages/next/src/server/):
-| Dir/File | Role |
-|----------|------|
-| `use-cache/` | `use cache` directive 구현 |
-| `response-cache/` | HTTP 응답 캐싱 |
-| `resume-data-cache/` | 재개 데이터 캐시 |
-| `cache-dir.ts` | 캐시 디렉토리 관리 |
-| `revalidation-utils.ts` | revalidate 유틸리티 |
+> Route Module 시스템 — app-page, app-route, pages 모듈의 요청 처리 분기
 
-**Study Points**:
-- use-cache directive 동작 원리
-- Response Cache 계층 구조
-- Resume Data Cache (PPR 관련)
-- Revalidation 메커니즘 (time-based, on-demand)
+**Source Files** (MODULE_MAP에서 추출 — server/route-modules/ 하위):
 
-**Docs**: `docs/01-app/02-guides/caching-and-revalidating.mdx`
+| File | Role |
+|------|------|
+| `src/server/route-modules/app-page/module.ts` | App Page 모듈 |
+| `src/server/route-modules/app-route/module.ts` | App Route Handler 모듈 |
+| `src/server/route-modules/pages/module.ts` | Pages 라우터 모듈 |
+| `src/server/route-modules/pages-api/module.ts` | Pages API 라우터 모듈 |
+| `src/server/route-modules/helpers/` | 공유 유틸리티 |
+
+> 사유: route-modules/는 라우팅 요청 → 렌더링 분기의 핵심 연결점
+
+**Study Points** (소스 구조에서 도출):
+- app-page vs app-route 모듈의 차이 (페이지 렌더링 vs Route Handler)
+- 각 모듈의 handle() 메서드 구조
+- Pages 라우터와의 공존 구조
+
+**Docs**: `01-app/03-api-reference/03-file-conventions/`
+
+**Skill Target**: `references/routing.md`, `references/api-routes.md`
+
+**Checklist**:
+- [ ] 소스 학습 완료
+- [ ] docs 교차 확인
+- [ ] skill 검증/개선
+
+---
+
+### Topic 4: next/src/server — response-cache & caching ✅ 커버
+
+> 캐싱 레이어 — Response Cache, Incremental Cache, Resume Data Cache
+
+**Source Files** (MODULE_MAP에서 추출 — server/ 캐시 관련):
+
+| File | Role |
+|------|------|
+| `src/server/response-cache/` | 응답 캐시 레이어 |
+| `src/server/resume-data-cache/` | 재개 데이터 캐시 |
+| `src/server/lib/incremental-cache/` | Incremental Static Regeneration 캐시 |
+| `src/server/lib/incremental-cache/file-system-cache.ts` | 파일 시스템 캐시 백엔드 |
+
+> 사유: server/ 분할 — 캐싱은 독립된 레이어로 별도 학습 가치 있음
+
+**Study Points** (소스 구조에서 도출):
+- response-cache/의 캐시 키 생성 및 조회 로직
+- incremental-cache/의 ISR 갱신 메커니즘
+- file-system-cache.ts의 저장/조회 구현
+- resume-data-cache/의 역할 (PPR 관련?)
+
+**Docs**: `01-app/01-getting-started/05-caching-and-revalidating.mdx`, `01-app/02-guides/caching.mdx`
 
 **Skill Target**: `references/caching.md`
 
@@ -209,50 +206,24 @@
 
 ---
 
-### Topic 6: server — Request & Data Fetching ✅ 커버
+### Topic 5: next/src/server — proxy & middleware ✅ 커버
 
-**Source Files** (packages/next/src/server/):
-| Dir/File | Role |
-|----------|------|
-| `request/` | NextRequest/NextResponse 구현 |
-| `request-meta.ts` | 요청 메타데이터 |
-| `api-utils/` | API 라우트 유틸리티 |
-| `async-storage/` | AsyncLocalStorage 래퍼 |
-| `internal-utils.ts` | 내부 유틸리티 |
+> v16+ Proxy 시스템 및 레거시 Middleware — 요청 가로채기/리디렉션
 
-**Study Points**:
-- NextRequest/NextResponse API
-- AsyncLocalStorage를 통한 요청 컨텍스트 전달
-- API Route 핸들러 실행 흐름
-- fetch 확장 및 캐시 제어
+**Source Files** (MODULE_MAP에서 추출):
 
-**Docs**: `docs/01-app/01-getting-started/04-fetching-data.mdx`, `docs/01-app/02-guides/data-fetching/`
+| File | Role |
+|------|------|
+| `src/server/web/` | Edge runtime exports, proxy/middleware 실행 |
+| `src/server/lib/router-utils/` | 라우터 유틸리티 |
+| `src/server/config.ts` | 서버 설정 (proxy 관련 옵션) |
 
-**Skill Target**: `references/data-fetching.md`, `references/api-routes.md`
+**Study Points** (소스 구조에서 도출):
+- v16 proxy.ts vs 레거시 middleware.ts 실행 경로 차이
+- web/ 디렉토리의 Edge Runtime 구현
+- NextRequest/NextResponse API 구현
 
-**Checklist**:
-- [ ] 소스 학습 완료
-- [ ] docs 교차 확인
-- [ ] skill 검증/개선
-
----
-
-### Topic 7: server — Proxy & Web Runtime ✅ 커버
-
-**Source Files** (packages/next/src/server/):
-| Dir/File | Role |
-|----------|------|
-| `web/` | Edge/Web 런타임 서버 구현 |
-| `web/adapter.ts` | Web API 어댑터 |
-| `web/sandbox/` | Edge 런타임 샌드박스 |
-
-**Study Points**:
-- Proxy (v16+) vs Middleware (legacy) 아키텍처
-- Edge Runtime 구현 (Web API 기반)
-- NextRequest/NextResponse 흐름 in proxy
-- Node.js vs Edge 런타임 차이
-
-**Docs**: `docs/01-app/03-api-reference/02-file-conventions/proxy.mdx`
+**Docs**: `01-app/03-api-reference/03-file-conventions/proxy.mdx`, `middleware.mdx`
 
 **Skill Target**: `references/proxy.md`
 
@@ -263,112 +234,66 @@
 
 ---
 
-### Topic 8: server — Error Handling & Dev ✅ 커버
+### Topic 6: next/src/client ✅ 커버
 
-**Source Files** (packages/next/src/server/):
-| Dir/File | Role |
-|----------|------|
-| `dev/` | 개발 서버 (HMR, 에러 오버레이 등) |
-| `patch-error-inspect.ts` | 에러 스택 트레이스 개선 |
-| `create-deduped-by-callsite-server-error-logger.ts` | 서버 에러 로깅 |
-| `typescript/` | TypeScript 플러그인 |
+> 클라이언트 런타임 — Hydration, Router, 에러 경계, 페이지 로딩
 
-**Study Points**:
-- error.tsx, not-found.tsx 에러 바운더리 동작
-- 개발 서버 HMR 파이프라인
-- 에러 오버레이 소스맵 처리
-- TypeScript 플러그인 (자동 타입 체크)
+**Source Files** (MODULE_MAP에서 추출):
 
-**Docs**: `docs/01-app/01-getting-started/05-error-handling.mdx`
-
-**Skill Target**: `references/error-handling.md`
-
-**Checklist**:
-- [ ] 소스 학습 완료
-- [ ] docs 교차 확인
-- [ ] skill 검증/개선
-
----
-
-### Topic 9: server — Misc (after, og, mcp, instrumentation) ⬜ 미커버
-
-**Source Files** (packages/next/src/server/):
-| Dir/File | Role |
-|----------|------|
-| `after/` | after() API (응답 후 실행) |
-| `og/` | Open Graph 이미지 생성 |
-| `mcp/` | Model Context Protocol |
-| `instrumentation/` | Instrumentation hook |
-| `stream-utils/` | 스트리밍 유틸리티 |
-| `normalizers/` | URL/경로 정규화 |
-| `node-environment-extensions/` | Node.js 환경 확장 |
-
-**Study Points**:
-- after() API: 응답 전송 후 비동기 작업 실행
-- OG Image generation 파이프라인
-- MCP endpoint (/_next/mcp)
-- Instrumentation hook (register, onRequestError)
-- 스트리밍 유틸리티 구현
-
-**Docs**: `docs/01-app/03-api-reference/03-functions/after.mdx`, `docs/01-app/03-api-reference/02-file-conventions/instrumentation.mdx`
-
-**Skill Target**: 신규 생성 필요
-
-**Checklist**:
-- [ ] 소스 학습 완료
-- [ ] docs 교차 확인
-- [ ] skill 검증/개선
-
----
-
-### Topic 10: client — App Router Runtime ✅ 커버
-
-**Source Files** (packages/next/src/client/):
-| Dir/File | Role |
-|----------|------|
-| `app-dir/` | App Router 클라이언트 구현 |
-| `app-index.tsx` | App Router 엔트리 |
-| `app-bootstrap.ts` | App 부트스트랩 |
-| `app-call-server.ts` | Server Actions 클라이언트 호출 |
-| `app-next.ts` | App Router next 객체 |
-| `flight-data-helpers.ts` | RSC Flight 데이터 헬퍼 |
-
-**Study Points**:
-- App Router 클라이언트 부트스트랩 과정
-- RSC Flight 프로토콜 클라이언트 처리
-- Server Actions 클라이언트 → 서버 호출
-- 클라이언트 사이드 네비게이션
-
-**Docs**: `docs/01-app/02-guides/routing/linking-and-navigating.mdx`
-
-**Skill Target**: `references/routing.md` (client-side sections)
-
-**Checklist**:
-- [ ] 소스 학습 완료
-- [ ] docs 교차 확인
-- [ ] skill 검증/개선
-
----
-
-### Topic 11: client — Components (Image, Link, Script, Form) ✅ 커버
-
-**Source Files** (packages/next/src/client/):
 | File | Role |
 |------|------|
-| `image-component.tsx` | next/image 컴포넌트 |
-| `link.tsx` | next/link 컴포넌트 |
-| `script.tsx` | next/script 컴포넌트 |
-| `form.tsx` | next/form 컴포넌트 |
-| `components/` | 내부 컴포넌트 (에러 바운더리, 레이아웃 라우터 등) |
-| `head-manager.ts` | Head 메타데이터 관리 |
+| `src/client/index.tsx` | Pages Router 초기화/하이드레이션 |
+| `src/client/app-index.tsx` | App Router 초기화 |
+| `src/client/app-next.ts` | App Router 런타임 |
+| `src/client/router.ts` | 라우터 생성 |
+| `src/client/page-loader.ts` | 동적 페이지 로딩 |
+| `src/client/head-manager.ts` | HEAD 태그 관리 |
+| `src/client/components/` | 클라이언트 컴포넌트 |
+| `src/client/lib/` | 클라이언트 유틸리티 |
+| `src/client/form.tsx` | Form 컴포넌트 |
+| `src/client/image-component.tsx` | Image 컴포넌트 |
 
-**Study Points**:
-- Image 컴포넌트: srcSet 생성, lazy loading, blur placeholder
-- Link 컴포넌트: prefetch 전략, soft/hard navigation
-- Script 컴포넌트: beforeInteractive/afterInteractive/lazyOnload
-- Form 컴포넌트: 프로그레시브 향상
+**Study Points** (소스 구조에서 도출):
+- index.tsx vs app-index.tsx — Pages vs App Router 하이드레이션 차이
+- RouterContext, AppRouterContext, HeadManagerContext 등 Context 구조
+- page-loader.ts의 동적 로딩 메커니즘
+- components/의 에러 경계, Suspense 경계 구현
 
-**Docs**: `docs/01-app/03-api-reference/01-components/`
+**Docs**: `01-app/03-api-reference/02-components/`, `01-app/01-getting-started/`
+
+**Skill Target**: `references/routing.md`, `references/error-handling.md`
+
+**Checklist**:
+- [ ] 소스 학습 완료
+- [ ] docs 교차 확인
+- [ ] skill 검증/개선
+
+---
+
+### Topic 7: font 패키지 ✅ 커버
+
+> next/font — Google Fonts 및 Local Font 로더
+
+**Source Files** (MODULE_MAP에서 추출):
+
+| File | Role |
+|------|------|
+| `packages/font/src/google/index.ts` | Google Fonts export (자동생성) |
+| `packages/font/src/google/loader.ts` | Google Fonts 로더 |
+| `packages/font/src/google/fetch-css-from-google-fonts.ts` | CSS 가져오기 |
+| `packages/font/src/google/fetch-font-file.ts` | 폰트 파일 다운로드 |
+| `packages/font/src/local/index.ts` | Local Font export |
+| `packages/font/src/local/loader.ts` | Local Font 로더 |
+| `packages/font/src/constants.ts` | 공유 상수 |
+| `packages/font/src/types.ts` | 타입 정의 |
+
+**Study Points** (소스 구조에서 도출):
+- Google Fonts: CSS fetch → 폰트 파일 다운로드 → 인라인 파이프라인
+- Local Fonts: 로컬 파일 → fallback metrics 계산
+- 두 로더의 공통 인터페이스
+- validation 함수들의 역할
+
+**Docs**: `01-app/03-api-reference/02-components/font.mdx`
 
 **Skill Target**: `references/optimization.md`
 
@@ -379,110 +304,31 @@
 
 ---
 
-### Topic 12: client — Dev Overlay ⬜ 미커버
+### Topic 8: third-parties 패키지 + next/src/experimental ✅ 커버
 
-**Source Files** (packages/next/src/client/dev/):
-| Pattern | Role |
-|---------|------|
-| `error-overlay/` | 에러 오버레이 UI |
-| `hot-middleware-client.ts` | HMR 클라이언트 |
-| `dev-build-watcher.ts` | 빌드 감시기 |
+> Third-party 통합 (GA, GTM, YouTube, Maps) 및 실험적 기능 (use cache, testing)
 
-**Study Points**:
-- 에러 오버레이 렌더링 및 소스맵 매핑
-- HMR WebSocket 프로토콜
-- 컴파일 상태 표시
+**Source Files** (MODULE_MAP에서 추출):
 
-**Docs**: 해당 없음 (내부 구현)
-
-**Skill Target**: 신규 생성 필요 (선택적 — 프레임워크 사용자 관점에서 낮은 우선순위)
-
-**Checklist**:
-- [ ] 소스 학습 완료
-- [ ] docs 교차 확인
-- [ ] skill 검증/개선
-
----
-
-### Topic 13: client — Legacy & Pages Router Compat + pages ⬜ 미커버
-
-**Source Files**:
-| Dir/File | Files | Role |
-|----------|-------|------|
-| `client/legacy/` | — | Pages Router 클라이언트 |
-| `client/router.ts` | 1 | Pages Router 라우터 |
-| `client/page-loader.ts` | 1 | 페이지 로더 |
-| `client/page-bootstrap.ts` | 1 | Pages 부트스트랩 |
-| `pages/` | 3 | Pages Router 서버 엔트리 |
-
-**Study Points**:
-- Pages Router 클라이언트 동작 (legacy 모드)
-- getServerSideProps/getStaticProps 클라이언트 데이터 로딩
-- Pages Router → App Router 마이그레이션 포인트
-
-**Docs**: `docs/02-pages/`
-
-**Skill Target**: 스킬 범위 외 (App Router 전용 스킬). 마이그레이션 맥락에서만 참조.
-
-**Checklist**:
-- [ ] 소스 학습 완료
-- [ ] docs 교차 확인
-- [ ] skill 검증/개선
-
----
-
-### Topic 14: build — Core Pipeline ✅ 커버
-
-**Source Files** (packages/next/src/build/):
 | File | Role |
 |------|------|
-| `index.ts` | 빌드 메인 진입점 |
-| `compiler.ts` | 컴파일러 생성 |
-| `entries.ts` | 엔트리포인트 수집 |
-| `webpack-config.ts` | Webpack 설정 생성 |
-| `build-context.ts` | 빌드 컨텍스트 |
-| `handle-entrypoints.ts` | 엔트리포인트 처리 |
-| `handle-externals.ts` | 외부 패키지 처리 |
-| `worker.ts` | 빌드 워커 |
+| `packages/third-parties/src/google/ga.tsx` | Google Analytics |
+| `packages/third-parties/src/google/gtm.tsx` | Google Tag Manager |
+| `packages/third-parties/src/google/youtube-embed.tsx` | YouTube 임베드 |
+| `packages/third-parties/src/google/google-maps-embed.tsx` | Maps 임베드 |
+| `packages/third-parties/src/ThirdPartyScriptEmbed.tsx` | 베이스 스크립트 임베드 |
+| `src/experimental/testing/` | 테스트 유틸리티 |
+| `src/experimental/testmode/` | 테스트 모드 런타임 |
 
-**Study Points**:
-- 빌드 파이프라인: 설정 → 엔트리 수집 → 컴파일 → 최적화 → 출력
-- Webpack/Turbopack 설정 생성 로직
-- Externals 처리 (서버 번들 최적화)
-- 빌드 워커 (병렬 처리)
+**Study Points** (소스 구조에서 도출):
+- GA/GTM 컴포넌트의 Script 컴포넌트 활용 패턴
+- ThirdPartyScriptEmbed의 기반 추상화
+- experimental/testing의 테스트 유틸 구조
+- use cache 관련 실험적 기능 (caching.md와 연결)
 
-**Docs**: `docs/03-architecture/nextjs-compiler.mdx`
+**Docs**: `01-app/03-api-reference/02-components/script.mdx`, `01-app/03-api-reference/01-directives/use-cache.mdx`
 
-**Skill Target**: `references/build-compilation.md`
-
-**Checklist**:
-- [ ] 소스 학습 완료
-- [ ] docs 교차 확인
-- [ ] skill 검증/개선
-
----
-
-### Topic 15: build — Bundlers (Webpack, Turbopack, SWC) ✅ 커버
-
-**Source Files** (packages/next/src/build/):
-| Dir | Role |
-|-----|------|
-| `webpack/` | Webpack 플러그인/로더 |
-| `webpack-build/` | Webpack 빌드 실행 |
-| `webpack-config-rules/` | Webpack 규칙 정의 |
-| `turbopack-analyze/` | Turbopack 분석 |
-| `turbopack-build/` | Turbopack 빌드 |
-| `swc/` | SWC 트랜스파일러 설정 |
-
-**Study Points**:
-- Webpack vs Turbopack 선택 로직
-- Next.js 전용 Webpack 플러그인 목록 및 역할
-- SWC 트랜스폼 옵션 (RSC 변환, 서버 액션 등)
-- Turbopack 빌드 파이프라인
-
-**Docs**: `docs/03-architecture/nextjs-compiler.mdx`
-
-**Skill Target**: `references/build-compilation.md`
+**Skill Target**: `references/optimization.md`, `references/caching.md`
 
 **Checklist**:
 - [ ] 소스 학습 완료
@@ -491,77 +337,43 @@
 
 ---
 
-### Topic 16: build — Analysis, Manifests & Templates ✅ 커버
+## Phase 2: Core Runtime — 동작 메커니즘 (7 Topics)
 
-**Source Files** (packages/next/src/build/):
-| Dir | Role |
-|-----|------|
-| `analysis/` | 코드 분석 |
-| `analyze/` | 번들 분석 |
-| `manifests/` | 빌드 매니페스트 생성 |
-| `templates/` | 엔트리 템플릿 |
-| `static-paths/` | 정적 경로 수집 |
-| `segment-config/` | 세그먼트 설정 파싱 |
-| `output/` | 출력 파일 관리 |
-
-**Study Points**:
-- 빌드 매니페스트 구조 (build-manifest, routes-manifest 등)
-- 엔트리 템플릿 (app-page, app-route 등)
-- 정적 경로 수집 (generateStaticParams)
-- 세그먼트 설정 추출 (dynamic, revalidate 등)
-
-**Docs**: `docs/01-app/03-api-reference/02-file-conventions/`
-
-**Skill Target**: `references/build-compilation.md`
-
-**Checklist**:
-- [ ] 소스 학습 완료
-- [ ] docs 교차 확인
-- [ ] skill 검증/개선
+순서는 Phase 내 import 의존 관계 기반. Phase 1 모듈이 직접 import하는 모듈.
 
 ---
 
-### Topic 17: export (Static Export) ✅ 커버
+### Topic 9: next/src/shared ✅ 커버 (부분)
 
-**Source Files** (packages/next/src/export/):
+> Server/Client 공유 유틸리티 — Context, Router, Dynamic, Constants
+
+**Source Files** (MODULE_MAP에서 추출):
+
 | File | Role |
 |------|------|
-| `index.ts` | 정적 내보내기 진입점 |
-| `helpers/` | 내보내기 헬퍼 |
-| `routes/` | 라우트별 내보내기 |
-| `worker.ts` | 내보내기 워커 |
+| `src/shared/lib/app-router-context.shared-runtime.ts` | AppRouterContext |
+| `src/shared/lib/router-context.shared-runtime.ts` | RouterContext |
+| `src/shared/lib/hooks-client-context.shared-runtime.ts` | Client hooks context |
+| `src/shared/lib/html-context.shared-runtime.ts` | HTML context |
+| `src/shared/lib/head-manager-context.shared-runtime.ts` | HeadManager context |
+| `src/shared/lib/app-dynamic.tsx` | App Router dynamic() 구현 |
+| `src/shared/lib/dynamic.tsx` | Pages Router dynamic() 구현 |
+| `src/shared/lib/head.tsx` | Head 컴포넌트 |
+| `src/shared/lib/constants.ts` | 공유 상수 |
+| `src/shared/lib/router/` | 라우터 유틸리티 |
+| `src/shared/lib/errors/` | 에러 타입 정의 |
+| `src/shared/lib/segment-cache/` | 세그먼트 캐시 |
 
-**Study Points**:
-- output: 'export' 설정 시 동작 흐름
-- 정적 HTML 생성 파이프라인
-- 동적 라우트의 정적 내보내기 처리
+**Study Points** (소스 구조에서 도출):
+- `*.shared-runtime.ts` 패턴의 의미 (서버/클라이언트 공유 런타임)
+- Context 객체들이 server → client로 전달되는 흐름
+- app-dynamic.tsx의 React.lazy + Suspense 래핑
+- router/ 하위의 라우터 유틸리티 구조
+- segment-cache/의 세그먼트 캐싱
 
-**Docs**: `docs/01-app/02-guides/static-exports.mdx`
+**Docs**: `01-app/03-api-reference/04-functions/`
 
-**Skill Target**: `references/rendering.md`
-
-**Checklist**:
-- [ ] 소스 학습 완료
-- [ ] docs 교차 확인
-- [ ] skill 검증/개선
-
----
-
-### Topic 18: experimental ⬜ 미커버
-
-**Source Files** (packages/next/src/experimental/):
-| Pattern | Role |
-|---------|------|
-| `*.ts`, `*.tsx` | 실험적 API |
-
-**Study Points**:
-- 실험적 기능 목록 (디렉토리 구조에서 추출)
-- 각 기능의 안정화 상태
-- next.config experimental 플래그와의 연결
-
-**Docs**: `docs/01-app/03-api-reference/05-config/01-next-config-js/` (experimental 섹션)
-
-**Skill Target**: 신규 생성 필요 (또는 기존 references에 실험적 기능 섹션 추가)
+**Skill Target**: `references/architecture.md`
 
 **Checklist**:
 - [ ] 소스 학습 완료
@@ -570,155 +382,88 @@
 
 ---
 
-### Topic 19: cli + bin (CLI) ⬜ 미커버
+### Topic 10: next/src/lib ✅ 커버 (부분)
 
-> 그룹핑 사유: bin 1파일 + cli 11파일 = 12파일, 관련 기능 통합
+> 코어 유틸리티 — 파일 시스템, 라우터, 메타데이터, 터보팩 연동
 
-**Source Files** (packages/next/src/):
-| Dir | Files | Role |
-|-----|-------|------|
-| `bin/` | 1 | `next` CLI 바이너리 진입점 |
-| `cli/` | 11 | CLI 명령어 (dev, build, start, lint 등) |
+**Source Files** (MODULE_MAP에서 추출 — 136 files):
 
-**Study Points**:
-- CLI 명령어 라우팅 구조
-- next dev / next build / next start 진입점
-- CLI 옵션 파싱
-
-**Docs**: `docs/01-app/03-api-reference/04-cli/`
-
-**Skill Target**: 신규 생성 필요
-
-**Checklist**:
-- [ ] 소스 학습 완료
-- [ ] docs 교차 확인
-- [ ] skill 검증/개선
-
----
-
-### Topic 20: diagnostics + telemetry + trace (Observability) ⬜ 미커버
-
-> 그룹핑 사유: diagnostics 2파일, telemetry 16파일, trace 13파일 — 관련 기능 통합 (31파일)
-
-**Source Files** (packages/next/src/):
-| Dir | Files | Role |
-|-----|-------|------|
-| `diagnostics/` | 2 | 진단 정보 |
-| `telemetry/` | 16 | 사용 통계 수집 |
-| `trace/` | 13 | 빌드/런타임 트레이싱 |
-
-**Study Points**:
-- 텔레메트리 수집 항목 및 옵트아웃
-- 빌드 트레이싱 구현
-- 진단 정보 수집
-
-**Docs**: 해당 없음 (내부 구현)
-
-**Skill Target**: 신규 생성 필요
-
-**Checklist**:
-- [ ] 소스 학습 완료
-- [ ] docs 교차 확인
-- [ ] skill 검증/개선
-
----
-
-### Topic 21: compiled + bundles (Vendored Dependencies) ⬜ 미커버
-
-> 참고: compiled 704파일, bundles 62파일 — 대부분 사전 컴파일된 의존성. 딥스터디 보다는 목록/역할 파악 수준.
-
-**Source Files** (packages/next/src/):
-| Dir | Files | Role |
-|-----|-------|------|
-| `compiled/` | 704 | 사전 컴파일된 의존성 (react, react-dom, webpack 등) |
-| `bundles/` | 62 | 번들된 의존성 |
-
-**Study Points**:
-- 번들된 패키지 목록 및 버전
-- 왜 사전 컴파일하는지 (설치 속도, 버전 고정)
-- 주요 번들 패키지: react, react-dom, webpack, postcss 등
-
-**Docs**: 해당 없음 (내부 인프라)
-
-**Skill Target**: `references/build-compilation.md` (부분적)
-
-**Checklist**:
-- [ ] 소스 학습 완료
-- [ ] docs 교차 확인
-- [ ] skill 검증/개선
-
----
-
-### Topic 22: next-devtools ⬜ 미커버
-
-**Source Files** (packages/next/src/next-devtools/):
-| Pattern | Files | Role |
-|---------|-------|------|
-| `*.ts`, `*.tsx` | 186 | Next.js DevTools 구현 |
-
-**Study Points**:
-- DevTools UI 구조
-- MCP 연동 (dev 환경)
-- 빌드/렌더링 정보 표시
-
-**Docs**: 해당 없음 (내부 도구)
-
-**Skill Target**: 신규 생성 필요
-
-**Checklist**:
-- [ ] 소스 학습 완료
-- [ ] docs 교차 확인
-- [ ] skill 검증/개선
-
----
-
-### Topic 23: font (next/font) ✅ 커버
-
-**Source Files** (packages/font/):
-| Pattern | Files | Role |
-|---------|-------|------|
-| `src/google/` | — | Google Fonts 지원 |
-| `src/local/` | — | 로컬 폰트 지원 |
-| `src/utils/` | — | 폰트 유틸리티 |
-
-**Study Points**:
-- Google Fonts 자동 다운로드 및 셀프호스팅
-- 로컬 폰트 처리
-- CSS 변수 기반 폰트 적용
-- font-display swap / size-adjust
-
-**Docs**: `docs/01-app/03-api-reference/01-components/font.mdx`
-
-**Skill Target**: `references/optimization.md`
-
-**Checklist**:
-- [ ] 소스 학습 완료
-- [ ] docs 교차 확인
-- [ ] skill 검증/개선
-
----
-
-### Topic 24: next-routing ✅ 커버
-
-**Source Files** (packages/next-routing/src/):
 | File | Role |
 |------|------|
-| `index.ts` | 진입점 |
-| `destination.ts` | 목적지 URL 처리 |
-| `i18n.ts` | i18n 라우팅 |
-| `matchers.ts` | 라우트 매칭 |
-| `middleware.ts` | 미들웨어 라우팅 |
-| `resolve-routes.ts` | 라우트 해석 |
-| `next-data.ts` | _next/data 처리 |
-| `types.ts` | 타입 정의 |
+| `src/lib/` 루트 파일들 | 코어 유틸리티 |
+| `src/lib/metadata/` | 메타데이터 생성/관리 |
+| `src/lib/turbopack/` | 터보팩 연동 |
 
-**Study Points**:
-- 라우트 해석 알고리즘 (rewrites, redirects, headers)
-- i18n 라우팅 처리
-- 미들웨어 실행 순서
-- _next/data 요청 정규화
+**Study Points** (소스 구조에서 도출):
+- metadata/ 하위의 메타데이터 생성 로직
+- turbopack/ 하위의 터보팩 런타임 연동
+- 주요 export 유틸리티 함수들
 
-**Docs**: `docs/01-app/02-guides/routing/`
+**Docs**: `01-app/03-api-reference/04-functions/generate-metadata.mdx`, `01-app/03-api-reference/08-turbopack.mdx`
+
+**Skill Target**: `references/architecture.md`
+
+**Checklist**:
+- [ ] 소스 학습 완료
+- [ ] docs 교차 확인
+- [ ] skill 검증/개선
+
+---
+
+### Topic 11: next/src/server — base-server & config ✅ 커버
+
+> 서버 코어 — Base Server, HTTP 추상화, 서버 설정
+
+**Source Files** (MODULE_MAP에서 추출):
+
+| File | Role |
+|------|------|
+| `src/server/next.ts` | 서버 진입점 (getServerImpl) |
+| `src/server/base-server.ts` | 기본 서버 클래스 |
+| `src/server/base-http/` | HTTP 요청/응답 추상화 |
+| `src/server/config.ts` | 서버 설정 로딩 |
+| `src/server/config-shared.ts` | 공유 설정 |
+| `src/server/config-utils.ts` | 설정 유틸리티 |
+| `src/server/load-components.ts` | 컴포넌트 로딩 |
+
+> 사유: server/ 분할 — base-server는 모든 서버 모드의 기반
+
+**Study Points** (소스 구조에서 도출):
+- next.ts → base-server.ts 초기화 흐름
+- base-http/의 Node.js HTTP 추상화 레이어
+- config.ts의 next.config.js 로딩/검증 로직
+- load-components.ts의 컴포넌트 해결 과정
+
+**Docs**: `01-app/03-api-reference/05-config/`
+
+**Skill Target**: `references/architecture.md`
+
+**Checklist**:
+- [ ] 소스 학습 완료
+- [ ] docs 교차 확인
+- [ ] skill 검증/개선
+
+---
+
+### Topic 12: next/src/server — routing internals ✅ 커버 (부분)
+
+> 라우팅 내부 — Route Matcher, Normalizer, 경로 해석
+
+**Source Files** (MODULE_MAP에서 추출):
+
+| File | Role |
+|------|------|
+| `src/server/normalizers/` | 경로 정규화 |
+| `src/server/route-matchers/` | 라우트 매칭 로직 |
+| `src/server/route-matches/` | 매칭 결과 타입 |
+| `src/server/lib/router-utils/` | 라우터 유틸리티 |
+
+**Study Points** (소스 구조에서 도출):
+- normalizers/의 경로 정규화 규칙 (trailing slash, locale 등)
+- route-matchers/의 패턴 매칭 구현
+- router-utils/의 라우트 해석 흐름
+
+**Docs**: `01-app/03-api-reference/03-file-conventions/`
 
 **Skill Target**: `references/routing.md`
 
@@ -729,23 +474,140 @@
 
 ---
 
-### Topic 25: eslint-config-next + eslint-plugin-next ⬜ 미커버
+### Topic 13: next/src/build — core ✅ 커버
 
-> 그룹핑 사유: eslint-config-next 4파일, eslint-plugin-internal 4파일, eslint-plugin-next 26파일 — 관련 ESLint 도구 통합 (34파일)
+> 빌드 시스템 코어 — 빌드 오케스트레이션, 엔트리포인트, 매니페스트
 
-**Source Files** (packages/):
-| Package | Files | Role |
-|---------|-------|------|
-| `eslint-config-next/` | 4 | Next.js ESLint 설정 |
-| `eslint-plugin-internal/` | 4 | 내부 ESLint 플러그인 |
-| `eslint-plugin-next/` | 26 | Next.js ESLint 규칙 |
+**Source Files** (MODULE_MAP에서 추출):
 
-**Study Points**:
-- Next.js 전용 ESLint 규칙 목록 (no-html-link-for-pages 등)
-- 권장 설정 구성
-- next lint 통합
+| File | Role |
+|------|------|
+| `src/build/index.ts` | 빌드 메인 엔트리 |
+| `src/build/entries.ts` | 엔트리포인트 생성 |
+| `src/build/output/` | 빌드 출력 관리 |
+| `src/build/manifests/` | 매니페스트 생성 |
+| `src/build/segment-config/` | 세그먼트 설정 |
+| `src/build/static-paths/` | 정적 경로 생성 |
+| `src/build/file-classifier.ts` | 파일 타입 감지 |
+| `src/build/handle-entrypoints.ts` | 엔트리포인트 처리 |
+| `src/build/type-check.ts` | TypeScript 체크 |
 
-**Docs**: `docs/01-app/02-guides/configuring/eslint.mdx`
+> 사유: build/ (263 files) 분할 — core는 빌드 오케스트레이션
+
+**Study Points** (소스 구조에서 도출):
+- index.ts의 빌드 파이프라인 흐름
+- entries.ts의 엔트리포인트 결정 로직
+- manifests/의 빌드 매니페스트 종류와 용도
+- segment-config/의 세그먼트별 설정 추출
+
+**Docs**: `01-app/03-api-reference/06-cli/`
+
+**Skill Target**: `references/build-compilation.md`
+
+**Checklist**:
+- [ ] 소스 학습 완료
+- [ ] docs 교차 확인
+- [ ] skill 검증/개선
+
+---
+
+### Topic 14: next/src/build — webpack & turbopack ✅ 커버
+
+> 번들러 통합 — Webpack 설정, Turbopack 빌드, SWC 컴파일
+
+**Source Files** (MODULE_MAP에서 추출):
+
+| File | Role |
+|------|------|
+| `src/build/webpack/` | Webpack 플러그인/로더 |
+| `src/build/webpack-build/` | Webpack 빌드 실행 |
+| `src/build/webpack-config.ts` | Webpack 설정 생성 |
+| `src/build/turbopack-build/` | Turbopack 빌드 |
+| `src/build/turbopack-analyze/` | Turbopack 분석 |
+| `src/build/swc/` | SWC 컴파일 설정 |
+| `src/build/babel/` | Babel 설정 (레거시) |
+| `src/build/analyzer/` | 번들 분석 |
+
+> 사유: build/ 분할 — 번들러 통합은 별도 학습 가치
+
+**Study Points** (소스 구조에서 도출):
+- webpack-config.ts의 Webpack 설정 생성 로직
+- webpack/의 커스텀 플러그인/로더 목록
+- turbopack-build/의 Turbopack 빌드 통합
+- swc/의 SWC 옵션 구성
+- Webpack vs Turbopack 실행 경로 분기점
+
+**Docs**: `01-app/03-api-reference/08-turbopack.mdx`, `03-architecture/nextjs-compiler.mdx`
+
+**Skill Target**: `references/build-compilation.md`
+
+**Checklist**:
+- [ ] 소스 학습 완료
+- [ ] docs 교차 확인
+- [ ] skill 검증/개선
+
+---
+
+### Topic 15: next/src/export + next-routing ⬜ 미커버 (부분)
+
+> 정적 Export 엔진 및 라우팅 유틸리티
+
+**Source Files** (MODULE_MAP에서 추출):
+
+| File | Role |
+|------|------|
+| `src/export/index.ts` | Export 메인 엔트리 (createStaticWorker 등) |
+| `src/export/worker.ts` | Export 워커 구현 |
+| `src/export/types.ts` | 타입 정의 |
+| `src/export/utils.ts` | Export 유틸리티 |
+| `packages/next-routing/src/index.ts` | resolveRoutes, i18n, middleware |
+| `packages/next-routing/src/resolve-routes.ts` | 라우트 매칭 엔진 |
+| `packages/next-routing/src/i18n.ts` | 국제화 |
+| `packages/next-routing/src/middleware.ts` | 미들웨어 유틸리티 |
+
+**Study Points** (소스 구조에서 도출):
+- export/: createStaticWorker → worker.ts 정적 페이지 생성 흐름
+- next-routing/: resolveRoutes의 라우트 해석 알고리즘
+- i18n.ts의 locale 감지/도메인 라우팅
+- export와 build의 연동 (static-paths → export)
+
+**Docs**: `01-app/02-guides/static-exports.mdx`, `01-app/02-guides/internationalization.mdx`
+
+**Skill Target**: `references/rendering.md` (static export 부분), 신규 생성 필요 (next-routing)
+
+**Checklist**:
+- [ ] 소스 학습 완료
+- [ ] docs 교차 확인
+- [ ] skill 검증/개선
+
+---
+
+## Phase 3: Infrastructure — 기반 유틸리티 (10 Topics)
+
+순서는 Phase 내 import 의존 관계 기반. Phase 1, 2에서 이미 간단히 다룬 개념들을 심화 학습.
+
+---
+
+### Topic 16: next/src/next-devtools ⬜ 미커버
+
+> Next.js 개발 도구 — Dev Overlay, Inspector, 에러 표시
+
+**Source Files** (MODULE_MAP에서 추출 — 186 files):
+
+| File | Role |
+|------|------|
+| `src/next-devtools/entrypoint.ts` | DevTools 진입점 |
+| `src/next-devtools/dev-overlay/` | 브라우저 Dev Overlay |
+| `src/next-devtools/server/` | 서버 사이드 DevTools |
+| `src/next-devtools/shared/` | 공유 로직 |
+| `src/next-devtools/userspace/` | 사용자 API |
+
+**Study Points** (소스 구조에서 도출):
+- dev-overlay/의 에러 UI 컴포넌트 구조
+- server/의 에러 감지/전송 로직
+- entrypoint.ts의 초기화 흐름
+
+**Docs**: `01-app/02-guides/debugging.mdx`
 
 **Skill Target**: 신규 생성 필요
 
@@ -756,42 +618,23 @@
 
 ---
 
-### Topic 26: create-next-app ⬜ 미커버
+### Topic 17: next/src/server — dev server ⬜ 미커버
 
-**Source Files** (packages/create-next-app/):
-| Pattern | Files | Role |
-|---------|-------|------|
-| `*.ts`, `*.mjs` | 81 | 프로젝트 스캐폴딩 도구 |
+> 개발 서버 — HMR, Fast Refresh, 개발 모드 서버
 
-**Study Points**:
-- 템플릿 선택 흐름 (App Router, TypeScript 등)
-- 프로젝트 구조 생성 로직
-- CLI 인터랙션
+**Source Files** (MODULE_MAP에서 추출):
 
-**Docs**: `docs/01-app/01-getting-started/01-installation.mdx`
+| File | Role |
+|------|------|
+| `src/server/dev/` | 개발 서버 구현 |
+| `packages/react-refresh-utils/` (8 files) | React Fast Refresh |
 
-**Skill Target**: 신규 생성 필요
+**Study Points** (소스 구조에서 도출):
+- dev/ 하위의 개발 서버 특화 로직
+- react-refresh-utils의 HMR 메커니즘
+- 파일 변경 감지 → 리빌드 → HMR 전파 흐름
 
-**Checklist**:
-- [ ] 소스 학습 완료
-- [ ] docs 교차 확인
-- [ ] skill 검증/개선
-
----
-
-### Topic 27: next-codemod ⬜ 미커버
-
-**Source Files** (packages/next-codemod/):
-| Pattern | Files | Role |
-|---------|-------|------|
-| `transforms/` | ~500 | 버전 마이그레이션 코드모드 |
-
-**Study Points**:
-- 주요 코드모드 목록 (middleware-to-proxy 등)
-- AST 변환 패턴 (jscodeshift)
-- 버전별 마이그레이션 전략
-
-**Docs**: `docs/01-app/02-guides/upgrading/`
+**Docs**: `03-architecture/fast-refresh.mdx`, `01-app/02-guides/local-development.mdx`
 
 **Skill Target**: 신규 생성 필요
 
@@ -802,31 +645,24 @@
 
 ---
 
-### Topic 28: Small Utilities ⬜ 미커버
+### Topic 18: next/src/cli + bin ⬜ 미커버
 
-> 그룹핑 사유: 각각 1~8파일의 소형 패키지 통합 (~30파일)
+> CLI 시스템 — next dev, next build, next start 명령 라우팅
 
-**Source Files** (packages/):
-| Package | Files | Role |
-|---------|-------|------|
-| `next-env/` | 1 | TypeScript 환경 선언 |
-| `next-mdx/` | 5 | MDX 지원 |
-| `next-plugin-storybook/` | 1 | Storybook 플러그인 |
-| `next-polyfill-module/` | 1 | Module polyfill |
-| `next-polyfill-nomodule/` | 1 | Nomodule polyfill |
-| `next-bundle-analyzer/` | 2 | 번들 분석기 |
-| `next-rspack/` | 3 | Rspack 지원 |
-| `next-swc/` | 0 | SWC 래퍼 (Rust 코드 별도) |
-| `react-refresh-utils/` | 8 | React Fast Refresh 유틸 |
-| `third-parties/` | 8 | 서드파티 스크립트 (GA, GTM 등) |
+**Source Files** (MODULE_MAP에서 추출):
 
-**Study Points**:
-- 각 유틸리티 패키지의 역할 파악
-- next-mdx: MDX 로더 구현
-- third-parties: Google Analytics, GTM, YouTube 임베드
-- react-refresh-utils: Fast Refresh 통합
+| File | Role |
+|------|------|
+| `src/bin/next.ts` | CLI 진입점 (1 file, ≤3 그룹핑) |
+| `src/cli/` (11 files) | 명령별 핸들러 |
 
-**Docs**: `docs/01-app/03-api-reference/01-components/third-party-libraries.mdx`
+> 사유: bin (1 file) → cli와 그룹핑
+
+**Study Points** (소스 구조에서 도출):
+- bin/next.ts의 명령 라우팅 구조
+- cli/ 하위의 각 서브커맨드 (dev, build, start, info 등)
+
+**Docs**: `01-app/03-api-reference/06-cli/`
 
 **Skill Target**: 신규 생성 필요
 
@@ -837,26 +673,221 @@
 
 ---
 
-## Part 2: Docs Supplementary Study
+### Topic 19: next/src/telemetry + diagnostics + trace ⬜ 미커버
 
-소스에서 다루지 않은 실용적 가이드/API 레퍼런스 학습.
+> 관측성 — 텔레메트리, 진단, 트레이싱
 
-### Docs Section: 01-app (App Router) — 224 files
+**Source Files** (MODULE_MAP에서 추출):
 
-| Category | Path | Files |
-|----------|------|-------|
-| Getting Started | `01-app/01-getting-started/` | ~10 |
-| Guides | `01-app/02-guides/` | ~100 |
-| API Reference | `01-app/03-api-reference/` | ~114 |
+| File | Role |
+|------|------|
+| `src/telemetry/` (16 files) | 텔레메트리 수집 |
+| `src/diagnostics/` (2 files, ≤3 그룹핑) | 에러/경고 진단 |
+| `src/trace/` (13 files) | 트레이싱/디버깅 |
 
-### Docs Section: 03-architecture — 5 files
+> 사유: diagnostics (2 files) → telemetry/trace와 관련 주제로 그룹핑
 
-| File | Topic |
-|------|-------|
-| `accessibility.mdx` | 접근성 |
-| `fast-refresh.mdx` | Fast Refresh |
-| `nextjs-compiler.mdx` | Next.js 컴파일러 |
-| `supported-browsers.mdx` | 브라우저 지원 |
+**Study Points** (소스 구조에서 도출):
+- telemetry/의 이벤트 수집/전송 구조
+- trace/의 빌드/요청 트레이싱
+- diagnostics/의 에러 진단 도우미
+
+**Docs**: `01-app/02-guides/open-telemetry.mdx`, `01-app/02-guides/instrumentation.mdx`
+
+**Skill Target**: 신규 생성 필요
+
+**Checklist**:
+- [ ] 소스 학습 완료
+- [ ] docs 교차 확인
+- [ ] skill 검증/개선
+
+---
+
+### Topic 20: next/src/bundles + compiled ⬜ 미커버
+
+> 번들/프리컴파일 — 외부 의존성 벤더링
+
+**Source Files** (MODULE_MAP에서 추출):
+
+| File | Role |
+|------|------|
+| `src/bundles/` (62 files) | 번들된 외부 의존성 |
+| `src/compiled/` (704 files) | 프리컴파일된 라이브러리 |
+
+**Study Points** (소스 구조에서 도출):
+- bundles/의 벤더링 대상과 이유
+- compiled/의 주요 프리컴파일 라이브러리 목록
+- 벤더링 전략 (왜 외부 dep를 직접 번들하는가)
+
+**Docs**: 해당 없음
+
+**Skill Target**: 신규 생성 필요 (또는 build-compilation.md에 추가)
+
+**Checklist**:
+- [ ] 소스 학습 완료
+- [ ] docs 교차 확인
+- [ ] skill 검증/개선
+
+---
+
+### Topic 21: next/src/pages + eslint 패키지들 ⬜ 미커버
+
+> 레거시 Pages Router 지원 및 ESLint 통합
+
+**Source Files** (MODULE_MAP에서 추출):
+
+| File | Role |
+|------|------|
+| `src/pages/` (3 files) | Pages Router 지원 |
+| `packages/eslint-plugin-next/src/` (26 files) | ESLint 규칙 |
+| `packages/eslint-config-next/src/` (4 files) | ESLint 설정 |
+| `packages/eslint-plugin-internal/src/` (4 files) | 내부 ESLint 규칙 |
+
+**Study Points** (소스 구조에서 도출):
+- pages/의 Pages Router 레거시 지원 범위
+- eslint-plugin-next의 규칙 목록과 각 규칙의 검사 대상
+- eslint-config-next의 기본 설정 구성
+
+**Docs**: `02-pages/`, `01-app/02-guides/eslint.mdx` (있을 경우)
+
+**Skill Target**: 신규 생성 필요
+
+**Checklist**:
+- [ ] 소스 학습 완료
+- [ ] docs 교차 확인
+- [ ] skill 검증/개선
+
+---
+
+### Topic 22: create-next-app ⬜ 미커버
+
+> 프로젝트 스캐폴딩 CLI
+
+**Source Files** (MODULE_MAP에서 추출 — 81 files):
+
+| File | Role |
+|------|------|
+| `packages/create-next-app/index.ts` | CLI 진입점 |
+| `packages/create-next-app/create-app.ts` | 앱 생성 로직 |
+| `packages/create-next-app/helpers/` | 템플릿/설치 헬퍼 |
+
+**Study Points** (소스 구조에서 도출):
+- index.ts → create-app.ts 흐름
+- helpers/의 템플릿 다운로드/설치 로직
+- 사용자 입력 처리 (prompts)
+
+**Docs**: `01-app/01-getting-started/01-installation.mdx`
+
+**Skill Target**: 신규 생성 필요
+
+**Checklist**:
+- [ ] 소스 학습 완료
+- [ ] docs 교차 확인
+- [ ] skill 검증/개선
+
+---
+
+### Topic 23: next-codemod ⬜ 미커버
+
+> 자동 코드 마이그레이션 도구
+
+**Source Files** (MODULE_MAP에서 추출 — 502 files):
+
+| File | Role |
+|------|------|
+| `packages/next-codemod/bin/` (15 files) | CLI |
+| `packages/next-codemod/lib/` (10 files) | 유틸리티 |
+| `packages/next-codemod/transforms/` (23 디렉토리) | 코드모드 변환 |
+
+**Study Points** (소스 구조에서 도출):
+- transforms/ 디렉토리별 변환 대상과 로직
+- jscodeshift 기반 AST 변환 패턴
+- 버전별 마이그레이션 경로
+
+**Docs**: `01-app/02-guides/upgrading.mdx`
+
+**Skill Target**: 신규 생성 필요
+
+**Checklist**:
+- [ ] 소스 학습 완료
+- [ ] docs 교차 확인
+- [ ] skill 검증/개선
+
+---
+
+### Topic 24: next-swc ⬜ 미커버
+
+> SWC 네이티브 바인딩 (Rust 바이너리)
+
+**Source Files** (MODULE_MAP에서 추출):
+
+| File | Role |
+|------|------|
+| `packages/next-swc/` | Rust 네이티브 바인딩 (TS/JS 소스 0) |
+
+**Study Points** (소스 구조에서 도출):
+- native/ 디렉토리의 Rust 바인딩 구조
+- N-API를 통한 Node.js ↔ Rust 인터페이스
+- build/swc/와의 연동 관계
+
+**Docs**: `03-architecture/nextjs-compiler.mdx`
+
+**Skill Target**: 신규 생성 필요
+
+**Checklist**:
+- [ ] 소스 학습 완료
+- [ ] docs 교차 확인
+- [ ] skill 검증/개선
+
+---
+
+### Topic 25: runtime-utils + build-plugins + next-mdx ⬜ 미커버
+
+> 런타임 유틸리티, 빌드 플러그인, MDX 통합
+
+**Source Files** (MODULE_MAP에서 추출):
+
+| File | Role |
+|------|------|
+| `packages/next-env/` (1 file, 그룹핑) | dotenv 타입 생성 |
+| `packages/next-polyfill-module/` (1 file, 그룹핑) | ES 모듈 폴리필 |
+| `packages/next-polyfill-nomodule/` (1 file, 그룹핑) | 레거시 폴리필 |
+| `packages/next-rspack/` (3 files, 그룹핑) | Rspack 통합 |
+| `packages/next-bundle-analyzer/` (2 files, 그룹핑) | 번들 분석 |
+| `packages/next-plugin-storybook/` (1 file, 그룹핑) | Storybook 통합 |
+| `packages/next-mdx/` (5 files) | MDX 지원 |
+
+> 사유: next-env(1), polyfill-module(1), polyfill-nomodule(1), next-rspack(3), next-bundle-analyzer(2), next-plugin-storybook(1) — 모두 ≤3 files, 관련 주제로 그룹핑
+
+**Study Points** (소스 구조에서 도출):
+- next-env의 dotenv 타입 주입
+- 폴리필 모듈의 지원 범위
+- next-rspack의 Rspack 번들러 통합 (실험적)
+- next-bundle-analyzer의 분석 설정
+- next-mdx의 MDX 처리 파이프라인
+
+**Docs**: `04-community/02-rspack.mdx`, `01-app/02-guides/mdx.mdx`
+
+**Skill Target**: 신규 생성 필요
+
+**Checklist**:
+- [ ] 소스 학습 완료
+- [ ] docs 교차 확인
+- [ ] skill 검증/개선
+
+---
+
+## Docs Supplementary Study
+
+소스에서 직접 다루지 않은 실용적 가이드/API 레퍼런스:
+
+- `01-app/02-guides/authentication.mdx` — 인증 패턴
+- `01-app/02-guides/forms.mdx` — 폼 처리 패턴
+- `01-app/02-guides/testing/` — 테스트 프레임워크별 가이드
+- `01-app/02-guides/self-hosting.mdx` — 셀프 호스팅
+- `01-app/02-guides/caching.mdx` — 캐싱 전략 가이드
+- `01-app/02-guides/pwa.mdx` — Progressive Web Apps
+- `01-app/03-api-reference/05-config/` — next.config.js 전체 옵션 (80+ 문서)
 
 ---
 
@@ -864,21 +895,21 @@
 
 | Action | File | Source |
 |--------|------|--------|
-| Verify/Improve | `references/architecture.md` | Topics 1, 2 |
-| Verify/Improve | `references/routing.md` | Topics 3, 10, 24 |
-| Verify/Improve | `references/server-components.md` | Topic 4 |
-| Verify/Improve | `references/rendering.md` | Topics 4, 17 |
-| Verify/Improve | `references/caching.md` | Topic 5 |
-| Verify/Improve | `references/data-fetching.md` | Topic 6 |
-| Verify/Improve | `references/api-routes.md` | Topic 6 |
-| Verify/Improve | `references/proxy.md` | Topic 7 |
-| Verify/Improve | `references/error-handling.md` | Topic 8 |
-| Verify/Improve | `references/optimization.md` | Topics 11, 23 |
-| Verify/Improve | `references/build-compilation.md` | Topics 14, 15, 16 |
-| Review (고아) | `references/patterns.md` | 크로스커팅 — 소스 학습 후 전체 검증 |
-| Review (고아) | `references/anti-patterns.md` | 크로스커팅 — 소스 학습 후 전체 검증 |
-| Review (고아) | `references/examples.md` | 크로스커팅 — 소스 학습 후 전체 검증 |
-| Review (고아) | `references/best-practices/*.md` (22개) | 크로스커팅 — 관련 토픽 학습 시 함께 검증 |
+| Verify/Improve | `skills/nextjs-aio/references/server-components.md` | Topic 2 (app-render) |
+| Verify/Improve | `skills/nextjs-aio/references/rendering.md` | Topic 2 (app-render), Topic 15 (export) |
+| Verify/Improve | `skills/nextjs-aio/references/routing.md` | Topic 3 (route-modules), Topic 12 (routing internals) |
+| Verify/Improve | `skills/nextjs-aio/references/api-routes.md` | Topic 1 (api), Topic 3 (route-modules) |
+| Verify/Improve | `skills/nextjs-aio/references/caching.md` | Topic 4 (caching) |
+| Verify/Improve | `skills/nextjs-aio/references/proxy.md` | Topic 5 (proxy) |
+| Verify/Improve | `skills/nextjs-aio/references/error-handling.md` | Topic 6 (client) |
+| Verify/Improve | `skills/nextjs-aio/references/optimization.md` | Topic 7 (font), Topic 8 (third-parties) |
+| Verify/Improve | `skills/nextjs-aio/references/architecture.md` | Topic 9 (shared), Topic 10 (lib), Topic 11 (server-core) |
+| Verify/Improve | `skills/nextjs-aio/references/build-compilation.md` | Topic 13, 14 (build) |
+| Verify/Improve | `skills/nextjs-aio/references/data-fetching.md` | Topic 2 (server actions) |
+| Create (신규) | (필요 시 결정) | 미커버 모듈 학습 후 |
+| Review (고아) | `skills/nextjs-aio/references/patterns.md` | 교차 관심사 — 삭제/병합 검토 불필요 (의도적 교차 참조) |
+| Review (고아) | `skills/nextjs-aio/references/anti-patterns.md` | 교차 관심사 — 삭제/병합 검토 불필요 |
+| Review (고아) | `skills/nextjs-aio/references/examples.md` | 교차 관심사 — 삭제/병합 검토 불필요 |
 
 ## Verification
 
