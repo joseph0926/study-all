@@ -96,7 +96,7 @@ study-all/
 - MODULE_MAP은 ref/ 디렉토리 구조에서 기계적으로 추출 — AI의 "주요/핵심" 주관 판단 금지
 - Study Points는 모듈의 export/import/디렉토리명에서 기계적으로 도출 — AI 일반 지식 사용 금지
 - COVERAGE_MAP으로 모듈 ↔ references/ 매칭 → 미커버 모듈은 "신규 생성 필요"로 표시
-- 토픽 순서는 모듈 간 import 의존 관계 Grep으로 결정 (폴백: bottom-up)
+- 토픽 순서는 Top-down(익숙한 것 먼저) 전략: Phase 1(Familiar — 공식 문서 매칭) → Phase 2(Core Runtime — Phase 1이 import) → Phase 3(Infrastructure — 나머지). 각 Phase 내에서는 import 의존 관계 순서. 상위 Phase 학습 중 하위 Phase 개념을 만나면 Just-in-time 간단 설명 후 넘어감
 - 최소 변경 원칙: 틀린 것만 고치고, 없는 것만 추가
 - `patterns.md`, `anti-patterns.md`는 사용자 명시 요청 시에만 수정
 

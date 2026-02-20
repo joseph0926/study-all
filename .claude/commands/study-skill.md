@@ -246,8 +246,40 @@ MODULE_MAP의 각 모듈과 REF_FILES(references/ 파일)를 교차 대조합니
    - 다른 모듈과의 의존 관계 (import 문 Grep으로 추출)
    - 테스트 파일이 있으면: 테스트 파일명에서 테스트 대상 추출
 
-4. **토픽 순서**: 모듈 간 **import 의존 관계**를 Grep으로 추출하여 의존되는 모듈부터 배치합니다.
-   - 의존 관계를 추출할 수 없으면: 기초 자료구조/설정 → 내부 메커니즘 → 사용자 기능 → 고급 기능 순서로 폴백
+4. **토픽 순서**: **Top-down (익숙한 것 먼저)** 전략으로 3개 Phase로 분류합니다.
+
+   #### Phase 분류 (기계적 — AI 주관 판단 금지)
+
+   아래 우선순위 순서로 첫 번째 적용 가능한 방법을 사용합니다:
+
+   **우선순위 1: DOCS_DIR 매칭 기반** (DOCS_DIR 있을 때)
+   - Phase 1 (Familiar): DOCS_DIR의 문서와 모듈명이 Grep 매칭되는 모듈
+   - Phase 2 (Core Runtime): Phase 1 모듈이 직접 import하는 모듈 (1-hop)
+   - Phase 3 (Infrastructure): 나머지
+
+   **우선순위 2: npm 패키지 기반** (모노레포, DOCS_DIR 없을 때)
+   - Phase 1: `package.json`에 `"main"` 또는 `"exports"`가 있는 모듈
+   - Phase 2: Phase 1 모듈이 직접 import하는 모듈
+   - Phase 3: 나머지
+
+   **우선순위 3: 엔트리포인트 기반** (단일 패키지)
+   - Phase 1: `src/index.{ts,js}`에서 직접 export하는 모듈
+   - Phase 2: Phase 1 모듈이 import하는 모듈
+   - Phase 3: 나머지
+
+   **우선순위 4: import 그래프 비율** (위 모두 안 될 때)
+   - 각 모듈의 score = (import하는 모듈 수) / (import당하는 모듈 수 + 1)
+   - Phase 1: score 상위 1/3
+   - Phase 2: score 중간 1/3
+   - Phase 3: score 하위 1/3
+
+   #### 각 Phase 내부 순서
+   - Phase 내에서는 모듈 간 import 의존 관계 순서 유지 (의존되는 모듈부터)
+   - 의존 관계 추출 불가 시 알파벳 순
+
+   #### Phase 분류 이유
+   - 익숙한 API(Phase 1)를 먼저 학습하면 맥락이 생기고, 이후 내부 구현(Phase 2)과 기반 인프라(Phase 3)를 deep dive할 때 "이게 어디에 쓰이는지" 이해한 상태에서 학습할 수 있음
+   - Phase 1 학습 중 하위 Phase 개념을 만나면 Just-in-time 간단 설명 후 넘어감 (Phase 5 참조)
 
 #### plan.md 생성
 
@@ -291,9 +323,15 @@ MODULE_MAP의 각 모듈과 REF_FILES(references/ 파일)를 교차 대조합니
 
 ---
 
-## Part 1: Source Code Study ({N} Topics)
+## Phase 1: Familiar — 사용자가 직접 쓰는 API ({N} Topics)
+
+순서는 Phase 내 import 의존 관계 기반.
+
+---
 
 ### Topic 1: {모듈명} {✅|⬜ 커버 상태}
+
+> {모듈 1줄 설명}
 
 **Source Files** (MODULE_MAP에서 추출):
 | File | Role |
@@ -315,12 +353,28 @@ MODULE_MAP의 각 모듈과 REF_FILES(references/ 파일)를 교차 대조합니
 - [ ] docs 교차 확인
 - [ ] skill 검증/개선
 
-### Topic 2: {모듈명} ...
-{이하 MODULE_MAP의 모든 모듈에 대해 반복}
+{이하 Phase 1의 모든 모듈에 대해 반복}
 
 ---
 
-## Part 2: Docs Supplementary Study
+## Phase 2: Core Runtime — 동작 메커니즘 ({N} Topics)
+
+순서는 Phase 내 import 의존 관계 기반.
+
+{Phase 2 모듈에 대해 Topic 반복 — 형식 동일}
+
+---
+
+## Phase 3: Infrastructure — 기반 유틸리티 ({N} Topics)
+
+순서는 Phase 내 import 의존 관계 기반.
+Phase 1, 2에서 이미 간단히 다룬 개념들을 심화 학습.
+
+{Phase 3 모듈에 대해 Topic 반복 — 형식 동일}
+
+---
+
+## Docs Supplementary Study
 
 {소스에서 다루지 않은 실용적 가이드/API 레퍼런스 학습 — DOCS_DIR 있을 때만}
 
@@ -356,6 +410,14 @@ plan.md를 생성한 후 AskUserQuestion으로 확인합니다:
 ## Phase 5: Per-Topic Study Loop (대화형 — 핵심)
 
 각 토픽마다 아래 5단계를 반복합니다. **사용자가 학습을 주도합니다.**
+
+### Step 0: Just-in-time 설명 규칙 (상위 Phase 토픽 학습 시)
+
+상위 Phase(Phase 1, 2) 토픽 학습 중 하위 Phase의 개념을 만나면:
+- **1-2줄 간단 설명** + 소스 경로만 제공 (deep dive하지 않음)
+- "이 개념은 Phase 3의 {토픽명}에서 심화 학습합니다" 표시
+- 사용자가 "지금 더 알고 싶다"고 하면 그 자리에서 확장 설명 가능
+- 해당 하위 Phase 토픽의 Study Points에 "Phase N에서 이미 간단히 다룸: {맥락}" 메모를 추가하여, 나중에 심화 학습 시 기존 맥락과 연결
 
 ### Step 1: 소스 파일 읽기 (SOURCE_DIR 있을 때)
 
