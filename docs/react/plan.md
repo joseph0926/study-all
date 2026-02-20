@@ -6,8 +6,8 @@
 ## Current State
 
 - **Skill**: react-aio — 19개 참조 문서 + 59개 best-practice 규칙 (v19.2.4 기준)
-- **Source**: `ref/react-fork/packages/` — 38개 패키지 + `compiler/` (총 ~7,000+ 파일)
-- **Docs**: `ref/react.dev/` — 46개 learn 가이드 + API 레퍼런스
+- **Source**: `ref/react-fork/packages/` — 38개 패키지 + `compiler/packages/` 8개 (총 46 모듈, ~3,978 files)
+- **Docs**: `ref/react.dev/` — 51개 learn 가이드 + API 레퍼런스 (~207 .md files)
 
 ## Coverage Analysis
 
@@ -16,11 +16,11 @@
 | ✅ 커버 | react | hooks.md, memo.md, lazy.md, context.md, refs.md, transitions.md, activity.md, actions.md |
 | ✅ 커버 | react-reconciler | fiber.md, reconciliation.md, hooks.md, effects.md, suspense.md, error-handling.md, refs.md, context.md |
 | ✅ 커버 | scheduler | scheduler.md |
-| ✅ 커버 | shared | memo.md, lazy.md, portals.md (부분) |
-| ✅ 커버 | react-dom-bindings | events.md, actions.md |
-| ✅ 커버 | react-dom | portals.md, actions.md |
+| ✅ 커버 | shared | memo.md, lazy.md (shallowEqual 관련, 부분) |
+| ✅ 커버 | react-dom-bindings | events.md, actions.md (부분) |
+| ✅ 커버 | react-dom | portals.md, actions.md (부분) |
 | ✅ 커버 | react-server | server-components.md |
-| ✅ 커버 | react-server-dom-webpack | server-components.md |
+| ✅ 커버 | react-server-dom-webpack | server-components.md (부분) |
 | ⬜ 미커버 | react-client | 신규 생성 필요 |
 | ⬜ 미커버 | react-is | 신규 생성 필요 |
 | ⬜ 미커버 | react-cache | 신규 생성 필요 |
@@ -28,15 +28,15 @@
 | ⬜ 미커버 | react-markup | 신규 생성 필요 |
 | ⬜ 미커버 | use-sync-external-store | 신규 생성 필요 |
 | ⬜ 미커버 | use-subscription | 신규 생성 필요 |
-| ⬜ 미커버 | react-native-renderer | 신규 생성 필요 |
-| ⬜ 미커버 | react-art | 신규 생성 필요 |
-| ⬜ 미커버 | react-noop-renderer | 신규 생성 필요 |
-| ⬜ 미커버 | react-test-renderer | 신규 생성 필요 |
 | ⬜ 미커버 | react-server-dom-turbopack | 신규 생성 필요 |
 | ⬜ 미커버 | react-server-dom-parcel | 신규 생성 필요 |
 | ⬜ 미커버 | react-server-dom-esm | 신규 생성 필요 |
 | ⬜ 미커버 | react-server-dom-unbundled | 신규 생성 필요 |
 | ⬜ 미커버 | react-server-dom-fb | 신규 생성 필요 |
+| ⬜ 미커버 | react-native-renderer | 신규 생성 필요 |
+| ⬜ 미커버 | react-art | 신규 생성 필요 |
+| ⬜ 미커버 | react-noop-renderer | 신규 생성 필요 |
+| ⬜ 미커버 | react-test-renderer | 신규 생성 필요 |
 | ⬜ 미커버 | react-devtools-shared | 신규 생성 필요 |
 | ⬜ 미커버 | react-devtools | 신규 생성 필요 |
 | ⬜ 미커버 | react-devtools-core | 신규 생성 필요 |
@@ -45,17 +45,25 @@
 | ⬜ 미커버 | react-devtools-extensions | 신규 생성 필요 |
 | ⬜ 미커버 | react-devtools-shell | 신규 생성 필요 |
 | ⬜ 미커버 | react-devtools-timeline | 신규 생성 필요 |
+| ⬜ 미커버 | react-debug-tools | 신규 생성 필요 |
 | ⬜ 미커버 | react-suspense-test-utils | 신규 생성 필요 |
 | ⬜ 미커버 | eslint-plugin-react-hooks | 신규 생성 필요 |
 | ⬜ 미커버 | dom-event-testing-library | 신규 생성 필요 |
 | ⬜ 미커버 | jest-react | 신규 생성 필요 |
 | ⬜ 미커버 | internal-test-utils | 신규 생성 필요 |
-| ⬜ 미커버 | compiler | 신규 생성 필요 |
+| ⬜ 미커버 | babel-plugin-react-compiler | 신규 생성 필요 |
+| ⬜ 미커버 | eslint-plugin-react-compiler | 신규 생성 필요 |
+| ⬜ 미커버 | react-compiler-healthcheck | 신규 생성 필요 |
+| ⬜ 미커버 | react-compiler-runtime | 신규 생성 필요 |
+| ⬜ 미커버 | make-read-only-util | 신규 생성 필요 |
+| ⬜ 미커버 | react-forgive | 신규 생성 필요 |
+| ⬜ 미커버 | react-mcp-server | 신규 생성 필요 |
+| ⬜ 미커버 | snap | 신규 생성 필요 |
 | 🔗 고아 ref | — | `references/patterns.md` (크로스커팅, 패키지 비특정) |
 | 🔗 고아 ref | — | `references/anti-patterns.md` (크로스커팅, 패키지 비특정) |
 | 🔗 고아 ref | — | `references/best-practices/` (크로스커팅, 패키지 비특정) |
 
-- **커버율**: 8/39 모듈 (20.5%)
+- **커버율**: 8/46 모듈 (17.4%)
 
 ## Core Principles
 
@@ -71,87 +79,33 @@
 4. 최소 개선 (사용자 결정)
 5. plan.md 체크리스트 업데이트
 
----
+## Phase Classification
 
-## Part 1: Core Runtime (13 Topics)
+DOCS_DIR 매칭 기반 (우선순위 1):
+- **Phase 1 (Familiar)**: `ref/react.dev/` 문서와 모듈명이 Grep 매칭되는 모듈
+- **Phase 2 (Core Runtime)**: Phase 1 모듈이 직접 import하는 내부 모듈 (1-hop)
+- **Phase 3 (Infrastructure)**: 나머지
 
-순서는 모듈 간 import 의존 관계 기반 — 의존되는 모듈부터 배치.
-`react-reconciler`(100+ files)는 파일 그룹별 분할 (사유: 단일 src/ 디렉토리에 100+ 파일, 논리적 파일 그룹별 분할).
-
----
-
-### Topic 1: shared ⬜ 미커버
-
-> React 전체 패키지가 공유하는 유틸리티/상수 (의존 관계 없음 — 기초 레이어)
-
-- [ ] 소스 학습 완료
-- [ ] docs 교차 확인
-- [ ] skill 검증/개선
-
-**Source Files** (`ref/react-fork/packages/shared/`):
-
-| File | Role |
-|------|------|
-| `ReactSymbols.js` | REACT_ELEMENT_TYPE 등 Symbol 상수 |
-| `ReactTypes.js` | 공유 타입 정의 |
-| `ReactFeatureFlags.js` | Feature flag 설정 |
-| `objectIs.js` | Object.is 폴리필 |
-| `shallowEqual.js` | 얕은 비교 (memo, deps 비교) |
-| `getComponentNameFromType.js` | 컴포넌트명 추출 유틸 |
-| `isValidElementType.js` | 유효한 엘리먼트 타입 체크 |
-| `hasOwnProperty.js` | OwnProperty 체크 유틸 |
-
-**Study Points** (소스 구조에서 도출):
-- ReactSymbols: REACT_ELEMENT_TYPE, REACT_FRAGMENT_TYPE 등 Symbol 상수 목록
-- shallowEqual/objectIs: deps 비교의 기초 알고리즘
-- ReactFeatureFlags: 기능 활성화/비활성화 분기 패턴
-- 의존 모듈: 없음 (최하위 레이어)
-
-**Docs**: 해당 없음 (내부 구현)
-
-**Skill Target**: `references/memo.md`, `references/lazy.md` 일부 (shallowEqual 관련)
+상위 Phase 학습 중 하위 Phase 개념을 만나면 Just-in-time 1-2줄 설명 후 넘어간다.
 
 ---
 
-### Topic 2: scheduler ✅ 커버
+## Phase 1: Familiar — 사용자가 직접 쓰는 API (9 Topics)
 
-> 시간 분할(Time Slicing)과 우선순위 작업 큐 (의존 관계 없음)
-
-- [ ] 소스 학습 완료
-- [ ] skill 검증/개선 (`references/scheduler.md`)
-
-**Source Files** (`ref/react-fork/packages/scheduler/src/`):
-
-| File | Role |
-|------|------|
-| `forks/Scheduler.js` | 메인 스케줄러 (작업 큐, shouldYield) |
-| `SchedulerMinHeap.js` | 우선순위 큐 (min heap) |
-| `SchedulerPriorities.js` | ImmediateP, UserBlockingP, NormalP, LowP, IdleP |
-| `SchedulerFeatureFlags.js` | 스케줄러 Feature flags |
-| `SchedulerProfiling.js` | 프로파일링 |
-
-**Study Points** (소스 구조에서 도출):
-- Entrypoint exports: `scheduleCallback`, `cancelCallback`, `shouldYieldToHost`, `getCurrentTime`
-- Min heap: taskQueue, timerQueue 구조
-- 5ms 타임 슬라이스, `MessageChannel` 기반 비동기 스케줄링
-- 의존 모듈: 없음
-
-**Docs**: 해당 없음 (내부 구현)
-
-**Skill Target**: `references/scheduler.md`
+순서는 Phase 내 import 의존 관계 기반 — 의존되는 모듈부터 배치.
 
 ---
 
-### Topic 3: React-Core-API ✅ 커버
+### Topic 1: react ✅ 커버
 
-> React 패키지의 공개 API Surface (→ shared 의존)
+> React 패키지의 공개 API Surface — 모든 React 앱의 진입점
 > 기존 학습 기록: `docs/react/React-Core-API.md` (2026-02-11, Step 1-6 완료)
 
-- [x] 소스 학습 완료 — ReactElement/$$typeof, SharedInternals/Dispatcher, Hooks API 선언부, Client vs Server API, HOC 유틸리티, cache & Transitions
+- [ ] 소스 학습 완료
 - [ ] docs 교차 확인
 - [ ] skill 검증/개선
 
-**Source Files** (`ref/react-fork/packages/react/`):
+**Source Files** (`ref/react-fork/packages/react/`, 82 files):
 
 | File | Role |
 |------|------|
@@ -169,384 +123,38 @@
 **Study Points** (소스 구조에서 도출):
 - Entrypoint exports: Component, Fragment, Profiler, StrictMode, Suspense, Activity, createElement, cloneElement, isValidElement, createContext, forwardRef, lazy, memo, use, cache, cacheSignal, startTransition, useId, useState, useReducer, useEffect, useLayoutEffect, useInsertionEffect, useCallback, useMemo, useRef, useContext, useImperativeHandle, useDebugValue, useTransition, useDeferredValue, useActionState, useOptimistic
 - Hook dispatcher 패턴: `ReactSharedInternals.H`를 통한 간접 호출
+- Client vs Server API surface 차이 (ReactClient.js vs ReactServer.js)
 - 의존 모듈: shared (ReactSymbols, ReactTypes)
 
 **Docs** (`ref/react.dev/src/content/`):
-- `learn/describing-the-ui.md`
-- `reference/react/createElement.md`
-- `reference/react/Children.md`
+- `reference/react/` — 49개 API 레퍼런스 파일
+- `learn/describing-the-ui.md`, `learn/adding-interactivity.md`
 
-**Skill Target**: 여러 references (hooks.md, memo.md, lazy.md, context.md, refs.md, transitions.md, activity.md, actions.md)
-
----
-
-### Topic 4: Fiber-Structure ✅ 커버
-
-> Fiber 노드 자료구조, WorkTag, Flags, Mode (→ shared 의존)
-> 분할 사유: react-reconciler 100+ files를 논리적 파일 그룹별로 분할
-> 기존 학습 기록: `docs/react/Fiber-Structure.md` (2026-02-13~14, Step 1-4 완료)
-
-- [x] 소스 학습 완료 — FiberNode 생성자/필드 5카테고리, WorkTag 31개 상수/type→tag 변환, Flags & Mode 비트마스크, Double Buffering/createWorkInProgress
-- [x] skill 검증/개선 (`references/fiber.md`) — WorkTag 테이블 확장, Flags/Mode/Double Buffering 섹션 추가, Lane 값 수정
-
-**Source Files** (`ref/react-fork/packages/react-reconciler/src/`):
-
-| File | Role |
-|------|------|
-| `ReactFiber.js` | Fiber 노드 생성, 구조체 필드 |
-| `ReactWorkTags.js` | FunctionComponent, HostComponent 등 태그 상수 |
-| `ReactFiberFlags.js` | Placement, Update, Deletion 등 부작용 플래그 |
-| `ReactTypeOfMode.js` | ConcurrentMode, StrictMode 등 모드 플래그 |
-| `ReactInternalTypes.js` | Fiber 타입 정의 |
-
-**Study Points** (소스 구조에서 도출):
-- Fiber 노드 필드: tag, type, stateNode, return, child, sibling, alternate, flags, lanes, memoizedState, memoizedProps
-- Double buffering: current ↔ workInProgress (alternate)
-- WorkTag 상수 목록과 분기 처리
-- 의존 모듈: shared (ReactTypes)
-
-**Docs**: 해당 없음 (내부 구현)
-
-**Skill Target**: `references/fiber.md`
+**Skill Target**: hooks.md, memo.md, lazy.md, context.md, refs.md, transitions.md, activity.md, actions.md
 
 ---
 
-### Topic 5: react-reconciler — Work Loop ✅ 커버
+### Topic 2: react-dom ✅ 커버
 
-> React 렌더링 엔진의 메인 루프 (→ shared, scheduler 의존)
-> 분할 사유: react-reconciler 파일 그룹 분할
-> 기존 학습 기록: `docs/react/Work-Loop.md` (2026-02-15~16, Step 2/5 완료)
-
-- [ ] 소스 학습 완료 (Step 3/5 — FiberRoot/전역변수 + 업데이트 진입점 + Render Phase 완료. 미완료: Step 4 performUnitOfWork, Step 5 Commit Phase)
-- [ ] skill 검증/개선 (`references/fiber.md` Work Loop 섹션)
-
-**Source Files** (`ref/react-fork/packages/react-reconciler/src/`):
-
-| File | Role |
-|------|------|
-| `ReactFiberWorkLoop.js` | 메인 렌더 루프 (performUnitOfWork, renderRootSync, renderRootConcurrent) |
-| `ReactFiberRootScheduler.js` | 루트 스케줄링 |
-| `ReactFiberRoot.js` | FiberRoot 생성/관리 |
-
-**Study Points** (소스 구조에서 도출):
-- export: performUnitOfWork, renderRootSync, renderRootConcurrent, commitRoot
-- Render Phase → Commit Phase 전환
-- shouldYield()를 통한 중단 가능 렌더링
-- 의존 모듈: scheduler (scheduleCallback, shouldYieldToHost), shared
-
-**Docs**: 해당 없음 (내부 구현)
-
-**Skill Target**: `references/fiber.md` (Work Loop 섹션)
-
----
-
-### Topic 6: react-reconciler — Reconciliation ✅ 커버
-
-> 변경 감지와 최소 업데이트 계산 (→ shared 의존)
-> 분할 사유: react-reconciler 파일 그룹 분할
+> DOM 렌더링 진입점 — createRoot, hydrateRoot, Portals, flushSync, 리소스 프리로딩
+> Subdirs: src/client/, src/server/, src/shared/, npm/
 
 - [ ] 소스 학습 완료
 - [ ] docs 교차 확인
-- [ ] skill 검증/개선 (`references/reconciliation.md`)
+- [ ] skill 검증/개선
 
-**Source Files** (`ref/react-fork/packages/react-reconciler/src/`):
-
-| File | Role |
-|------|------|
-| `ReactFiberBeginWork.js` | 컴포넌트 렌더링 시작, 타입별 분기 |
-| `ReactFiberCompleteWork.js` | DOM 노드 생성, props diffing |
-| `ReactChildFiber.js` | 자식 재조정 알고리즘 (리스트 diffing, key 처리) |
-| `ReactFiberUnwindWork.js` | 에러/Suspense unwind |
-
-**Study Points** (소스 구조에서 도출):
-- beginWork: WorkTag별 분기 (FunctionComponent, HostComponent 등)
-- bailout 조건: props === pendingProps && !includesSomeLane
-- reconcileChildFibers: 단일 자식 vs 배열 자식 diffing
-- completeWork: HostComponent의 실제 DOM 생성
-- 의존 모듈: shared (ReactTypes, ReactSymbols)
-
-**Docs** (`ref/react.dev/src/content/`):
-- `learn/preserving-and-resetting-state.md`
-
-**Skill Target**: `references/reconciliation.md`
-
----
-
-### Topic 7: react-reconciler — Lanes & Priority ✅ 커버
-
-> React의 우선순위 시스템 (→ shared 의존)
-> 분할 사유: react-reconciler 파일 그룹 분할
-
-- [ ] 소스 학습 완료
-- [ ] skill 검증/개선 (`references/scheduler.md` Lane 섹션)
-
-**Source Files** (`ref/react-fork/packages/react-reconciler/src/`):
+**Source Files** (`ref/react-fork/packages/react-dom/`, 221 files):
 
 | File | Role |
 |------|------|
-| `ReactFiberLane.js` | Lane 모델 (32비트 비트마스크 스케줄링) |
-| `ReactEventPriorities.js` | 이벤트→Lane 우선순위 매핑 |
-
-**Study Points** (소스 구조에서 도출):
-- Lane 비트마스크 상수: SyncLane, DefaultLane, TransitionLane 등
-- export: mergeLanes, includesSomeLane, getHighestPriorityLane, getNextLanes
-- 이벤트 타입별 우선순위 할당 매핑
-- 의존 모듈: shared
-
-**Docs**: 해당 없음 (내부 구현)
-
-**Skill Target**: `references/scheduler.md` (Lane 섹션)
-
----
-
-### Topic 8: react-reconciler — Hooks ✅ 커버
-
-> 모든 Hook의 내부 구현 (→ shared, react 의존)
-> 분할 사유: react-reconciler 파일 그룹 분할
-
-- [ ] 소스 학습 완료
-- [ ] docs 교차 확인
-- [ ] skill 검증/개선 (`references/hooks.md`)
-
-**Source Files** (`ref/react-fork/packages/react-reconciler/src/`):
-
-| File | Role |
-|------|------|
-| `ReactFiberHooks.js` | 모든 훅 구현 (mount/update dispatcher) |
-
-**Study Points** (소스 구조에서 도출):
-- HooksDispatcherOnMount / HooksDispatcherOnUpdate: mount vs update 분기
-- memoizedState 링크드 리스트 구조
-- 업데이트 큐: queue.pending → circular linked list
-- 개별 훅: mountState, updateState, mountEffect, updateEffect, mountMemo, updateMemo, mountCallback, mountRef, mountContext
-- React 19 신규 훅: mountUse, mountActionState, mountOptimistic, mountEffectEvent
-- 의존 모듈: shared (objectIs), react (타입)
-
-**Docs** (`ref/react.dev/src/content/reference/react/`):
-- `useState.md`, `useEffect.md`, `useCallback.md`, `useMemo.md`, `useRef.md`, `useContext.md`, `useReducer.md`, `use.md`, `useId.md`
-
-**Skill Target**: `references/hooks.md`
-
----
-
-### Topic 9: react-reconciler — Effects & Commit ✅ 커버
-
-> 커밋 단계와 Effect 실행 순서 (→ shared 의존)
-> 분할 사유: react-reconciler 파일 그룹 분할
-
-- [ ] 소스 학습 완료
-- [ ] docs 교차 확인
-- [ ] skill 검증/개선 (`references/effects.md`)
-
-**Source Files** (`ref/react-fork/packages/react-reconciler/src/`):
-
-| File | Role |
-|------|------|
-| `ReactFiberCommitWork.js` | 메인 커밋 로직 (before mutation → mutation → layout → passive) |
-| `ReactFiberCommitEffects.js` | Effect 순회/실행 |
-| `ReactFiberCommitHostEffects.js` | Host(DOM) 커밋 연산 |
-| `ReactHookEffectTags.js` | HasEffect, Layout, Passive 등 플래그 |
-
-**Study Points** (소스 구조에서 도출):
-- 커밋 3단계: beforeMutation → mutation → layout
-- Passive effects (useEffect): flushPassiveEffects로 별도 스케줄링
-- Layout effects (useLayoutEffect): mutation 직후 동기 실행
-- Effect tags: HasEffect, Insertion, Layout, Passive
-- 의존 모듈: shared
-
-**Docs** (`ref/react.dev/src/content/`):
-- `reference/react/useEffect.md`, `reference/react/useLayoutEffect.md`, `reference/react/useInsertionEffect.md`
-- `learn/synchronizing-with-effects.md`, `learn/you-might-not-need-an-effect.md`
-
-**Skill Target**: `references/effects.md`
-
----
-
-### Topic 10: react-reconciler — Context ✅ 커버
-
-> Context 전파 메커니즘 (→ shared 의존)
-> 분할 사유: react-reconciler 파일 그룹 분할
-
-- [ ] 소스 학습 완료
-- [ ] docs 교차 확인
-- [ ] skill 검증/개선 (`references/context.md`)
-
-**Source Files** (`ref/react-fork/packages/react-reconciler/src/`):
-
-| File | Role |
-|------|------|
-| `ReactFiberNewContext.js` | Modern Context (Provider → Consumer 전파) |
-| `ReactFiberHostContext.js` | Host 환경 컨텍스트 |
-
-**Study Points** (소스 구조에서 도출):
-- Provider 값 변경 → Consumer 탐색 알고리즘
-- Object.is 기반 값 비교
-- Context 변경이 bailout을 무시하는 메커니즘
-- 의존 모듈: shared (objectIs)
-
-**Docs** (`ref/react.dev/src/content/`):
-- `reference/react/createContext.md`, `reference/react/useContext.md`
-- `learn/passing-data-deeply-with-context.md`
-
-**Skill Target**: `references/context.md`
-
----
-
-### Topic 11: react-reconciler — Suspense & Concurrent ✅ 커버
-
-> 비동기 렌더링, Suspense, Offscreen (→ shared 의존)
-> 분할 사유: react-reconciler 파일 그룹 분할
-
-- [ ] 소스 학습 완료
-- [ ] docs 교차 확인
-- [ ] skill 검증/개선 (`references/suspense.md`, `references/activity.md`)
-
-**Source Files** (`ref/react-fork/packages/react-reconciler/src/`):
-
-| File | Role |
-|------|------|
-| `ReactFiberSuspenseComponent.js` | Suspense 컴포넌트 처리 |
-| `ReactFiberSuspenseContext.js` | Suspense 경계 컨텍스트 |
-| `ReactFiberThenable.js` | Promise/thenable 추적 |
-| `ReactFiberThrow.js` | throw 처리 (Suspense catch) |
-| `ReactFiberOffscreenComponent.js` | Offscreen/Activity 렌더링 |
-
-**Study Points** (소스 구조에서 도출):
-- Promise throw → Suspense 경계 catch 메커니즘
-- SuspenseState: fallback vs primary 트리 전환
-- use() Hook과 thenable 추적
-- Offscreen/Activity: UI 숨김/보존
-- 의존 모듈: shared
-
-**Docs** (`ref/react.dev/src/content/`):
-- `reference/react/Suspense.md`, `reference/react/use.md`
-
-**Skill Target**: `references/suspense.md`, `references/activity.md`
-
----
-
-### Topic 12: react-reconciler — Transitions & Actions ✅ 커버
-
-> useTransition, useActionState, Gesture 스케줄링 (→ shared 의존)
-> 분할 사유: react-reconciler 파일 그룹 분할
-
-- [ ] 소스 학습 완료
-- [ ] docs 교차 확인
-- [ ] skill 검증/개선 (`references/transitions.md`, `references/actions.md`)
-
-**Source Files** (`ref/react-fork/packages/react-reconciler/src/`):
-
-| File | Role |
-|------|------|
-| `ReactFiberAsyncAction.js` | useTransition, useActionState 내부 |
-| `ReactFiberTransition.js` | Transition 추적 |
-| `ReactFiberGestureScheduler.js` | Gesture 스케줄링 (React 19.2+) |
-
-**Study Points** (소스 구조에서 도출):
-- startTransition → TransitionLane 할당
-- async action과 isPending 상태 관리
-- useOptimistic: 낙관적 업데이트 → revert
-- GestureScheduler: View Transition 연동 (신규)
-- 의존 모듈: shared
-
-**Docs** (`ref/react.dev/src/content/reference/react/`):
-- `useTransition.md`, `useActionState.md`, `useOptimistic.md`
-
-**Skill Target**: `references/transitions.md`, `references/actions.md`
-
----
-
-### Topic 13: react-reconciler — Error Handling ✅ 커버
-
-> Error Boundary와 에러 전파 (→ shared 의존)
-> 분할 사유: react-reconciler 파일 그룹 분할
-
-- [ ] 소스 학습 완료
-- [ ] docs 교차 확인
-- [ ] skill 검증/개선 (`references/error-handling.md`)
-
-**Source Files** (`ref/react-fork/packages/react-reconciler/src/`):
-
-| File | Role |
-|------|------|
-| `ReactFiberThrow.js` | 에러 throw 처리 (Error Boundary catch 포함) |
-| `ReactFiberUnwindWork.js` | 에러 발생 시 unwind 처리 |
-| `ReactCapturedValue.js` | 캡처된 에러 값 |
-
-**Study Points** (소스 구조에서 도출):
-- throwException: Error Boundary 탐색 알고리즘
-- getDerivedStateFromError / componentDidCatch 호출
-- Suspense catch vs Error catch 분기
-- 의존 모듈: shared
-
-**Docs** (`ref/react.dev/src/content/`):
-- `reference/react/Component.md` (componentDidCatch, getDerivedStateFromError)
-
-**Skill Target**: `references/error-handling.md`
-
----
-
-## Part 2: DOM Rendering (2 Topics)
-
----
-
-### Topic 14: react-dom-bindings ✅ 커버
-
-> DOM 연산, 이벤트 위임, CSS/속성 처리 (→ shared, react-reconciler 의존)
-
-- [ ] 소스 학습 완료
-- [ ] docs 교차 확인
-- [ ] skill 검증/개선 (`references/events.md`)
-
-**Source Files** (`ref/react-fork/packages/react-dom-bindings/src/`):
-
-| File | Role |
-|------|------|
-| `client/ReactDOMComponent.js` | DOM 컴포넌트 생성/업데이트 |
-| `client/ReactFiberConfigDOM.js` | Reconciler ↔ DOM 호스트 설정 |
-| `events/DOMPluginEventSystem.js` | 이벤트 위임 시스템 |
-| `events/ReactDOMEventListener.js` | 이벤트 리스너 등록 |
-| `events/SyntheticEvent.js` | SyntheticEvent 생성 |
-| `events/getEventTarget.js` | 이벤트 타겟 결정 |
-| `server/ReactFizzConfigDOM.js` | 서버 사이드 DOM 설정 |
-| `shared/CSSPropertyOperations.js` | CSS 속성 처리 |
-
-**Subdirs**: client/, events/, server/, shared/
-
-**Study Points** (소스 구조에서 도출):
-- 이벤트 위임: root에 리스너 등록, 버블링/캡처 분기
-- SyntheticEvent: 네이티브 이벤트 래핑
-- DOMPluginEventSystem: 이벤트 플러그인 아키텍처
-- DOM property/attribute diffing
-- 의존 모듈: shared, react-reconciler (Fiber 타입, EventPriority)
-
-**Docs** (`ref/react.dev/src/content/`):
-- `learn/responding-to-events.md`
-
-**Skill Target**: `references/events.md`
-
----
-
-### Topic 15: react-dom ✅ 커버
-
-> createRoot, hydrateRoot, Portals, flushSync (→ shared, react-reconciler, react-dom-bindings, react-server 의존)
-
-- [ ] 소스 학습 완료
-- [ ] docs 교차 확인
-- [ ] skill 검증/개선 (`references/portals.md`)
-
-**Source Files** (`ref/react-fork/packages/react-dom/`):
-
-| File | Role |
-|------|------|
-| `index.js` | 전체 export: createPortal, flushSync, prefetchDNS, preconnect, preload, preinit, useFormState, useFormStatus |
+| `index.js` | 전체 export: createPortal, flushSync, prefetchDNS, preconnect, preload, preinit |
 | `src/client/ReactDOMRoot.js` | createRoot, hydrateRoot 구현 |
 | `src/client/ReactDOMClient.js` | 클라이언트 엔트리포인트 |
-| `src/shared/ReactDOM.js` | 공유 API |
-| `src/shared/ReactDOMFloat.js` | 리소스 프리로딩 (Suspense) |
+| `src/shared/ReactDOMFloat.js` | 리소스 프리로딩 (Suspense 연동) |
 | `src/shared/ReactDOMFlushSync.js` | flushSync |
-
-**Subdirs**: src/client/, src/server/, src/shared/, npm/
+| `src/server/ReactDOMFizzServerBrowser.js` | 브라우저 SSR |
+| `src/server/ReactDOMFizzServerNode.js` | Node SSR |
+| `src/server/ReactDOMFizzStaticBrowser.js` | Static prerender |
 
 **Study Points** (소스 구조에서 도출):
 - Entrypoint exports: createPortal, flushSync, prefetchDNS, preconnect, preload, preloadModule, preinit, preinitModule, requestFormReset, useFormState, useFormStatus
@@ -555,150 +163,94 @@
 - flushSync: 동기 강제 렌더링
 - 의존 모듈: react-reconciler, react-dom-bindings, react-server, shared
 
-**Docs** (`ref/react.dev/src/content/reference/`):
-- `react-dom/client/createRoot.md`, `react-dom/client/hydrateRoot.md`
+**Docs** (`ref/react.dev/src/content/reference/react-dom/`):
+- `client/createRoot.md`, `client/hydrateRoot.md`
+- `server/renderToPipeableStream.md`, `server/renderToReadableStream.md`
+- `createPortal.md`, `flushSync.md`
+- `components/` — 13개 DOM 컴포넌트 레퍼런스
 
-**Skill Target**: `references/portals.md`
+**Skill Target**: `references/portals.md`, `references/actions.md` (부분)
 
 ---
 
-## Part 3: Server Rendering (3 Topics)
+### Topic 3: react-server + react-client ✅ 커버 (부분)
 
----
-
-### Topic 16: react-server — Fizz (Streaming SSR) ✅ 커버
-
-> 스트리밍 SSR 엔진 (→ shared, react, react-reconciler 의존)
+> RSC 직렬화/소비 프로토콜 — Fizz(스트리밍 SSR) + Flight(RSC 프로토콜) + 클라이언트 소비
+> 그룹핑 사유: Flight 프로토콜의 서버 측(react-server)과 클라이언트 측(react-client) — 양면 학습
 
 - [ ] 소스 학습 완료
 - [ ] docs 교차 확인
-- [ ] skill 검증/개선 (`references/server-components.md` SSR 섹션)
-
-**Source Files** (`ref/react-fork/packages/react-server/src/`):
-
-| File | Role |
-|------|------|
-| `ReactFizzServer.js` | Fizz 메인 렌더러 (스트리밍 SSR) |
-| `ReactFizzHooks.js` | 서버 사이드 훅 구현 |
-| `ReactFizzClassComponent.js` | 서버 클래스 컴포넌트 |
-
-**Study Points** (소스 구조에서 도출):
-- Fizz 스트리밍 아키텍처: segments, boundaries
-- 서버 Suspense: 점진적 HTML 스트리밍
-- 서버 훅 vs 클라이언트 훅 차이
-- 의존 모듈: shared, react (LazyComponent), react-reconciler (Dispatcher)
-
-**Docs** (`ref/react.dev/src/content/reference/react-dom/server/`):
-- `renderToPipeableStream.md`, `renderToReadableStream.md`
-
-**Skill Target**: `references/server-components.md` (SSR 섹션)
-
----
-
-### Topic 17: react-server — Flight + react-client (RSC) ✅ 커버
-
-> RSC 직렬화 프로토콜, 클라이언트 소비 (→ shared, react 의존)
-
-- [ ] 소스 학습 완료
-- [ ] docs 교차 확인
-- [ ] skill 검증/개선 (`references/server-components.md`)
+- [ ] skill 검증/개선
 
 **Source Files**:
 
-`ref/react-fork/packages/react-server/src/`:
+`ref/react-fork/packages/react-server/` (76 files):
 
 | File | Role |
 |------|------|
-| `ReactFlightServer.js` | RSC 렌더러 (컴포넌트→클라이언트 직렬화) |
-| `ReactFlightHooks.js` | Server Component 훅 |
-| `ReactFlightActionServer.js` | Server Actions |
-| `ReactFlightReplyServer.js` | 클라이언트→서버 직렬화 |
+| `src/ReactFizzServer.js` | Fizz 메인 렌더러 (스트리밍 SSR) |
+| `src/ReactFizzHooks.js` | 서버 사이드 훅 구현 |
+| `src/ReactFlightServer.js` | RSC 렌더러 (컴포넌트→클라이언트 직렬화) |
+| `src/ReactFlightHooks.js` | Server Component 훅 |
+| `src/ReactFlightActionServer.js` | Server Actions |
+| `src/ReactFlightReplyServer.js` | 클라이언트→서버 직렬화 |
 
-`ref/react-fork/packages/react-client/src/`:
+`ref/react-fork/packages/react-client/` (34 files):
 
 | File | Role |
 |------|------|
-| `ReactFlightClient.js` | Flight 프로토콜 클라이언트 소비 |
+| `src/ReactFlightClient.js` | Flight 프로토콜 클라이언트 소비 |
 
 **Study Points** (소스 구조에서 도출):
+- Fizz 스트리밍: segments, boundaries, 점진적 HTML
 - Flight Protocol: 컴포넌트 트리 직렬화 포맷
 - 'use client' / 'use server' 경계 처리
 - ClientReference / ServerReference 메커니즘
 - Server Actions RPC 흐름
-- react-client: Flight 응답 파싱, provisional_useTransition, use, useFormStatus
-- 의존 모듈: shared, react (LazyComponent)
+- react-client: Flight 응답 파싱
+- 의존 모듈: shared, react
 
-**Docs** (`ref/react.dev/src/content/reference/rsc/`):
-- `server-components.md`, `server-functions.md`, `use-client.md`, `use-server.md`
+**Docs** (`ref/react.dev/src/content/`):
+- `reference/rsc/server-components.md`, `reference/rsc/server-functions.md`
+- `reference/rsc/use-client.md`, `reference/rsc/use-server.md`
+- `reference/react-dom/server/renderToPipeableStream.md`
 
 **Skill Target**: `references/server-components.md`
 
 ---
 
-### Topic 18: react-server-dom-* (Bundler Variants) ⬜ 미커버
+### Topic 4: react-server-dom-* (Bundler Variants) ⬜ 미커버
 
 > Flight 프로토콜의 번들러별 구현 (webpack, turbopack, parcel, esm, unbundled, fb)
-> 그룹핑 사유: 6개 패키지가 동일한 Flight 프로토콜의 번들러 어댑터 변형
+> 그룹핑 사유: 6개 패키지가 동일 Flight 프로토콜의 번들러 어댑터 변형
 
 - [ ] 소스 학습 완료
 - [ ] skill 검증/개선
 
-**Source Files**:
+**Source Files** (218 files 합계):
 
-| Package | Key Files | Role |
-|---------|-----------|------|
-| `react-server-dom-webpack` | `src/client/`, `src/server/` | webpack 번들러용 Flight |
-| `react-server-dom-turbopack` | `src/client/`, `src/server/` | Turbopack 번들러용 Flight |
-| `react-server-dom-parcel` | `src/client/`, `src/server/` | Parcel 번들러용 Flight |
-| `react-server-dom-esm` | `src/client/`, `src/server/` | ESM 환경용 Flight |
-| `react-server-dom-unbundled` | `src/client/`, `src/server/` | 비번들 환경용 Flight |
-| `react-server-dom-fb` | `src/` | Meta 내부용 Flight |
+| Package | Files | Role |
+|---------|-------|------|
+| react-server-dom-webpack | 65 | webpack 번들러용 Flight |
+| react-server-dom-turbopack | 53 | Turbopack 번들러용 Flight |
+| react-server-dom-parcel | 44 | Parcel 번들러용 Flight |
+| react-server-dom-esm | 27 | ESM 환경용 Flight |
+| react-server-dom-unbundled | 27 | 비번들 환경용 Flight |
+| react-server-dom-fb | 2 | Meta 내부용 Flight |
 
 **Study Points** (소스 구조에서 도출):
 - 각 번들러 어댑터의 client/server 엔트리포인트 구조
 - 번들러별 모듈 참조 해석(resolve) 차이
-- webpack의 PluginServerRegister 등 번들러 통합 패턴
+- webpack PluginServerRegister 등 번들러 통합 패턴
 - 의존 모듈: react-server, react-client, shared
 
-**Docs**: 해당 없음 (번들러별 구현 세부사항)
+**Docs**: `reference/rsc/` (간접 참조)
 
-**Skill Target**: 신규 생성 필요 또는 `references/server-components.md` 확장
-
----
-
-## Part 4: Utilities (3 Topics)
+**Skill Target**: `references/server-components.md` 확장 또는 신규 생성
 
 ---
 
-### Topic 19: react-is + react-cache + use-subscription ⬜ 미커버
-
-> 소규모 유틸리티 패키지
-> 그룹핑 사유: 각 2~4개 소스 파일의 소규모 패키지
-
-- [ ] 소스 학습 완료
-- [ ] skill 검증/개선
-
-**Source Files**:
-
-| Package | Key File | Exports |
-|---------|----------|---------|
-| `react-is` (2 files) | `src/ReactIs.js` | isValidElementType, isFragment, isSuspense, isProfiler, isStrictMode 등 |
-| `react-cache` (3 files) | `src/ReactCacheOld.js` | unstable_createResource, unstable_readResource |
-| `use-subscription` (4 files) | `src/useSubscription.js` | useSubscription |
-
-**Study Points** (소스 구조에서 도출):
-- react-is: ReactSymbols 기반 타입 체크
-- react-cache: Suspense 통합 캐싱 (legacy/experimental)
-- use-subscription: 외부 소스 구독 패턴
-- 의존 모듈: shared (ReactSymbols)
-
-**Docs**: 해당 없음
-
-**Skill Target**: 신규 생성 필요
-
----
-
-### Topic 20: use-sync-external-store ⬜ 미커버
+### Topic 5: use-sync-external-store ⬜ 미커버
 
 > 외부 상태 소스 동기화 Hook
 
@@ -706,7 +258,7 @@
 - [ ] docs 교차 확인
 - [ ] skill 검증/개선
 
-**Source Files** (`ref/react-fork/packages/use-sync-external-store/`):
+**Source Files** (`ref/react-fork/packages/use-sync-external-store/`, 22 files):
 
 | File | Role |
 |------|------|
@@ -720,32 +272,33 @@
 - Shim vs native 구현 분기
 - 의존 모듈: react
 
-**Docs** (`ref/react.dev/src/content/reference/react/`):
-- `useSyncExternalStore.md`
+**Docs**: `reference/react/useSyncExternalStore.md`
 
 **Skill Target**: 신규 생성 필요
 
 ---
 
-### Topic 21: react-refresh + react-markup ⬜ 미커버
+### Topic 6: react-is + react-cache + use-subscription ⬜ 미커버
 
-> 개발/유틸리티 패키지
-> 그룹핑 사유: 각 6~12개 소스 파일의 중소규모 유틸리티
+> 소규모 유틸리티 패키지
+> 그룹핑 사유: 각 2~6개 소스 파일의 소규모 패키지
 
 - [ ] 소스 학습 완료
 - [ ] skill 검증/개선
 
-**Source Files**:
+**Source Files** (15 files 합계):
 
-| Package | Key File | Exports |
-|---------|----------|---------|
-| `react-refresh` (6 files) | `src/ReactFreshRuntime.js` | performReactRefresh, createSignature, enqueueRender |
-| `react-markup` (12 files) | `src/ReactMarkupClient.js`, `src/ReactMarkupServer.js` | renderToMarkup (client/server) |
+| Package | Files | Key File | Exports |
+|---------|-------|----------|---------|
+| react-is | 6 | `src/ReactIs.js` | isValidElementType, isFragment, isSuspense 등 |
+| react-cache | 5 | `src/ReactCacheOld.js` | unstable_createResource |
+| use-subscription | 4 | `src/useSubscription.js` | useSubscription |
 
 **Study Points** (소스 구조에서 도출):
-- react-refresh: HMR 메커니즘, signature 기반 컴포넌트 추적
-- react-markup: 마크업 렌더링 타겟 (실험적)
-- 의존 모듈: shared, react-reconciler
+- react-is: ReactSymbols 기반 타입 체크
+- react-cache: Suspense 통합 캐싱 (legacy/experimental)
+- use-subscription: 외부 소스 구독 패턴
+- 의존 모듈: shared (ReactSymbols)
 
 **Docs**: 해당 없음
 
@@ -753,153 +306,23 @@
 
 ---
 
-## Part 5: Alternative Renderers (1 Topic)
-
----
-
-### Topic 22: react-native-renderer + react-art + react-noop-renderer ⬜ 미커버
-
-> React Reconciler 기반 대체 렌더러
-> 그룹핑 사유: react-noop-renderer(6 files), react-art(4 files)는 소규모; react-native-renderer(85+ files)가 주 학습 대상
-
-- [ ] 소스 학습 완료
-- [ ] skill 검증/개선
-
-**Source Files**:
-
-| Package | Key File | Role |
-|---------|----------|------|
-| `react-native-renderer` (85+ files) | `src/ReactNativeRenderer.js`, `src/ReactFabric.js` | React Native 렌더러 (Legacy + Fabric) |
-| `react-art` (4 files) | `src/ReactART.js` | 벡터 그래픽 렌더러 |
-| `react-noop-renderer` (6 files) | `src/createReactNoop.js` | 테스트용 no-op 렌더러 |
-
-**Study Points** (소스 구조에서 도출):
-- Reconciler의 HostConfig 인터페이스 구현 패턴
-- react-native-renderer: Legacy vs Fabric 아키텍처
-- react-noop-renderer: 커스텀 렌더러 최소 구현 참조
-- 의존 모듈: react-reconciler, shared
-
-**Docs**: 해당 없음
-
-**Skill Target**: 신규 생성 필요
-
----
-
-## Part 6: Testing (1 Topic)
-
----
-
-### Topic 23: react-test-renderer + Testing Infrastructure ⬜ 미커버
-
-> 테스트 렌더러 및 테스트 인프라
-> 그룹핑 사유: 테스트 관련 5개 패키지 — dom-event-testing-library(8), jest-react(3), internal-test-utils(13), react-suspense-test-utils(3), react-test-renderer(12)
-
-- [ ] 소스 학습 완료
-- [ ] skill 검증/개선
-
-**Source Files**:
-
-| Package | Key File | Role |
-|---------|----------|------|
-| `react-test-renderer` (12 files) | `src/ReactTestRenderer.js` | 테스트용 렌더러 |
-| `react-suspense-test-utils` (3 files) | `src/ReactSuspenseTestUtils.js` | Suspense 테스트 유틸 |
-| `jest-react` (3 files) | `src/JestReact.js` | Jest 환경 설정 |
-| `internal-test-utils` (13 files) | `index.js` | 내부 테스트 헬퍼 |
-| `dom-event-testing-library` (8 files) | `index.js` | DOM 이벤트 테스트 |
-
-**Study Points** (소스 구조에서 도출):
-- react-test-renderer: create, unmountComponentAtNode, toJSON
-- act() 메커니즘: 동기적 렌더링/이펙트 완료 보장
-- 의존 모듈: react-reconciler, shared
-
-**Docs**: 해당 없음
-
-**Skill Target**: 신규 생성 필요
-
----
-
-## Part 7: DevTools (2 Topics)
-
----
-
-### Topic 24: react-devtools-shared ⬜ 미커버
-
-> DevTools 핵심 로직 (140+ files)
-
-- [ ] 소스 학습 완료
-- [ ] skill 검증/개선
-
-**Source Files** (`ref/react-fork/packages/react-devtools-shared/`):
-
-| Subdir | Role |
-|--------|------|
-| `src/backend/` | 렌더러 연결, Fiber 트리 인스펙션 |
-| `src/devtools/` | 프론트엔드 UI 스토어 |
-| `src/config/` | 설정 |
-
-**Study Points** (소스 구조에서 도출):
-- backend: attachRenderer, setupHighlighter, setupTraceUpdates
-- devtools: ProfilingCache, ProfilerStore, 컴포넌트 트리 뷰
-- Bridge: backend ↔ frontend 통신
-- 의존 모듈: react-reconciler (내부 타입)
-
-**Docs**: 해당 없음
-
-**Skill Target**: 신규 생성 필요
-
----
-
-### Topic 25: react-devtools Variants ⬜ 미커버
-
-> DevTools UI, 브라우저 확장, 타임라인
-> 그룹핑 사유: 6개 패키지가 모두 react-devtools-shared 기반 변형
-
-- [ ] 소스 학습 완료
-- [ ] skill 검증/개선
-
-**Source Files**:
-
-| Package | Role |
-|---------|------|
-| `react-devtools` | 스탠드얼론 DevTools |
-| `react-devtools-core` (3 files) | backend, editor, standalone 모듈 |
-| `react-devtools-inline` (13 files) | 인라인 DevTools |
-| `react-devtools-fusebox` (3 files) | Fusebox 번들러용 |
-| `react-devtools-extensions` (50+ files) | 브라우저 확장 |
-| `react-devtools-shell` (50+ files) | 개발/테스트 셸 |
-| `react-devtools-timeline` (65+ files) | 타임라인 프로파일러 |
-
-**Study Points** (소스 구조에서 도출):
-- 각 변형의 빌드/배포 패턴
-- 브라우저 확장: background script, content script, panel 구조
-- Timeline: content-views, view-base 렌더링 아키텍처
-- 의존 모듈: react-devtools-shared
-
-**Docs**: 해당 없음
-
-**Skill Target**: 신규 생성 필요
-
----
-
-## Part 8: Tooling (3 Topics)
-
----
-
-### Topic 26: eslint-plugin-react-hooks ⬜ 미커버
+### Topic 7: eslint-plugin-react-hooks ⬜ 미커버
 
 > React Hooks ESLint 규칙
 
 - [ ] 소스 학습 완료
+- [ ] docs 교차 확인
 - [ ] skill 검증/개선
 
-**Source Files** (`ref/react-fork/packages/eslint-plugin-react-hooks/src/`):
+**Source Files** (`ref/react-fork/packages/eslint-plugin-react-hooks/`, 26 files):
 
-| Subdir/File | Role |
+| File/Subdir | Role |
 |-------------|------|
-| `rules/RulesOfHooks.js` | rules-of-hooks 규칙 |
-| `rules/ExhaustiveDeps.js` | exhaustive-deps 규칙 |
-| `code-path-analysis/` | 코드 경로 분석 |
-| `shared/` | 공유 유틸 |
+| `src/index.ts` | 플러그인 엔트리포인트 |
+| `src/rules/RulesOfHooks.ts` | rules-of-hooks 규칙 |
+| `src/rules/ExhaustiveDeps.ts` | exhaustive-deps 규칙 |
+| `src/code-path-analysis/` | 코드 경로 분석 |
+| `src/shared/` | 공유 유틸 |
 
 **Study Points** (소스 구조에서 도출):
 - RulesOfHooks: 조건부 훅 호출 감지 알고리즘
@@ -907,40 +330,16 @@
 - 코드 경로 분석: ESLint code path API 활용
 - 의존 모듈: 없음 (ESLint 플러그인)
 
-**Docs**: 해당 없음
+**Docs**: `reference/eslint-plugin-react-hooks/` (20 files)
 
 **Skill Target**: 신규 생성 필요
 
 ---
 
-### Topic 27: react-debug-tools ⬜ 미커버
+### Topic 8: babel-plugin-react-compiler ⬜ 미커버
 
-> DevTools용 Hook 디버깅 유틸리티
-
-- [ ] 소스 학습 완료
-- [ ] skill 검증/개선
-
-**Source Files** (`ref/react-fork/packages/react-debug-tools/src/`):
-
-| File | Role |
-|------|------|
-| `ReactDebugTools.js` | Hook 정보 추출 메인 |
-| `ReactDebugHooks.js` | Hook 타입별 디버그 정보 |
-
-**Study Points** (소스 구조에서 도출):
-- getHooks, parseHookName: Fiber에서 Hook 정보 추출
-- DevTools와의 연동 인터페이스
-- 의존 모듈: react-reconciler (Fiber 내부 타입)
-
-**Docs**: 해당 없음
-
-**Skill Target**: 신규 생성 필요
-
----
-
-### Topic 28: compiler (React Compiler) ⬜ 미커버
-
-> React Compiler — 자동 메모이제이션 바벨 플러그인 (500+ files)
+> React Compiler — 자동 메모이제이션 바벨 플러그인 (~2,000 files)
+> 분할 사유: 7개 하위 디렉토리 기준 분할 (src/ 하위)
 
 - [ ] 소스 학습 완료
 - [ ] docs 교차 확인
@@ -965,22 +364,690 @@
 - 의존 모듈: 없음 (독립 Babel 플러그인)
 
 **Docs** (`ref/react.dev/src/content/`):
-- `learn/react-compiler/` 디렉토리
-- `reference/react-compiler/` 디렉토리
+- `learn/react-compiler/` (5 files)
+- `reference/react-compiler/` (11 files)
 
 **Skill Target**: 신규 생성 필요 (`references/compiler.md`)
 
 ---
 
-## Part 9: Docs Supplementary Study (3 Sections)
+### Topic 9: Compiler Sub-packages ⬜ 미커버
 
-Part 1~8에서 소스 코드로 내부 동작을 이해한 후, 공식 문서로 "사용자 관점"의 베스트 프랙티스를 보충한다.
+> React Compiler 보조 패키지
+> 그룹핑 사유: babel-plugin-react-compiler 외 7개 소규모 보조 패키지
+
+- [ ] 소스 학습 완료
+- [ ] skill 검증/개선
+
+**Source Files** (61 files 합계):
+
+| Package | Files | Key File | Role |
+|---------|-------|----------|------|
+| eslint-plugin-react-compiler | 15 | `src/index.ts` | ESLint 규칙 |
+| react-mcp-server | 8 | `src/index.ts` | MCP 서버 |
+| react-forgive | 9 | `client/`, `server/` | Error Recovery |
+| snap | 17 | `src/main.ts` | 스냅샷 도구 |
+| react-compiler-healthcheck | 6 | `src/index.ts` | 호환성 체크 |
+| make-read-only-util | 4 | `src/makeReadOnly.ts` | 읽기 전용 유틸 |
+| react-compiler-runtime | 2 | `src/index.ts` | 런타임 헬퍼 |
+
+**Study Points** (소스 구조에서 도출):
+- eslint-plugin-react-compiler: 컴파일러 호환 ESLint 규칙
+- react-compiler-runtime: 컴파일된 코드가 의존하는 런타임 헬퍼
+- react-mcp-server: MCP 프로토콜 연동
+- 의존 모듈: babel-plugin-react-compiler (부분)
+
+**Docs**: `reference/react-compiler/` (간접 참조)
+
+**Skill Target**: 신규 생성 필요
+
+---
+
+## Phase 2: Core Runtime — Phase 1이 import하는 내부 모듈 (13 Topics)
+
+순서는 모듈 간 import 의존 관계 기반 — 의존되는 모듈부터 배치.
+`react-reconciler`(170 files)는 단일 `src/` 디렉토리에 170개 파일이므로 논리적 파일 그룹별 분할.
+
+---
+
+### Topic 10: shared ⬜ 미커버 (ref 부분 커버)
+
+> React 전체 패키지가 공유하는 유틸리티/상수 (의존 관계 없음 — 기초 레이어)
+> 기존 학습 기록: `docs/react/Topic-1-Shared.md` (2026-02-19, Step 1/5 완료)
+
+- [ ] 소스 학습 완료
+- [ ] docs 교차 확인
+- [ ] skill 검증/개선
+
+**Source Files** (`ref/react-fork/packages/shared/`, 52 files):
+
+| File | Role |
+|------|------|
+| `ReactSymbols.js` | REACT_ELEMENT_TYPE 등 Symbol 상수 |
+| `ReactTypes.js` | 공유 타입 정의 |
+| `ReactElementType.js` | 엘리먼트 타입 정의 |
+| `ReactFeatureFlags.js` | Feature flag 설정 |
+| `objectIs.js` | Object.is 폴리필 |
+| `shallowEqual.js` | 얕은 비교 (memo, deps 비교) |
+| `getComponentNameFromType.js` | 컴포넌트명 추출 유틸 |
+| `ReactSharedInternals.js` | 패키지 간 내부 통신 채널 |
+| `ReactDOMSharedInternals.js` | DOM 패키지 공유 내부 |
+| `CheckStringCoercion.js` | 문자열 변환 검증 |
+
+**Study Points** (소스 구조에서 도출):
+- ReactSymbols: REACT_ELEMENT_TYPE, REACT_FRAGMENT_TYPE 등 Symbol 상수 목록
+- shallowEqual/objectIs: deps 비교의 기초 알고리즘
+- ReactFeatureFlags: 기능 활성화/비활성화 분기 패턴
+- forks/ 디렉토리: 환경별(www, native, test) 오버라이드
+- 의존 모듈: 없음 (최하위 레이어)
+
+**Docs**: 해당 없음 (내부 구현)
+
+**Skill Target**: `references/memo.md`, `references/lazy.md` (shallowEqual 관련)
+
+---
+
+### Topic 11: scheduler ✅ 커버
+
+> 시간 분할(Time Slicing)과 우선순위 작업 큐 (의존 관계 없음)
+
+- [ ] 소스 학습 완료
+- [ ] skill 검증/개선 (`references/scheduler.md`)
+
+**Source Files** (`ref/react-fork/packages/scheduler/`, 28 files):
+
+| File | Role |
+|------|------|
+| `index.js` | 엔트리포인트 |
+| `src/forks/Scheduler.js` | 메인 스케줄러 (작업 큐, shouldYield) |
+| `src/SchedulerMinHeap.js` | 우선순위 큐 (min heap) |
+| `src/SchedulerPriorities.js` | ImmediateP, UserBlockingP, NormalP, LowP, IdleP |
+| `src/SchedulerFeatureFlags.js` | 스케줄러 Feature flags |
+| `src/SchedulerProfiling.js` | 프로파일링 |
+
+**Study Points** (소스 구조에서 도출):
+- Entrypoint exports: `scheduleCallback`, `cancelCallback`, `shouldYieldToHost`, `getCurrentTime`
+- Min heap: taskQueue, timerQueue 구조
+- 5ms 타임 슬라이스, `MessageChannel` 기반 비동기 스케줄링
+- 의존 모듈: 없음
+
+**Docs**: 해당 없음 (내부 구현)
+
+**Skill Target**: `references/scheduler.md`
+
+---
+
+### Topic 12: react-reconciler — Fiber Structure ✅ 커버
+
+> Fiber 노드 자료구조, WorkTag, Flags, Mode
+> 분할 사유: react-reconciler 170 files — 논리적 파일 그룹별 분할
+> 기존 학습 기록: `docs/react/Fiber-Structure.md` (2026-02-13~14, Step 1-4 완료)
+
+- [ ] 소스 학습 완료
+- [ ] skill 검증/개선 (`references/fiber.md`)
+
+**Source Files** (`ref/react-fork/packages/react-reconciler/src/`):
+
+| File | Role |
+|------|------|
+| `ReactFiber.js` | Fiber 노드 생성, 구조체 필드 |
+| `ReactWorkTags.js` | FunctionComponent, HostComponent 등 태그 상수 |
+| `ReactFiberFlags.js` | Placement, Update, Deletion 등 부작용 플래그 |
+| `ReactTypeOfMode.js` | ConcurrentMode, StrictMode 등 모드 플래그 |
+| `ReactInternalTypes.js` | Fiber 타입 정의 |
+
+**Study Points** (소스 구조에서 도출):
+- Fiber 노드 필드: tag, type, stateNode, return, child, sibling, alternate, flags, lanes, memoizedState, memoizedProps
+- Double buffering: current ↔ workInProgress (alternate)
+- WorkTag 상수 목록과 분기 처리
+- 의존 모듈: shared (ReactTypes)
+
+**Docs**: 해당 없음 (내부 구현)
+
+**Skill Target**: `references/fiber.md`
+
+---
+
+### Topic 13: react-reconciler — Work Loop ✅ 커버
+
+> React 렌더링 엔진의 메인 루프
+> 분할 사유: react-reconciler 파일 그룹 분할
+> 기존 학습 기록: `docs/react/Work-Loop.md` (2026-02-15~16, Step 3/5 완료)
+
+- [ ] 소스 학습 완료
+- [ ] skill 검증/개선 (`references/fiber.md` Work Loop 섹션)
+
+**Source Files** (`ref/react-fork/packages/react-reconciler/src/`):
+
+| File | Role |
+|------|------|
+| `ReactFiberWorkLoop.js` | 메인 렌더 루프 (performUnitOfWork, renderRootSync, renderRootConcurrent) |
+| `ReactFiberRootScheduler.js` | 루트 스케줄링 |
+| `ReactFiberRoot.js` | FiberRoot 생성/관리 |
+
+**Study Points** (소스 구조에서 도출):
+- export: performUnitOfWork, renderRootSync, renderRootConcurrent, commitRoot
+- Render Phase → Commit Phase 전환
+- shouldYield()를 통한 중단 가능 렌더링
+- 의존 모듈: scheduler (scheduleCallback, shouldYieldToHost), shared
+
+**Docs**: 해당 없음 (내부 구현)
+
+**Skill Target**: `references/fiber.md` (Work Loop 섹션)
+
+---
+
+### Topic 14: react-reconciler — Reconciliation ✅ 커버
+
+> 변경 감지와 최소 업데이트 계산
+> 분할 사유: react-reconciler 파일 그룹 분할
+
+- [ ] 소스 학습 완료
+- [ ] docs 교차 확인
+- [ ] skill 검증/개선 (`references/reconciliation.md`)
+
+**Source Files** (`ref/react-fork/packages/react-reconciler/src/`):
+
+| File | Role |
+|------|------|
+| `ReactFiberBeginWork.js` | 컴포넌트 렌더링 시작, 타입별 분기 |
+| `ReactFiberCompleteWork.js` | DOM 노드 생성, props diffing |
+| `ReactChildFiber.js` | 자식 재조정 알고리즘 (리스트 diffing, key 처리) |
+| `ReactFiberUnwindWork.js` | 에러/Suspense unwind |
+
+**Study Points** (소스 구조에서 도출):
+- beginWork: WorkTag별 분기 (FunctionComponent, HostComponent 등)
+- bailout 조건: props === pendingProps && !includesSomeLane
+- reconcileChildFibers: 단일 자식 vs 배열 자식 diffing
+- completeWork: HostComponent의 실제 DOM 생성
+- 의존 모듈: shared (ReactTypes, ReactSymbols)
+
+**Docs**: `learn/preserving-and-resetting-state.md`
+
+**Skill Target**: `references/reconciliation.md`
+
+---
+
+### Topic 15: react-reconciler — Lanes & Priority ✅ 커버
+
+> React의 우선순위 시스템
+> 분할 사유: react-reconciler 파일 그룹 분할
+
+- [ ] 소스 학습 완료
+- [ ] skill 검증/개선 (`references/scheduler.md` Lane 섹션)
+
+**Source Files** (`ref/react-fork/packages/react-reconciler/src/`):
+
+| File | Role |
+|------|------|
+| `ReactFiberLane.js` | Lane 모델 (32비트 비트마스크 스케줄링) |
+| `ReactEventPriorities.js` | 이벤트→Lane 우선순위 매핑 |
+
+**Study Points** (소스 구조에서 도출):
+- Lane 비트마스크 상수: SyncLane, DefaultLane, TransitionLane 등
+- export: mergeLanes, includesSomeLane, getHighestPriorityLane, getNextLanes
+- 이벤트 타입별 우선순위 할당 매핑
+- 의존 모듈: shared
+
+**Docs**: 해당 없음 (내부 구현)
+
+**Skill Target**: `references/scheduler.md` (Lane 섹션)
+
+---
+
+### Topic 16: react-reconciler — Hooks ✅ 커버
+
+> 모든 Hook의 내부 구현
+> 분할 사유: react-reconciler 파일 그룹 분할
+
+- [ ] 소스 학습 완료
+- [ ] docs 교차 확인
+- [ ] skill 검증/개선 (`references/hooks.md`)
+
+**Source Files** (`ref/react-fork/packages/react-reconciler/src/`):
+
+| File | Role |
+|------|------|
+| `ReactFiberHooks.js` | 모든 훅 구현 (mount/update dispatcher) |
+
+**Study Points** (소스 구조에서 도출):
+- HooksDispatcherOnMount / HooksDispatcherOnUpdate: mount vs update 분기
+- memoizedState 링크드 리스트 구조
+- 업데이트 큐: queue.pending → circular linked list
+- 개별 훅: mountState, updateState, mountEffect, updateEffect, mountMemo, updateMemo, mountCallback, mountRef, mountContext
+- React 19 신규 훅: mountUse, mountActionState, mountOptimistic, mountEffectEvent
+- 의존 모듈: shared (objectIs), react (타입)
+
+**Docs** (`ref/react.dev/src/content/reference/react/`):
+- useState.md, useEffect.md, useCallback.md, useMemo.md, useRef.md, useContext.md, useReducer.md, use.md, useId.md
+
+**Skill Target**: `references/hooks.md`
+
+---
+
+### Topic 17: react-reconciler — Effects & Commit ✅ 커버
+
+> 커밋 단계와 Effect 실행 순서
+> 분할 사유: react-reconciler 파일 그룹 분할
+
+- [ ] 소스 학습 완료
+- [ ] docs 교차 확인
+- [ ] skill 검증/개선 (`references/effects.md`)
+
+**Source Files** (`ref/react-fork/packages/react-reconciler/src/`):
+
+| File | Role |
+|------|------|
+| `ReactFiberCommitWork.js` | 메인 커밋 로직 (before mutation → mutation → layout → passive) |
+| `ReactFiberCommitEffects.js` | Effect 순회/실행 |
+| `ReactFiberCommitHostEffects.js` | Host(DOM) 커밋 연산 |
+| `ReactFiberCommitViewTransitions.js` | View Transitions 커밋 (React 19.2+) |
+| `ReactHookEffectTags.js` | HasEffect, Layout, Passive 등 플래그 |
+
+**Study Points** (소스 구조에서 도출):
+- 커밋 3단계: beforeMutation → mutation → layout
+- Passive effects (useEffect): flushPassiveEffects로 별도 스케줄링
+- Layout effects (useLayoutEffect): mutation 직후 동기 실행
+- View Transitions: 커밋 시 DOM 전환 애니메이션 (신규)
+- Effect tags: HasEffect, Insertion, Layout, Passive
+- 의존 모듈: shared
+
+**Docs**:
+- `reference/react/useEffect.md`, `reference/react/useLayoutEffect.md`, `reference/react/useInsertionEffect.md`
+- `learn/synchronizing-with-effects.md`, `learn/you-might-not-need-an-effect.md`
+
+**Skill Target**: `references/effects.md`
+
+---
+
+### Topic 18: react-reconciler — Context ✅ 커버
+
+> Context 전파 메커니즘
+> 분할 사유: react-reconciler 파일 그룹 분할
+
+- [ ] 소스 학습 완료
+- [ ] docs 교차 확인
+- [ ] skill 검증/개선 (`references/context.md`)
+
+**Source Files** (`ref/react-fork/packages/react-reconciler/src/`):
+
+| File | Role |
+|------|------|
+| `ReactFiberNewContext.js` | Modern Context (Provider → Consumer 전파) |
+| `ReactFiberHostContext.js` | Host 환경 컨텍스트 |
+
+**Study Points** (소스 구조에서 도출):
+- Provider 값 변경 → Consumer 탐색 알고리즘
+- Object.is 기반 값 비교
+- Context 변경이 bailout을 무시하는 메커니즘
+- 의존 모듈: shared (objectIs)
+
+**Docs**:
+- `reference/react/createContext.md`, `reference/react/useContext.md`
+- `learn/passing-data-deeply-with-context.md`
+
+**Skill Target**: `references/context.md`
+
+---
+
+### Topic 19: react-reconciler — Suspense & Activity ✅ 커버
+
+> 비동기 렌더링, Suspense, Activity(Offscreen)
+> 분할 사유: react-reconciler 파일 그룹 분할
+
+- [ ] 소스 학습 완료
+- [ ] docs 교차 확인
+- [ ] skill 검증/개선 (`references/suspense.md`, `references/activity.md`)
+
+**Source Files** (`ref/react-fork/packages/react-reconciler/src/`):
+
+| File | Role |
+|------|------|
+| `ReactFiberSuspenseComponent.js` | Suspense 컴포넌트 처리 |
+| `ReactFiberSuspenseContext.js` | Suspense 경계 컨텍스트 |
+| `ReactFiberThenable.js` | Promise/thenable 추적 |
+| `ReactFiberThrow.js` | throw 처리 (Suspense catch) |
+| `ReactFiberOffscreenComponent.js` | Offscreen/Activity 렌더링 |
+| `ReactFiberActivityComponent.js` | Activity 컴포넌트 |
+
+**Study Points** (소스 구조에서 도출):
+- Promise throw → Suspense 경계 catch 메커니즘
+- SuspenseState: fallback vs primary 트리 전환
+- use() Hook과 thenable 추적
+- Activity: UI 숨김/보존, hydration 경계
+- 의존 모듈: shared
+
+**Docs**:
+- `reference/react/Suspense.md`, `reference/react/use.md`, `reference/react/Activity.md`
+
+**Skill Target**: `references/suspense.md`, `references/activity.md`
+
+---
+
+### Topic 20: react-reconciler — Transitions & Actions ✅ 커버
+
+> useTransition, useActionState, Gesture 스케줄링
+> 분할 사유: react-reconciler 파일 그룹 분할
+
+- [ ] 소스 학습 완료
+- [ ] docs 교차 확인
+- [ ] skill 검증/개선 (`references/transitions.md`, `references/actions.md`)
+
+**Source Files** (`ref/react-fork/packages/react-reconciler/src/`):
+
+| File | Role |
+|------|------|
+| `ReactFiberAsyncAction.js` | useTransition, useActionState 내부 |
+| `ReactFiberTransition.js` | Transition 추적 |
+| `ReactFiberGestureScheduler.js` | Gesture 스케줄링 (React 19.2+) |
+| `ReactFiberViewTransitionComponent.js` | ViewTransition 컴포넌트 |
+
+**Study Points** (소스 구조에서 도출):
+- startTransition → TransitionLane 할당
+- async action과 isPending 상태 관리
+- useOptimistic: 낙관적 업데이트 → revert
+- GestureScheduler: View Transition 연동 (신규)
+- 의존 모듈: shared
+
+**Docs**:
+- `reference/react/useTransition.md`, `reference/react/useActionState.md`, `reference/react/useOptimistic.md`
+- `reference/react/ViewTransition.md`
+
+**Skill Target**: `references/transitions.md`, `references/actions.md`
+
+---
+
+### Topic 21: react-reconciler — Error Handling ✅ 커버
+
+> Error Boundary와 에러 전파
+> 분할 사유: react-reconciler 파일 그룹 분할
+
+- [ ] 소스 학습 완료
+- [ ] docs 교차 확인
+- [ ] skill 검증/개선 (`references/error-handling.md`)
+
+**Source Files** (`ref/react-fork/packages/react-reconciler/src/`):
+
+| File | Role |
+|------|------|
+| `ReactFiberThrow.js` | 에러 throw 처리 (Error Boundary catch 포함) |
+| `ReactFiberUnwindWork.js` | 에러 발생 시 unwind 처리 |
+| `ReactCapturedValue.js` | 캡처된 에러 값 |
+
+**Study Points** (소스 구조에서 도출):
+- throwException: Error Boundary 탐색 알고리즘
+- getDerivedStateFromError / componentDidCatch 호출
+- Suspense catch vs Error catch 분기
+- 의존 모듈: shared
+
+**Docs**: `reference/react/Component.md` (componentDidCatch, getDerivedStateFromError)
+
+**Skill Target**: `references/error-handling.md`
+
+---
+
+### Topic 22: react-dom-bindings ✅ 커버
+
+> DOM 연산, 이벤트 위임, CSS/속성 처리
+> Subdirs: src/client/, src/events/, src/server/, src/shared/
+
+- [ ] 소스 학습 완료
+- [ ] docs 교차 확인
+- [ ] skill 검증/개선 (`references/events.md`)
+
+**Source Files** (`ref/react-fork/packages/react-dom-bindings/`, 93 files):
+
+| File | Role |
+|------|------|
+| `src/client/ReactDOMComponent.js` | DOM 컴포넌트 생성/업데이트 |
+| `src/client/ReactFiberConfigDOM.js` | Reconciler ↔ DOM 호스트 설정 |
+| `src/events/DOMPluginEventSystem.js` | 이벤트 위임 시스템 |
+| `src/events/ReactDOMEventListener.js` | 이벤트 리스너 등록 |
+| `src/events/SyntheticEvent.js` | SyntheticEvent 생성 |
+| `src/events/getEventTarget.js` | 이벤트 타겟 결정 |
+| `src/server/ReactFizzConfigDOM.js` | 서버 사이드 DOM 설정 |
+| `src/shared/CSSPropertyOperations.js` | CSS 속성 처리 |
+
+**Study Points** (소스 구조에서 도출):
+- 이벤트 위임: root에 리스너 등록, 버블링/캡처 분기
+- SyntheticEvent: 네이티브 이벤트 래핑
+- DOMPluginEventSystem: 이벤트 플러그인 아키텍처
+- DOM property/attribute diffing
+- 의존 모듈: shared, react-reconciler (Fiber 타입, EventPriority)
+
+**Docs**: `learn/responding-to-events.md`
+
+**Skill Target**: `references/events.md`
+
+---
+
+## Phase 3: Infrastructure — 기반 유틸리티 (7 Topics)
+
+순서는 Phase 내 import 의존 관계 기반.
+Phase 1, 2에서 이미 간단히 다룬 개념들을 심화 학습.
+
+---
+
+### Topic 23: react-refresh + react-markup ⬜ 미커버
+
+> 개발/유틸리티 패키지
+> 그룹핑 사유: 각 10~12개 소스 파일의 중소규모 유틸리티
+
+- [ ] 소스 학습 완료
+- [ ] skill 검증/개선
+
+**Source Files** (22 files 합계):
+
+| Package | Files | Key File | Exports |
+|---------|-------|----------|---------|
+| react-refresh | 10 | `src/ReactFreshRuntime.js` | performReactRefresh, createSignature, enqueueRender |
+| react-markup | 12 | `src/ReactMarkupClient.js`, `src/ReactMarkupServer.js` | renderToMarkup |
+
+**Study Points** (소스 구조에서 도출):
+- react-refresh: HMR 메커니즘, signature 기반 컴포넌트 추적
+- react-markup: 마크업 렌더링 타겟 (실험적)
+- 의존 모듈: shared, react-reconciler
+
+**Docs**: 해당 없음
+
+**Skill Target**: 신규 생성 필요
+
+---
+
+### Topic 24: react-native-renderer + react-art + react-noop-renderer ⬜ 미커버
+
+> React Reconciler 기반 대체 렌더러
+> 그룹핑 사유: react-noop-renderer(18 files), react-art(12 files)는 소규모; react-native-renderer(72 files)가 주 학습 대상
+
+- [ ] 소스 학습 완료
+- [ ] skill 검증/개선
+
+**Source Files** (102 files 합계):
+
+| Package | Files | Key File | Role |
+|---------|-------|----------|------|
+| react-native-renderer | 72 | `src/ReactNativeRenderer.js`, `src/ReactFabric.js` | React Native 렌더러 (Legacy + Fabric) |
+| react-art | 12 | `src/ReactART.js` | 벡터 그래픽 렌더러 |
+| react-noop-renderer | 18 | `src/createReactNoop.js` | 테스트용 no-op 렌더러 |
+
+**Study Points** (소스 구조에서 도출):
+- Reconciler의 HostConfig 인터페이스 구현 패턴
+- react-native-renderer: Legacy vs Fabric 아키텍처
+- react-noop-renderer: 커스텀 렌더러 최소 구현 참조
+- 의존 모듈: react-reconciler, shared
+
+**Docs**: 해당 없음
+
+**Skill Target**: 신규 생성 필요
+
+---
+
+### Topic 25: Testing Infrastructure ⬜ 미커버
+
+> 테스트 렌더러 및 테스트 인프라
+> 그룹핑 사유: 테스트 관련 5개 패키지
+
+- [ ] 소스 학습 완료
+- [ ] skill 검증/개선
+
+**Source Files** (39 files 합계):
+
+| Package | Files | Key File | Role |
+|---------|-------|----------|------|
+| react-test-renderer | 12 | `src/ReactTestRenderer.js` | 테스트용 렌더러 |
+| react-suspense-test-utils | 3 | `src/ReactSuspenseTestUtils.js` | Suspense 테스트 유틸 |
+| jest-react | 3 | `src/JestReact.js` | Jest 환경 설정 |
+| internal-test-utils | 13 | `index.js` | 내부 테스트 헬퍼 |
+| dom-event-testing-library | 8 | `index.js` | DOM 이벤트 테스트 |
+
+**Study Points** (소스 구조에서 도출):
+- react-test-renderer: create, unmountComponentAtNode, toJSON
+- act() 메커니즘: 동기적 렌더링/이펙트 완료 보장
+- 의존 모듈: react-reconciler, shared
+
+**Docs**: 해당 없음
+
+**Skill Target**: 신규 생성 필요
+
+---
+
+### Topic 26: react-devtools-shared ⬜ 미커버
+
+> DevTools 핵심 로직 (452 files)
+
+- [ ] 소스 학습 완료
+- [ ] skill 검증/개선
+
+**Source Files** (`ref/react-fork/packages/react-devtools-shared/`, 452 files):
+
+| Subdir | Role |
+|--------|------|
+| `src/backend/` | 렌더러 연결, Fiber 트리 인스펙션 |
+| `src/devtools/` | 프론트엔드 UI 스토어 |
+| `src/config/` | 설정 |
+
+**Study Points** (소스 구조에서 도출):
+- backend: attachRenderer, setupHighlighter, setupTraceUpdates
+- devtools: ProfilingCache, ProfilerStore, 컴포넌트 트리 뷰
+- Bridge: backend ↔ frontend 통신
+- 의존 모듈: react-reconciler (내부 타입)
+
+**Docs**: `reference/dev-tools/react-performance-tracks.md`
+
+**Skill Target**: 신규 생성 필요
+
+---
+
+### Topic 27: react-devtools Variants ⬜ 미커버
+
+> DevTools UI, 브라우저 확장, 타임라인
+> 그룹핑 사유: 7개 패키지가 모두 react-devtools-shared 기반 변형
+
+- [ ] 소스 학습 완료
+- [ ] skill 검증/개선
+
+**Source Files** (188 files 합계):
+
+| Package | Files | Role |
+|---------|-------|------|
+| react-devtools | 3 | 스탠드얼론 DevTools |
+| react-devtools-core | 7 | backend, editor, standalone 모듈 |
+| react-devtools-inline | 13 | 인라인 DevTools |
+| react-devtools-fusebox | 3 | Fusebox 번들러용 |
+| react-devtools-extensions | 47 | 브라우저 확장 |
+| react-devtools-shell | 49 | 개발/테스트 셸 |
+| react-devtools-timeline | 66 | 타임라인 프로파일러 |
+
+**Study Points** (소스 구조에서 도출):
+- 각 변형의 빌드/배포 패턴
+- 브라우저 확장: background script, content script, panel 구조
+- Timeline: content-views, view-base 렌더링 아키텍처
+- 의존 모듈: react-devtools-shared
+
+**Docs**: 해당 없음
+
+**Skill Target**: 신규 생성 필요
+
+---
+
+### Topic 28: react-debug-tools ⬜ 미커버
+
+> DevTools용 Hook 디버깅 유틸리티
+
+- [ ] 소스 학습 완료
+- [ ] skill 검증/개선
+
+**Source Files** (`ref/react-fork/packages/react-debug-tools/`, 8 files):
+
+| File | Role |
+|------|------|
+| `index.js` | 엔트리포인트 |
+| `src/ReactDebugTools.js` | Hook 정보 추출 메인 |
+| `src/ReactDebugHooks.js` | Hook 타입별 디버그 정보 |
+
+**Study Points** (소스 구조에서 도출):
+- getHooks, parseHookName: Fiber에서 Hook 정보 추출
+- DevTools와의 연동 인터페이스
+- 의존 모듈: react-reconciler (Fiber 내부 타입)
+
+**Docs**: 해당 없음
+
+**Skill Target**: 신규 생성 필요
+
+---
+
+### Topic 29: react-reconciler — Remaining Files ✅ 커버 (부분)
+
+> Topic 12~21에서 다루지 않은 react-reconciler 잔여 파일들
+> Hydration, ClassComponent, Profiler, ViewTransition, MutationTracking 등
+
+- [ ] 소스 학습 완료
+- [ ] skill 검증/개선
+
+**Source Files** (`ref/react-fork/packages/react-reconciler/src/`):
+
+| File | Role |
+|------|------|
+| `ReactFiberHydrationContext.js` | 하이드레이션 컨텍스트 |
+| `ReactFiberHydrationDiffs.js` | 하이드레이션 diff |
+| `ReactFiberShellHydration.js` | Shell 하이드레이션 |
+| `ReactFiberClassComponent.js` | 클래스 컴포넌트 처리 |
+| `ReactFiberClassUpdateQueue.js` | 클래스 업데이트 큐 |
+| `ReactFiberCacheComponent.js` | 캐시 컴포넌트 |
+| `ReactFiberMutationTracking.js` | 뮤테이션 추적 |
+| `ReactFiberPerformanceTrack.js` | 성능 추적 |
+| `ReactProfilerTimer.js` | 프로파일러 타이머 |
+| `ReactFiberStack.js` | 스택 프레임 관리 |
+| `ReactFiberTreeContext.js` | 트리 컨텍스트 |
+| `ReactFiberTreeReflection.js` | 트리 반사 |
+| `ReactFiberConcurrentUpdates.js` | 동시성 업데이트 |
+| `ReactFiberReconciler.js` | Reconciler 공개 API |
+| `ReactFiberScope.js` | 스코프 처리 |
+| `ReactFiberHotReloading.js` | HMR 지원 |
+| `ReactFiberDuplicateViewTransitions.js` | 중복 ViewTransition 감지 |
+| `ReactFiberApplyGesture.js` | 제스처 적용 |
+
+**Study Points** (소스 구조에서 도출):
+- Hydration: 서버 HTML → 클라이언트 Fiber 매칭 과정
+- ClassComponent: setState, forceUpdate, lifecycle 메서드
+- Cache: CacheComponent, Suspense 캐시 통합
+- 의존 모듈: shared
+
+**Docs**: `reference/react-dom/client/hydrateRoot.md`
+
+**Skill Target**: `references/fiber.md`, `references/reconciliation.md` (부분 보강)
+
+---
+
+## Docs Supplementary Study (3 Sections)
+
+Phase 1~3에서 소스 코드로 내부 동작을 이해한 후, 공식 문서로 "사용자 관점"의 베스트 프랙티스를 보충한다.
 
 ---
 
 ### Section A: Learn Guides
 
-> Part 1~8에서 다루지 않은 실용적 가이드 학습
+> Phase 1~3에서 다루지 않은 실용적 가이드 학습
 
 - [ ] 학습 완료
 - [ ] skill 검증/개선 (`references/patterns.md`, `references/anti-patterns.md`)
@@ -1016,8 +1083,8 @@ Part 1~8에서 소스 코드로 내부 동작을 이해한 후, 공식 문서로
 
 **Docs** (`ref/react.dev/src/content/reference/react/`):
 - 모든 훅 API 레퍼런스 (useState ~ useEffectEvent)
-- 컴포넌트 API (Suspense, StrictMode, Profiler, Fragment)
-- 유틸리티 API (memo, lazy, forwardRef, cache)
+- 컴포넌트 API (Suspense, StrictMode, Profiler, Fragment, Activity, ViewTransition)
+- 유틸리티 API (memo, lazy, forwardRef, cache, cacheSignal)
 
 **Skill Target**: 전체 `references/`
 
@@ -1040,27 +1107,27 @@ Part 1~8에서 소스 코드로 내부 동작을 이해한 후, 공식 문서로
 
 | Action | File | Source |
 |--------|------|--------|
-| Verify/Improve | `skills/react-aio/references/fiber.md` | Topics 4, 5 |
-| Verify/Improve | `skills/react-aio/references/reconciliation.md` | Topic 6 |
-| Verify/Improve | `skills/react-aio/references/scheduler.md` | Topics 2, 7 |
-| Verify/Improve | `skills/react-aio/references/hooks.md` | Topics 3, 8 |
-| Verify/Improve | `skills/react-aio/references/effects.md` | Topic 9 |
-| Verify/Improve | `skills/react-aio/references/context.md` | Topic 10 |
-| Verify/Improve | `skills/react-aio/references/suspense.md` | Topic 11 |
-| Verify/Improve | `skills/react-aio/references/activity.md` | Topic 11 |
-| Verify/Improve | `skills/react-aio/references/transitions.md` | Topic 12 |
-| Verify/Improve | `skills/react-aio/references/actions.md` | Topic 12 |
-| Verify/Improve | `skills/react-aio/references/error-handling.md` | Topic 13 |
-| Verify/Improve | `skills/react-aio/references/events.md` | Topic 14 |
-| Verify/Improve | `skills/react-aio/references/portals.md` | Topic 15 |
-| Verify/Improve | `skills/react-aio/references/server-components.md` | Topics 16, 17 |
-| Verify/Improve | `skills/react-aio/references/memo.md` | Topic 1 (shared) |
-| Verify/Improve | `skills/react-aio/references/lazy.md` | Topic 1 (shared) |
-| Verify/Improve | `skills/react-aio/references/refs.md` | Topic 8 (hooks) |
-| Review (고아) | `skills/react-aio/references/patterns.md` | Section A |
-| Review (고아) | `skills/react-aio/references/anti-patterns.md` | Section A |
-| Review (고아) | `skills/react-aio/references/best-practices/` | Section C |
-| Create (신규) | `skills/react-aio/references/compiler.md` | Topic 28 |
+| Verify/Improve | `references/hooks.md` | Topics 1, 16 |
+| Verify/Improve | `references/memo.md` | Topics 1, 10 |
+| Verify/Improve | `references/lazy.md` | Topics 1, 10 |
+| Verify/Improve | `references/context.md` | Topics 1, 18 |
+| Verify/Improve | `references/refs.md` | Topics 1, 16 |
+| Verify/Improve | `references/transitions.md` | Topics 1, 20 |
+| Verify/Improve | `references/activity.md` | Topics 1, 19 |
+| Verify/Improve | `references/actions.md` | Topics 1, 2, 20 |
+| Verify/Improve | `references/portals.md` | Topic 2 |
+| Verify/Improve | `references/server-components.md` | Topics 3, 4 |
+| Verify/Improve | `references/fiber.md` | Topics 12, 13, 29 |
+| Verify/Improve | `references/reconciliation.md` | Topics 14, 29 |
+| Verify/Improve | `references/scheduler.md` | Topics 11, 15 |
+| Verify/Improve | `references/effects.md` | Topic 17 |
+| Verify/Improve | `references/events.md` | Topic 22 |
+| Verify/Improve | `references/suspense.md` | Topic 19 |
+| Verify/Improve | `references/error-handling.md` | Topic 21 |
+| Create (신규) | `references/compiler.md` | Topics 8, 9 |
+| Review (고아) | `references/patterns.md` | Section A |
+| Review (고아) | `references/anti-patterns.md` | Section A |
+| Review (고아) | `references/best-practices/` | Section C |
 
 ## Verification
 
