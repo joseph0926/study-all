@@ -1,216 +1,208 @@
-# Topic 1: next/src/api
+# next/src/api
 
 > `/learn nextjs` 세션 기록. 소스 코드 기반 Q&A 히스토리.
 
 ---
 
-## 2026-02-20
+## 2026-02-21
 
 ### 학습 로드맵
-- Step 1: API Facade 패턴
-  - [x] 1.1: src/api/ 디렉토리의 역할 — 16개 파일 전체 지도와 re-export 패턴
-  - [x] 1.2: 빌드 & 패키지 매핑 — src/api/ → dist/api/ → root CJS shim → `next/X` import
-- Step 2: Client API Re-exports
-  - [ ] 2.1: navigation.ts — useRouter, usePathname, useSearchParams의 실제 구현 위치
-  - [ ] 2.2: link, form, script, image — 컴포넌트 re-export 패턴
-- Step 3: Server API Re-exports
-  - [ ] 3.1: headers.ts — cookies(), headers(), draftMode()의 구현 위치
-  - [ ] 3.2: server.ts + og.ts — NextRequest/NextResponse와 ImageResponse
-- Step 4: Dual-environment 패턴
-  - [ ] 4.1: navigation.react-server.ts — 서버 전용 redirect, notFound
-  - [ ] 4.2: create-compiler-aliases.ts — 번들러의 레이어별 alias 스위칭 메커니즘
-- Step 5: Pages Router Legacy Re-exports
-  - [ ] 5.1: dynamic.ts vs app-dynamic.ts — Pages vs App Router dynamic()
-  - [ ] 5.2: router.ts, head.ts, app.tsx, document.tsx — Pages Router 전용 API
+- Step 1: API 엔트리 레이어 패턴
+  - [x] 1.1: src/api/의 역할 — re-export 진입점 패턴 이해
+  - [x] 1.2: 구현 위치 매핑 — 16개 파일이 가리키는 실제 구현 계층 (client/server/shared/pages)
+- Step 2: Navigation API (Client/Server 분기)
+  - [ ] 2.1: navigation.ts — Client-side hooks (useRouter, usePathname 등)
+  - [ ] 2.2: navigation.react-server.ts — Server-side functions (redirect, notFound 등)
+  - [ ] 2.3: .react-server.ts 조건부 export 메커니즘 — 빌드 시 Client/Server 분기 방법
+- Step 3: Server Request API
+  - [ ] 3.1: headers.ts — cookies(), headers(), draftMode() re-export 구조
+  - [ ] 3.2: server.ts — NextRequest/NextResponse/NextFetchEvent 진입점
+- Step 4: Client Components API
+  - [ ] 4.1: image.ts & link.ts — Image/Link 컴포넌트 진입점
+  - [ ] 4.2: form.ts & script.ts — Form/Script 컴포넌트 진입점
+  - [ ] 4.3: og.ts — OG Image Response 진입점
+- Step 5: Dynamic Import & Pages Router Legacy
+  - [ ] 5.1: dynamic.ts vs app-dynamic.ts — Pages vs App Router dynamic() 분기
+  - [ ] 5.2: Pages Router 전용 API — router.ts, head.ts, document.tsx, app.tsx, constants.ts
 
 ### 학습 요약
-- `src/api/`는 16개 파일로 구성된 re-export facade. 직접 로직 없이 `client/`, `server/`, `shared/`의 실제 구현을 re-export한다.
-- 번들러는 `create-compiler-aliases.ts`의 alias 시스템으로 `next/X` → `next/dist/api/X`로 리디렉트. 빌드 컨텍스트(Server/Client, App/Pages, Node/Edge)에 따라 다른 파일로 라우팅한다.
-- `src/api/`는 barrel export 문제가 없다 — 16개 파일이 별도 진입점으로 분리되어 있어 번들러가 사용된 것만 방문. 서드파티의 barrel 문제는 `next-barrel-loader` + `optimizePackageImports`로 해결.
-- `dist/api/`와 `dist/esm/api/`에 동일 ESM을 이중 출력 — Edge 서버 alias(`dist/*` → `dist/esm/*`)를 위한 구조. Pages Router CJS 호환 때문에 `dist/` vs `dist/esm/` 분기가 존재.
+- `src/api/` 디렉토리는 Next.js의 공개 API 진입점 레이어로, 실제 구현 없이 `client/`, `server/`, `shared/`, `pages/` 계층의 코드를 re-export한다.
+- 빌드 시스템(`create-compiler-aliases.ts`)이 `isServerOnlyLayer` 조건에 따라 `navigation`의 resolve 대상을 `.react-server.ts` 버전으로 교체한다.
+- `navigation.ts`만 `.react-server.ts` 쌍을 가지는 이유는, React가 `shared-subset` → `react-server` 전환 시 `useContext`를 서버 빌드에서 제거했기 때문. 같은 파일에 hooks(`useContext` 의존)와 순수 함수(`redirect`, `notFound`)가 공존하여 서버 번들링 에러 발생 → PR #62456에서 분리로 해결.
+- React 팀(Josh Story)과 Next.js 팀(Jiachi Liu)의 협업 과정에서 3주 간격으로 후속 조치가 이루어졌다.
 
 ### 소스 코드 경로
-- `packages/next/src/api/*.ts` — 16개 공개 API re-export 진입점
-- `packages/next/src/build/create-compiler-aliases.ts:203-242` — `next/X` → `next/dist/api/X` alias + App Router/Server Layer 오버라이드
-- `packages/next/src/build/webpack/loaders/next-barrel-loader.ts` — 서드파티 barrel export 최적화 로더
-- `packages/next/src/build/swc/options.ts:471-474` — `optimizePackageImports` → SWC `autoModularizeImports` 설정
-- `packages/next/src/build/swc/options.ts:33-36` — `shouldOutputCommonJs` — Next.js 내부 파일 CJS 강제
-- `packages/next/src/build/swc/options.ts:237-239` — App Router ESM / Pages Router CJS 분기 주석
-- `packages/next/taskfile.js:2452-2460` — `api_esm` 빌드 태스크 (ESM → dist/api + dist/esm/api)
-- `packages/next/taskfile.js:2438-2449` — `server` (CJS) vs `server_esm` (ESM) 비교
-- `packages/next/navigation.js` — 루트 CJS shim
-- `packages/next/navigation.d.ts` — 루트 ESM 타입 선언
-- `packages/next/headers.js` — 개별 named export 선택형 CJS shim
-- `packages/next/server.js` — CJS + named export 양립 패턴
-- `packages/next/package.json:11-76` — `files` 배열 (루트 shim 파일 목록)
-- `packages/next/src/server/config-shared.ts:450` — `optimizePackageImports` 타입 정의
-- `packages/next/src/build/webpack-config.ts:1937-1952` — `__barrel_optimize__` 로더 규칙
-- `packages/next/src/build/webpack-config.ts:2330-2341` — dev 모드 `usedExports: false`
-- `ref/react-fork/packages/react/npm/index.js` — React CJS 배포 패턴 (비교용)
+- `ref/next.js/packages/next/src/api/navigation.ts:1` — Client navigation re-export 진입점
+- `ref/next.js/packages/next/src/api/navigation.react-server.ts:1` — Server navigation re-export 진입점
+- `ref/next.js/packages/next/src/api/headers.ts:1-3` — cookies/headers/draft-mode re-export
+- `ref/next.js/packages/next/src/api/server.ts:1` — NextRequest/NextResponse re-export
+- `ref/next.js/packages/next/src/build/create-compiler-aliases.ts:231-250` — Server/Client 조건부 alias 분기
+- `ref/next.js/packages/next/src/client/components/navigation.ts:1-301` — Client navigation 실제 구현 (hooks + server re-export)
+- `ref/next.js/packages/next/src/client/components/navigation.react-server.ts:1-19` — Server navigation 실제 구현 (순수 함수만)
+- `ref/next.js/packages/next/src/compiled/react/cjs/react.react-server.production.js:300-436` — React 서버 빌드 (useContext 없음)
+- `ref/next.js/packages/next/src/compiled/react/cjs/react.production.js:387-545` — React 클라이언트 빌드 (useContext 있음)
+- `ref/next.js/packages/next/navigation.js:1` — 패키지 루트 진입점 (dist/client/components/navigation require)
 
 ### Q&A 전체 기록
 
-#### Step 1.1: src/api/ 디렉토리의 역할
+#### Step 1.1: src/api/의 역할 — re-export 진입점 패턴 이해
 
-**Q: 이러한 barrel export 패턴으로 발생할수있는 트리쉐이킹 안되는 위험성은 없나요 ?**
+**Q: 이 패턴의 장단점은 뭐라 생각하시나요? 장점의 경우 당신이 말한대로 안내 데스크 역할만 수행하므로 사용자 입장에서는 본인의 환경별로 다른 접근 방법을 쓰지 않고, 동일한 방법으로 import 하기만하면 안내 데스크 요원이 내부적으로 사용자에 맞는것을 제공해주는 장점이있을거같습니다. 단점은 제 생각에는 사용자 입장에서는 추상화가 많이된 상황이라 내부 로직을 아예 모른다는점. 즉 장/단점이 하나에서 나오는거같습니다**
 
-A: `src/api/` 자체는 트리쉐이킹 위험이 낮다. 일반적인 barrel 문제는 "하나의 index.js에 수백 개를 re-export"하는 경우인데, `src/api/`는 16개 파일이 각각 별도 패키지 서브패스에 매핑된다.
+A: 정확한 통찰. "추상화의 양면성" — 장단점이 같은 뿌리에서 나온다는 점을 잘 짚었다. 실제로 "안내 데스크 요원이 사용자에 맞는 것을 제공"하는 메커니즘을 소스에서 확인:
 
-- `next/navigation` → `src/api/navigation.ts` (별도 파일)
-- `next/headers` → `src/api/headers.ts` (별도 파일)
-
-사용자가 `import { useRouter } from 'next/navigation'`을 하면, 번들러는 `navigation.ts` 하나만 진입하고 나머지 15개는 방문하지 않는다. 파일 간에 import 관계가 없기 때문.
-
-각 파일 내의 `export *`는 해당 모듈의 모든 export를 통과시키지만, webpack의 `usedExports` 최적화가 사용하지 않는 export를 제거한다.
-
-서드파티 패키지의 barrel 문제를 위해 `next-barrel-loader`(`src/build/webpack/loaders/next-barrel-loader.ts`)가 존재한다. SWC의 `optimizeBarrelExports` 변환으로 barrel 파일을 분석하여 export map을 생성하고, 사용자가 실제로 import한 이름만 남기고 나머지를 제거한다. `next.config.js`의 `experimental.optimizePackageImports`에 지정된 패키지에만 적용.
-
----
-
-**Q: 사용자가 import { useRouter } from 'next/navigation'을 하면, 번들러는 navigation.ts 하나만 진입하고 나머지 15개 파일은 아예 처리하지 않습니다. << 이게 되는 이유가 뭔가요? 제가 인식하고있는 barrel export 위험성은 export * from "./a", export * from "./b" ... 이렇게 작성되고, 사용자가 import {someA} from "next/a" << 이렇게 가져와도 b,c...들이 같이 번들링되지 않나? 였습니다**
-
-**+ usedExports 최적화가 뭔가요? 이름만 보면 사용되는것만 export한다 같은데 위에 사용되고 안되고는 동적으로 결정되는거 아닌가요?**
-
-**+ SWC의 optimizeBarrelExports 변환으로 barrel 파일을 분석 < 무슨 분석을 합니까?**
-
-**+ 사용자가 실제로 import한 이름만 남기고 나머지 re-export를 제거 < 사용자 import 결정 시점이 더 미래 아닌지?**
-
-A: 4개 질문 모두 하나의 핵심 오해에서 출발 — **Next.js는 "이미 번들링된 패키지"가 아니라 사용자의 앱과 함께 빌드 시점에 번들링된다.**
-
-비유: Next.js = 이미 구운 빵이 아니라, 밀가루/재료. 사용자의 앱과 함께 빵을 구움(번들링).
-
-`next build` 실행 시 webpack/turbopack이 사용자의 코드와 Next.js 소스를 하나의 빌드 그래프에서 함께 처리한다. 번들러가 사용자의 import를 따라가면서 필요한 모듈만 끌어온다.
-
-**Q1 답변**: `src/api/`에는 16개를 한곳에 모은 단일 barrel(`src/api/index.ts`)이 존재하지 않는다. 16개가 물리적으로 분리된 별개 파일이고, 사용자가 `next/navigation`을 import하면 `navigation.ts`만 진입점이 된다.
-
-**Q2 답변**: `usedExports`는 빌드 시점에 동작한다. 번들러가 사용자의 모든 import를 먼저 파악하고, 각 모듈에서 실제로 사용된 export만 표시한 뒤, minifier가 unused export를 제거한다. Next.js는 dev 모드에서는 빌드 속도를 위해 이걸 끈다 (`webpack-config.ts:2340: webpack5Config.optimization.usedExports = false`).
-
-**Q3 답변**: SWC는 barrel 파일의 정적 구조(AST)를 분석해서 export map을 생성한다:
-```
-입력: export { a } from './a'; export { b } from './b'
-출력: __next_private_export_map__ = '[["a","./a","a"],["b","./b","b"]]'
-```
-코드를 실행하지 않고, 어떤 이름이 어느 파일에서 오는지만 매핑한다.
-
-**Q4 답변**: barrel-loader 실행 시점에는 이미 사용자의 import를 알고 있다. 파이프라인 순서:
-1. 사용자 코드 파싱 → `import { Button } from '@mui/material'` 발견
-2. SWC 변환 → `import { Button } from '__barrel_optimize__?names=Button!=!@mui/material'` (이름이 URL에 인코딩됨)
-3. webpack의 `__barrel_optimize__` 매칭 → barrel-loader가 URL에서 `names=['Button']`을 추출
-4. export map에서 Button만 찾아 re-export → 나머지 수백 개 제거
-
-SWC의 `autoModularizeImports` 설정 (`swc/options.ts:471-474`):
-```typescript
-if (optimizePackageImports) {
-    baseOptions.autoModularizeImports = { packages: optimizePackageImports }
+`create-compiler-aliases.ts:231-250`:
+```ts
+export function createAppRouterApiAliases(isServerOnlyLayer: boolean) {
+  const mapping: Record<string, string> = {
+    head: 'next/dist/client/components/noop-head',
+    dynamic: 'next/dist/api/app-dynamic',
+    link: 'next/dist/client/app-dir/link',
+    form: 'next/dist/client/app-dir/form',
+  }
+  if (isServerOnlyLayer) {
+    mapping['navigation'] = 'next/dist/api/navigation.react-server'
+    mapping['link'] = 'next/dist/client/app-dir/link.react-server'
+  }
+  // ...
 }
 ```
-webpack loader에서 names 추출 (`webpack-config.ts:1938-1941`):
-```typescript
-test: /__barrel_optimize__/,
-use: ({ resourceQuery }) => {
-    const names = (resourceQuery.match(/\?names=([^&]+)/)?.[1] || '').split(',')
-```
 
----
+`isServerOnlyLayer`가 `true`이면 `navigation`이 `.react-server` 버전으로 교체됨. 사용자는 동일하게 `'next/navigation'`으로 import하지만, Server Component에서는 `redirect`/`notFound` 등만, Client Component에서는 `useRouter`/`usePathname` 등도 사용 가능.
 
-**Q: 이러한 패턴(사용자 앱을 빌드시 같이 빌드되는 패턴)이 일반적인가요? (react, react-router, ...이런 패키지들도 동일한지?)**
+장단점 정리:
 
-A: "번들러가 import를 따라가며 의존 그래프를 만든다"는 것은 모든 패키지에 해당한다. 하지만 패키지가 어떤 형태로 코드를 제공하느냐에 따라 트리쉐이킹 효과가 크게 달라진다.
-
-**React** (`ref/react-fork/packages/react/npm/index.js`):
-```js
-if (process.env.NODE_ENV === 'production') {
-  module.exports = require('./cjs/react.production.js');
-}
-```
-- CJS 전용, ESM 없음, `sideEffects` 선언 없음
-- `cjs/react.production.js` = 모든 API가 들어있는 플랫한 단일 파일
-- 트리쉐이킹 사실상 불가. 하지만 React 자체가 작고(~6KB gzip), 전체가 거의 다 사용되므로 문제 없음
-
-**모던 라이브러리** (react-router 등):
-- ESM + `sideEffects: false` 조합으로 배포
-- 번들러가 export 단위로 트리쉐이킹 가능
-
-**Next.js src/api/**:
-- 다중 ESM 진입점 (16개 별도 파일)
-- 파일 단위로 분리되어 가장 효과적
-
-스펙트럼:
-```
-트리쉐이킹 어려움 ◀──────────────────▶ 트리쉐이킹 쉬움
-React (CJS 단일)   일반 모던 패키지    Next.js src/api/
-                   (ESM+sideEffects)   (다중 ESM 진입점)
-```
-
----
-
-#### Step 1.2: 빌드 & 패키지 매핑
-
-**Q: SWC가 src/api/ TypeScript를 ESM JavaScript로 컴파일하여 두 곳에 출력합니다. << 왜 2곳에 출력하나요?**
-
-**+ 왜 굳이 /api -> /dist/api로 리다이렉트하나요?**
-
-A:
-
-**왜 2곳 출력**: 대부분의 모듈은 CJS(`dist/`) + ESM(`dist/esm/`) 두 가지 포맷으로 출력한다:
-
-| 위치 | 포맷 | 용도 |
+| 관점 | 장점 | 단점 |
 |------|------|------|
-| `dist/server/` | CJS | Node.js 서버 |
-| `dist/esm/server/` | ESM | Edge 서버 |
+| 사용자 경험 | 환경을 신경 쓸 필요 없이 동일한 import 경로 사용 | 빌드 타임에 실제로 어떤 코드가 연결되는지 보이지 않음 |
+| 디버깅 | — | Server Component에서 useRouter import 시 에러 원인 이해 어려움 |
+| 유지보수 | 내부 구조 변경 시 public API 안정성 유지 | alias 시스템 자체가 복잡성 추가 |
 
-Edge 서버는 alias로 모든 `next/dist/*`를 `next/dist/esm/*`로 교체한다 (`create-compiler-aliases.ts:98-106`). `src/api/`는 `export *` 문법 때문에 CJS 불가능하므로 양쪽 모두 ESM이지만, Edge alias가 `dist/esm/api/`를 찾으므로 존재해야 한다.
-
-```
-                  dist/        dist/esm/
-server/         CJS            ESM
-client/         CJS            ESM
-api/            ESM ←동일→     ESM    ← 예외
-```
-
-**왜 alias 리디렉트**: alias 없으면 `next/navigation` → 루트 `navigation.js` (CJS shim) → 항상 클라이언트 버전. 이러면 3가지가 불가능:
-
-1. **서버/클라이언트 스위칭 불가**: 서버 컴포넌트에서도 클라이언트 navigation을 가져옴. `redirect()`, `notFound()` 서버 전용 API로 교체 불가.
-2. **App/Pages Router 분기 불가**: 같은 `next/dynamic`이지만 App Router는 `app-dynamic`, Pages Router는 `dynamic`이 필요.
-3. **Edge ESM 전환 불가**: Edge 런타임은 CJS 미지원, 루트 CJS shim이 동작 안 함.
-
-alias 시스템은 모듈 해석의 "라우터":
-```
-                        ┌─ Client Layer ──→ dist/api/navigation.js
-next/navigation ─alias─┤
-                        ├─ Server Layer ──→ dist/api/navigation.react-server.js
-                        └─ Edge Server ───→ dist/esm/api/navigation.js
-```
+Next.js는 이 단점을 에러 메시지로 보완 — Server Component에서 `useRouter`를 쓰면 "It only works in a Client Component" 같은 메시지가 나옴.
 
 ---
 
-**Q: node도 esm으로 처리하면 최소한 esm 분기는 없어지지 않나요?**
+#### Step 1.2: 구현 위치 매핑
 
-A: 맞다. 원칙적으로 ESM 통일하면 분기가 없어진다. 하지만 소스에 아직 CJS를 유지하는 이유가 명시되어 있다.
+**Q: navigation.ts만 .react-server.ts 쌍을 가짐 — 16개 파일 중 유일하게 Server/Client 분기가 필요한 API << 왜 이렇게 설계되었는지 근거를 웹검색이나 주석등에서 찾을수있을까요? 저것만 저런 패턴이라면, 반대로 말하면 저것만 아니라면 분기가 필요 없을수도있던거 아닌가요?**
 
-`swc/options.ts:237-239`:
-```typescript
-// For app router we prefer to bundle ESM,
-// On server side of pages router we prefer CJS.
+A: 두 파일의 실제 구현을 읽어서 확인.
+
+`navigation.react-server.ts` (Server 전용, 1-19줄):
+```ts
+export { redirect, permanentRedirect } from './redirect'
+export { notFound } from './not-found'
+export { forbidden } from './forbidden'
+export { unauthorized } from './unauthorized'
+export { unstable_rethrow } from './unstable-rethrow'
+export { ReadonlyURLSearchParams }
+export const RedirectType = { push: 'push', replace: 'replace' } as const
 ```
 
-`swc/options.ts:33-36`:
-```typescript
-// Ensure Next.js internals and .cjs files are output as CJS modules
-function shouldOutputCommonJs(filename) {
-  return isCommonJSFile(filename) || nextDistPath.test(filename)
+`navigation.ts` (Client, 56-301줄):
+```ts
+// Client에서만 가능한 React hooks
+export function useSearchParams() { ... useContext(SearchParamsContext) ... }
+export function usePathname() { ... useContext(PathnameContext) ... }
+export function useRouter() { ... useContext(AppRouterContext) ... }
+export function useParams() { ... useContext(PathParamsContext) ... }
+// ...
+// ★ Server 것들도 전부 re-export
+export { notFound, forbidden, unauthorized, redirect, permanentRedirect, RedirectType, unstable_rethrow } from './navigation.react-server'
+```
+
+`next/navigation`이라는 하나의 import 경로에 성격이 완전히 다른 두 종류의 API가 공존: React Hooks (`useContext` 사용, Client 전용) + 순수 함수 (`redirect`/`notFound`, Server/Client 양쪽 가능). 다른 API들은 이런 혼합이 없음.
+
+git 히스토리에서 원본 커밋 발견: `c221fc4508 Create react server condition alias for next/navigation api (#62456)`
+
+PR #62456 커밋 메시지:
+> We found that if you're using edge runtime with `next/navigation` it will error with bundling that you're attempted to import some client component hooks such as `useContext` from react. So we introduced a `react-server` version of `next/navigation` that doesn't interoplate with any client hooks.
+
+---
+
+**Q: 마지막 3문단은 당신의 역추론인가요? 근거가있는건가요?**
+
+A: 정직하게 인정 — 마지막 3문단("DX를 위해 하나의 import 경로로 합치는 설계 결정을 먼저 하고, 그 대가로 `.react-server.ts`가 필요해졌다")은 소스에서 확인하지 못한 역추론이었음. 실제 근거(PR #62456)에 의하면 순서가 반대:
+
+1. 원래 `navigation.ts` 하나만 있었음
+2. Edge Runtime + Server Components에서 `useContext` 번들 에러 발생 (버그)
+3. 이 버그를 고치기 위해 `.react-server.ts` 분리
+
+"DX 선택 → 복잡성 감수"가 아니라 "버그 → 분리 필요"가 실제 이유.
+
+---
+
+**Q: useContext import가 터지는 문제 << 정확히 무슨 문제입니까?**
+
+A: React 자체가 서버용 빌드에서 `useContext`를 제거하는 것이 본질.
+
+React의 `package.json` 조건부 export (`compiled/react/package.json:5-7`):
+```json
+".": {
+  "react-server": "./react.react-server.js",
+  "default": "./index.js"
 }
 ```
 
-Pages Router가 `require()` 기반 동기적 모듈 로딩에 의존하므로, Next.js가 App Router + Pages Router를 한 패키지에서 동시 지원하는 한 CJS/ESM 양쪽이 필요하다. Pages Router 지원을 완전히 드롭하면 `dist/` ESM 통일 가능 → Edge alias 제거, api 이중 출력 제거 가능. 현재는 Pages Router 호환을 위한 레거시 비용.
+두 빌드의 export 비교:
+
+| Hook | `react.production.js` (Client) | `react.react-server.production.js` (Server) |
+|------|:---:|:---:|
+| `useContext` | 있음 (511줄) | 없음 |
+| `useState` | 있음 | 없음 |
+| `useEffect` | 있음 (518줄) | 없음 |
+| `useRef` | 있음 | 없음 |
+| `useMemo` | 있음 (536줄) | 있음 (433줄) |
+| `useCallback` | 있음 (508줄) | 있음 (426줄) |
+| `use` | 있음 (502줄) | 있음 (423줄) |
+| `createContext` | 있음 (437줄) | 없음 |
+
+에러 발생 흐름:
+1. Server Component에서 `import { redirect } from 'next/navigation'`
+2. 번들러가 `navigation.ts` resolve (분기 전)
+3. `navigation.ts`는 `import { useContext } from 'react'` 포함
+4. 번들러가 Server 번들이므로 `react-server` 조건으로 React resolve
+5. `react.react-server.js`에 `useContext`가 없음
+6. 번들링 에러: "useContext is not exported from react"
+
+사용자가 `redirect`만 쓰려 했는데, 같은 파일에 있는 `useRouter`가 `useContext`를 import하고, 그 `useContext`가 서버 빌드의 React에 존재하지 않아 터진 것.
 
 ---
+
+**Q: 그러면 react 변경으로 Nextjs가 후속 조치를 한건가요? / react 같은 많은 의존성을 고려하는 팀이 이렇게 대안없이 바꾸지 않을거같아서 궁금하네요**
+
+A: git 히스토리에서 `shared-subset` → `react-server` 전환 과정을 추적.
+
+**Before (shared-subset)** — `useContext`가 있었음:
+```
+exports.useContext = useContext;    ← ✅ 포함
+```
+
+**After (react-server, 같은 커밋 #61522)** — `useContext`가 제거됨:
+```
+                                   ← ❌ useContext 없음
+```
+
+이름만 바뀐 게 아니라 `useContext`가 서버 빌드에서 제거되었음.
+
+타임라인:
+
+| 날짜 | PR | 작성자 | 내용 |
+|------|-----|--------|------|
+| 2024-02-05 | #61522 | Josh Story (React 팀) | React 업데이트 + `shared-subset` → `react-server` 전환, `useContext` 제거 |
+| 2024-02-26 | #62456 | Jiachi Liu (Next.js 팀) | `navigation.react-server.ts` 생성으로 번들링 에러 수정 |
+
+대안 없이 바꾼 것이 아님:
+1. PR #61522의 작성자 Josh Story는 React 팀 멤버. React 업데이트와 Next.js alias 변경을 한 PR에서 같이 처리 — 협업하여 진행.
+2. 다만 이 PR에서는 alias 이름만 바꿨고, `navigation.ts`가 `useContext`를 import하는 문제까지는 미처 잡지 못함.
+3. 3주 뒤 Edge Runtime + Server Components에서 실제 에러 보고(#62187) → Next.js 팀이 후속 수정.
+
+결론: 의도적인 breaking change가 아니라, React-Next.js 협업 과정에서 발생한 누락. React의 `useContext` 제거는 의도적이었지만(Server Component에서 Context는 의미 없으므로), Next.js의 `navigation.ts`에 미치는 영향까지는 한 번에 처리되지 않았음.
 
 ### 연결 토픽
-- **client/components/navigation.ts**: Step 2.1에서 다룰 useRouter, usePathname 등의 실제 구현
-- **create-compiler-aliases.ts 전체**: Step 4.2에서 다룰 번들러 레이어 스위칭 메커니즘
-- **next-barrel-loader + optimizePackageImports**: 서드파티 barrel 최적화 심화 (Topic 14: build — webpack & turbopack)
-- **Pages Router vs App Router 모듈 분기**: Step 5에서 다룰 레거시 re-export 패턴
-- **Edge Runtime**: Topic 5 (proxy & middleware) — Edge 서버의 ESM 전용 환경
+- `navigation 실제 구현`: `client/components/navigation.ts`의 useRouter, usePathname 등 hooks 구현 상세 (Step 2에서 다룰 예정)
+- `create-compiler-aliases 전체 구조`: Server/Client 외에도 Edge, Pages 등 다양한 alias 분기가 존재
+- `React react-server 조건`: React가 서버 빌드에서 제공하는 API subset의 설계 의도와 범위
+- `빌드 시스템 (webpack-config)`: `isServerOnlyLayer` 판단 로직과 번들 레이어 시스템
 
 ---
