@@ -375,3 +375,374 @@ if (type === null || type === undefined) {
 - `Pages/App 어댑터 패턴 상세`: `adaptForSearchParams`, `PathnameContextProviderAdapter`의 fallback/autoExport 처리
 
 ---
+
+## 2026-02-21 (재개 — Step 2.3부터)
+
+### 학습 로드맵
+- Step 1: API 엔트리 레이어 패턴
+  - [x] 1.1: src/api/의 역할 — re-export 진입점 패턴 이해
+  - [x] 1.2: 구현 위치 매핑 — 16개 파일이 가리키는 실제 구현 계층 (client/server/shared/pages)
+- Step 2: Navigation API (Client/Server 분기)
+  - [x] 2.1: navigation.ts — Client-side hooks (useRouter, usePathname 등)
+  - [x] 2.2: navigation.react-server.ts — Server-side functions (redirect, notFound 등)
+  - [x] 2.3: .react-server.ts 조건부 export 메커니즘 — 빌드 시 Client/Server 분기 방법
+- Step 3: Server Request API
+  - [x] 3.1: headers.ts — cookies(), headers(), draftMode() re-export 구조
+  - [x] 3.2: server.ts — NextRequest/NextResponse/after/connection 진입점
+- Step 4: Client Components API
+  - [ ] 4.1: image.ts & link.ts — Image/Link 컴포넌트 진입점
+  - [ ] 4.2: form.ts & script.ts — Form/Script 컴포넌트 진입점
+  - [ ] 4.3: og.ts — OG Image Response 진입점
+- Step 5: Dynamic Import & Pages Router Legacy
+  - [ ] 5.1: dynamic.ts vs app-dynamic.ts — Pages vs App Router dynamic() 분기
+  - [ ] 5.2: Pages Router 전용 API — router.ts, head.ts, document.tsx, app.tsx, constants.ts
+
+### 학습 요약
+- webpack의 레이어(layer) 시스템과 resolve alias 조합으로 `.react-server.ts` 조건부 분기가 이루어진다. `issuerLayer`는 "import를 하는 파일이 속한 레이어"를 체크하는 함수이며, `shouldUseReactServerCondition()`이 `serverOnly` 그룹 포함 여부를 boolean으로 반환한다.
+- `noop-head`는 App Router에서 `next/head`를 에러 대신 빈 컴포넌트로 교체하는 패턴. Pages→App 마이그레이션 중 공유 컴포넌트가 양쪽에서 렌더링될 수 있어 에러 차단 대신 noop + 빌드 경고(`next-flight-loader`)로 점진적 마이그레이션을 허용한다.
+- `cookies()`, `headers()`, `draftMode()`는 Node.js `AsyncLocalStorage`(비동기 실행 컨텍스트에 바인딩되는 저장소) + `workUnitStore.type` switch 분기 패턴을 공유한다. `getStore()`는 동기 함수이며, `.run(store, callback)` 안의 모든 비동기 체인에서 동일한 store에 접근 가능하다.
+- `next/server` API들(`NextRequest`, `NextResponse`, `after`, `connection`)은 Web Standard 클래스 확장 + 유틸리티 모음으로, AsyncLocalStorage 기반인 `headers.ts` API들과 성격이 다르다. `NextResponse.rewrite()`는 내부 헤더(`x-middleware-rewrite`)로 URL 변경 없이 다른 곳의 콘텐츠를 반환하는 메커니즘이다.
+
+### 소스 코드 경로
+- `ref/next.js/packages/next/src/build/webpack-config.ts:1514-1525` — issuerLayer별 alias 분기 (createAppRouterApiAliases 호출)
+- `ref/next.js/packages/next/src/build/utils.ts:1603-1609` — shouldUseReactServerCondition (serverOnly 그룹 포함 여부 체크)
+- `ref/next.js/packages/next/src/lib/constants.ts:115-169` — WEBPACK_LAYERS_NAMES 정의 (rsc, ssr, app-pages-browser 등)
+- `ref/next.js/packages/next/src/lib/constants.ts:181-195` — serverOnly/clientOnly 그룹 정의
+- `ref/next.js/packages/next/src/build/create-compiler-aliases.ts:231-250` — createAppRouterApiAliases (navigation, link의 .react-server 분기)
+- `ref/next.js/packages/next/src/client/components/noop-head.tsx:1-3` — NoopHead (return null)
+- `ref/next.js/packages/next/src/build/webpack/loaders/next-flight-loader/index.ts:210-216` — noop-head 사용 시 빌드 경고 출력
+- `ref/next.js/packages/next/src/shared/lib/head.tsx:1-165` — 진짜 next/head 구현 ('use client', useContext(HeadManagerContext))
+- `ref/next.js/packages/next/src/api/headers.ts:1-3` — cookies/headers/draftMode re-export 진입점
+- `ref/next.js/packages/next/src/server/request/cookies.ts:33-142` — cookies() 구현 (AsyncLocalStorage + switch)
+- `ref/next.js/packages/next/src/server/request/headers.ts:40-158` — headers() 구현 (AsyncLocalStorage + switch)
+- `ref/next.js/packages/next/src/server/request/draft-mode.ts:25-71` — draftMode() 구현
+- `ref/next.js/packages/next/src/server/app-render/async-local-storage.ts:1-68` — createAsyncLocalStorage (Node.js AsyncLocalStorage 래퍼)
+- `ref/next.js/packages/next/src/server/app-render/work-async-storage-instance.ts:1-5` — workAsyncStorageInstance 싱글톤
+- `ref/next.js/packages/next/src/server/app-render/work-unit-async-storage.external.ts:344` — WorkUnitStore 타입 정의 (Discriminated Union)
+- `ref/next.js/packages/next/src/server/app-render/app-render.tsx:712-717` — workUnitAsyncStorage.run() 호출 (렌더링 진입점)
+- `ref/next.js/packages/next/src/server/web/adapter.ts:320-327` — workAsyncStorage.run() 호출 (middleware 진입점)
+- `ref/next.js/packages/next/src/api/server.ts:1` — next/server re-export 진입점
+- `ref/next.js/packages/next/src/server/web/exports/index.ts:1-10` — NextRequest/NextResponse/after/connection export 목록
+- `ref/next.js/packages/next/src/server/web/spec-extension/request.ts:14-52` — NextRequest (Request 상속, cookies/nextUrl/url 추가)
+- `ref/next.js/packages/next/src/server/web/spec-extension/response.ts:36-153` — NextResponse (Response 상속, json/redirect/rewrite/next 정적 팩토리)
+- `ref/next.js/packages/next/src/server/web/next-url.ts:34-45` — NextURL (basePath/i18n/trailingSlash 파싱)
+
+### Q&A 전체 기록
+
+#### Step 2.3: .react-server.ts 조건부 export 메커니즘
+
+**Q: issuerLayer(= import를 하는 파일이 속한 레이어) << 이 말은 즉 import가 존재하는 모듈로 이해해도됩니까? 아니면 레이어는 모듈이나 번들과 다릅니까? / head: 'next/dist/client/components/noop-head' << noop-head인 이유는 클라이언트에서는 접근이 안되어서 일까요?**
+
+A: "import가 존재하는 모듈"이라는 이해는 반쪽만 맞다. **모듈(module)**은 개별 파일 하나, **레이어(layer)**는 webpack이 그 모듈에 태그처럼 붙이는 분류 라벨이다. `constants.ts:115-169`에서 `reactServerComponents: 'rsc'`, `serverSideRendering: 'ssr'`, `appPagesBrowser: 'app-pages-browser'` 등으로 정의됨. 비유하면 모듈이 "사람"이라면 레이어는 "부서". `issuerLayer`는 함수이며, webpack이 각 rule 평가 시 현재 모듈의 레이어를 인자로 넘겨 boolean을 받는다.
+
+noop-head는 클라이언트 접근 불가 때문이 아니라, **App Router에서 `next/head`가 의미 없기 때문**이다. App Router에서는 `metadata` export나 `generateMetadata()`로 `<head>`를 관리. `noop-head.tsx:1-3`은 `return null`만 하는 빈 컴포넌트.
+
+---
+
+**Q: App Router 코드에서 실수로 import Head from 'next/head'를 하면, 에러 대신 아무것도 렌더링하지 않는 빈 컴포넌트로 조용히 교체 << 이 접근이 좀 위험해보입니다, 사실 저는 "조용한 실패"를 좋은 패턴인가?라고 생각하면 상황에 따라 다르지만, 개발환경으로 한정하면 별로 좋지 못하다고 생각합니다.**
+
+A: 완전히 조용하지는 않다. `next-flight-loader/index.ts:210-216`에서 빌드 타임에 `warnOnce()`로 경고를 출력한다:
+```
+Warning: You're using `next/head` inside the `app` directory, please migrate to the Metadata API.
+```
+2단계 대응: ① 빌드 타임 경고, ② 런타임 graceful degradation (null 렌더링). 다른 API들과 비교하면 `useRouter()` Provider 밖 호출은 에러 throw, Server Component에서 `useRouter()`는 빌드 에러인 반면, `next/head`만 관대한 이유는 마이그레이션 과정이 고려된 것으로 보임.
+
+---
+
+**Q: 근데 궁금한게 app router에서 사용이 안된다면, 레이어 단계나 alias 단계에서 처리 가능하지 않을까요? 왜 noop으로 처리한걸까요? 예를들어 react의 cache는 shared에서 import 될수있고, 그러므로 server나 client에서 새로운 함수로 래핑되는 패턴을 유지해야하므로 noop 패턴이 이해가 가는데, 여긴 잘 이해가 안갑니다**
+
+A: 진짜 `next/head` 구현(`shared/lib/head.tsx:1-3`)은 `'use client'` + `useContext(HeadManagerContext)`. Pages→App 마이그레이션 중 `pages/`와 `app/`이 한 프로젝트에 공존하며, 같은 공유 컴포넌트가 양쪽에서 렌더링될 수 있다.
+
+| 전략 | Pages Router | App Router | 마이그레이션 중 |
+|------|:---:|:---:|:---:|
+| alias 없음 (진짜 head.tsx) | 정상 | HeadManagerContext Provider 없음 → 런타임 에러 | 공유 컴포넌트 사용 불가 |
+| 에러 throw | 정상 | 빌드 에러 | 공유 컴포넌트 사용 불가 |
+| noop (현재) | 정상 | null 렌더링 + 경고 | 양쪽에서 동작 — 점진적 마이그레이션 가능 |
+
+`navigation.ts`의 `.react-server.ts` 분기는 Server/Client 분기(사용자가 한쪽에서만 쓰는 API)이지만, `head`는 Pages/App Router 분기 — 마이그레이션 중 같은 컴포넌트가 양쪽에서 렌더링될 수 있어 에러 차단이 점진적 마이그레이션을 깨뜨린다.
+
+---
+
+#### Step 3.1: headers.ts — cookies(), headers(), draftMode() re-export 구조
+
+**Q: AsyncLocalStorage 라는 말은 기본 window.localStorage는 비동기입니까? indexedDB만 비동기인줄 알았습니다 / `const workStore = workAsyncStorage.getStore()` < async 함수인데 왜 await나 then처리등이 없나요? / switch (workUnitStore.type) << 이 분기는 앞으로 새로운 지시어가 생길때마다 늘어나겠군요, 맞나요?**
+
+A:
+
+1) `AsyncLocalStorage`는 브라우저의 `window.localStorage`와 **전혀 다른 API**. Node.js의 `async_hooks` 모듈 소속(`async-local-storage.ts:1`에서 `import type { AsyncLocalStorage } from 'async_hooks'`). "Async"는 "비동기 저장소"가 아니라 "비동기 실행 컨텍스트에 바인딩되는 저장소"라는 뜻. 비유하면 각 HTTP 요청이 보이지 않는 배낭을 메고 다니는 것.
+
+2) `getStore()`는 **동기 함수**(`async-local-storage.ts:14-16`에서 `getStore(): Store | undefined { return undefined }`). Promise를 반환하지 않는다. `.run(store, callback)` 안의 모든 코드에서 `.getStore()`를 호출하면 그 store가 동기적으로 반환된다.
+
+3) 맞다. 이미 9개 case가 있으며, 코드 끝의 `workUnitStore satisfies never`가 TypeScript exhaustiveness check로 새 type 추가 시 컴파일 에러를 강제한다.
+
+---
+
+**Q: 처리할 때 프레임워크가 .run(store, callback)으로 감싸줍니다 << 여기서 말하는 프레임워크는 어떤 프레임워크 말하는겁니까? / async/await 체인을 따라가도 컨텍스트가 유지되기 때문에 "AsyncLocal"이라는 이름이 붙었습니다 << 무슨말입니까? / 당신이 생각할때 마지막 switch 처리는 베스트 패턴이라 생각하시나요?**
+
+A:
+
+1) **Next.js 자체**가 `.run()`을 호출한다. `adapter.ts:320`에서 middleware 진입 시 `workAsyncStorage.run(workStore, () => workUnitAsyncStorage.run(requestStore, params.handler, ...))`, `app-render.tsx:712`에서 렌더링 시 `workUnitAsyncStorage.run(requestStore, generateDynamicRSCPayload, ...)`. 사용자 코드는 이 `.run()` 안에서 실행되므로 `cookies()`로 getStore()하면 이미 씌워진 store가 나온다.
+
+2) Node.js가 모든 비동기 작업(Promise, setTimeout, I/O)에 ID를 부여하고 `triggerAsyncId`로 "누가 나를 만들었는가"를 추적한다. `.run()` 안에서 시작된 비동기 체인은 아무리 깊어져도 동일한 store에 접근 가능. 동시에 1000개 요청이 처리되어도 각자의 비동기 체인이 독립적으로 추적되어 섞이지 않는다. 글로벌 변수로는 불가능한 것 — 동시 요청 시 서로 덮어쓰지만, AsyncLocalStorage는 실행 흐름별로 격리된다.
+
+3) Discriminated Union + switch는 "최선"이라기보다 **확장성과 안전성의 현실적 절충**. 장점: `satisfies never`로 빠짐 방지, case별로 완전히 다른 동작이라 공통 추상화 어려움. 비용: `cookies()`, `headers()`, `draftMode()` 세 함수가 거의 동일한 switch를 중복하여 새 렌더링 모드 추가 시 3곳 이상 수정 필요. 대안으로 Strategy 패턴(각 Store에 `resolveCookies()` 메서드)도 가능하지만, Store의 책임이 커지고 각 함수의 분기 로직이 미묘하게 다르므로(예: draftMode는 cache 안에서도 read-only 허용) 무리한 추상화가 오히려 복잡성을 높일 수 있다.
+
+---
+
+**Q: 보이지 않는 배낭을 메고 다닌다 << 모든 http 요청에 해당되는 내용입니까? 다 메고 다니지만 위처럼 직접 호출 안하면 볼일 없음 vs 명시적으로 호출해야 생김..?**
+
+A: **전자가 맞다.** 모든 HTTP 요청을 처리할 때 Next.js가 `.run(store, callback)`으로 감싸준다. `cookies()`는 이미 메고 있는 배낭을 열어보는 것이지, 배낭을 새로 만드는 게 아니다. `adapter.ts:320-327`과 `app-render.tsx:712-717`에서 진입점마다 `.run()`이 호출됨을 확인.
+
+---
+
+#### Step 3.2: server.ts — NextRequest/NextResponse/after/connection 진입점
+
+**Q: 여기서 뭔가 질문할건 크게 없고, 여길 전체적으로 실생활 비유해주시겠어요?**
+
+A: 호텔 비유로 정리:
+- **`NextRequest`** = 투숙객 등록 카드. Web Standard `Request`가 기본 양식이라면, NextRequest는 호텔 전용 항목(`.cookies` 멤버십 카드, `.nextUrl` 예약 상세)이 추가된 양식.
+- **`NextResponse`** = 프론트 직원의 응대 메뉴얼. `.json()` 정보 안내, `.redirect()` 다른 층 안내, `.rewrite()` 손님 모르게 B동 안내(URL 변경 없이 다른 콘텐츠), `.next()` 다음 담당자에게 인수인계.
+- **`after()`** = 체크아웃 후 처리 (방 청소, 리뷰 이메일). 손님 기다리게 하지 않음.
+- **`connection()`** = "예약인가요, 워크인인가요?" 확인. 정적/동적 렌더링 분기 신호.
+- `headers.ts` API들과의 차이: headers.ts는 객실 내 비품 요청 전화(함수만 호출하면 시스템이 알아서 찾아줌 — AsyncLocalStorage), server.ts는 프론트 데스크 장비/양식(등록 카드에 적혀있는 데이터를 읽음).
+
+---
+
+**Q: .nextUrl → 예약 상세 (어떤 방, 어떤 층, 특별 요청사항까지 파싱) << 비유대로라면 이건 호텔(NextJs)에 특화된 서비스인데, 일반적으로는 없다면 default값으로 대체되나요? / "손님 모르게 B동으로 안내" < 이 말은 HTTP 요청(응답)과 다르게 행동한다는건가요?**
+
+A:
+
+1) default 대체가 아니다. `NextRequest`는 `Request`를 **상속(extends)**하므로 원래 `Request.url`(단순 문자열)은 그대로 있고, `NextURL`은 이를 Next.js 설정(basePath, i18n, trailingSlash)을 감안해 **파싱한 추가 객체**(`next-url.ts:34-45`). 비유 정정: `Request.url`이 손님이 쓴 "서울 OO호텔"이라면, `NextURL`은 직원이 "서울지점, A동, 12층, 한국어 서비스"로 분해 정리한 투숙 카드. Next.js가 아닌 일반 서버에는 이 기능 자체가 없다.
+
+2) HTTP 응답 자체와 다르게 행동하는 것이 아니라, **Next.js 내부에서 요청을 다른 곳으로 전달한 뒤 그 응답을 원래 URL의 응답인 것처럼 돌려주는 것**. `response.ts:135-143`에서 `headers.set('x-middleware-rewrite', validateURL(destination))`. 브라우저 주소창은 `example.com/api/data`로 유지되지만 실제 콘텐츠는 `backend.internal/v2/data`에서 가져옴. redirect는 브라우저가 새 URL로 재요청하여 주소창이 바뀌지만, rewrite는 바뀌지 않음.
+
+### 연결 토픽
+- `webpack 레이어 시스템 상세`: reactServerComponents, serverSideRendering, appPagesBrowser 등 레이어별 동작 차이
+- `AsyncLocalStorage 심층`: Node.js async_hooks의 asyncId/triggerAsyncId 추적 메커니즘
+- `workStore vs workUnitStore`: 두 AsyncLocalStorage의 역할 차이와 생명주기
+- `NextResponse.rewrite 내부 처리`: x-middleware-rewrite 헤더를 라우터가 어떻게 소비하는지
+- `after() 구현 상세`: 응답 전송 후 비동기 작업 실행의 메커니즘 (waitUntil)
+- `Image/Link 컴포넌트 진입점`: Step 4에서 다룰 Client Components API
+
+---
+
+## 2026-02-21 (재개 — Step 4.1부터)
+
+### 학습 로드맵
+- Step 1: API 엔트리 레이어 패턴
+  - [x] 1.1: src/api/의 역할 — re-export 진입점 패턴 이해
+  - [x] 1.2: 구현 위치 매핑 — 16개 파일이 가리키는 실제 구현 계층 (client/server/shared/pages)
+- Step 2: Navigation API (Client/Server 분기)
+  - [x] 2.1: navigation.ts — Client-side hooks (useRouter, usePathname 등)
+  - [x] 2.2: navigation.react-server.ts — Server-side functions (redirect, notFound 등)
+  - [x] 2.3: .react-server.ts 조건부 export 메커니즘 — 빌드 시 Client/Server 분기 방법
+- Step 3: Server Request API
+  - [x] 3.1: headers.ts — cookies(), headers(), draftMode() re-export 구조
+  - [x] 3.2: server.ts — NextRequest/NextResponse/after/connection 진입점
+- Step 4: Client Components API
+  - [x] 4.1: image.ts & link.ts — Image/Link 컴포넌트 진입점
+  - [x] 4.2: form.ts & script.ts — Form/Script 컴포넌트 진입점
+  - [ ] 4.3: og.ts — OG Image Response 진입점
+- Step 5: Dynamic Import & Pages Router Legacy
+  - [ ] 5.1: dynamic.ts vs app-dynamic.ts — Pages vs App Router dynamic() 분기
+  - [ ] 5.2: Pages Router 전용 API — router.ts, head.ts, document.tsx, app.tsx, constants.ts
+
+### 학습 요약
+- `src/api/image.ts`는 분기 없이 `shared/lib/image-external.tsx` → `client/image-component.tsx`로 단일 경로 연결. `defaultLoader`와 `__NEXT_IMAGE_OPTS`는 webpack의 alias/DefinePlugin이 빌드 타임에 `next.config.js`의 images 설정으로 교체/주입한다.
+- `src/api/link.ts`는 빌드 alias에 의해 3개 구현으로 분기: Pages(`client/link.tsx` — `RouterContext`, `useIntersection` prefetch), App Client(`client/app-dir/link.tsx` — `AppRouterContext`, `useOptimistic`, segment cache), App Server(`client/app-dir/link.react-server.tsx` — legacyBehavior + SC 검증 후 Client 위임).
+- `export *`는 ES Module 스펙상 default export를 포함하지 않으므로, `export { default }`와 `export *`가 항상 2줄로 함께 사용된다.
+- Form은 Link와 동일한 Pages/App 포크 패턴(두 별도 파일), Script는 단일 파일 내 `appDir` 분기. 차이 이유: Link/Form은 라우터와 직접 상호작용(navigation, prefetch 메커니즘이 다름)하지만, Script는 DOM에 `<script>` 삽입이 본질이라 분기 몇 개로 충분.
+- Script의 4가지 로딩 전략(`beforeInteractive`/`afterInteractive`/`lazyOnload`/`worker`)과 `ScriptCache`(Map)/`LoadCache`(Set) 중복 방지 메커니즘.
+- Pages/App Router 공존 구조의 복잡성이 과도하다는 관찰: 실제로 공유되는 코드가 거의 없으면서 "공유하는 척 하느라 드는 비용"(alias, 어댑터, noop, Context 이중화)이 더 크다. TODO 주석이 3년 넘게 남아있는 것은 우선순위에서 밀리고 있다는 의미.
+
+### 소스 코드 경로
+- `ref/next.js/packages/next/src/api/image.ts:1-2` — Image re-export 진입점
+- `ref/next.js/packages/next/src/shared/lib/image-external.tsx:1-37` — Image default + getImageProps() + 타입 export
+- `ref/next.js/packages/next/src/client/image-component.tsx:1-80` — Image 컴포넌트 실제 구현 ('use client')
+- `ref/next.js/packages/next/src/api/link.ts:1-2` — Link re-export 진입점
+- `ref/next.js/packages/next/src/client/link.tsx:1-713` — Pages Router Link (RouterContext, useIntersection, prefetched Set)
+- `ref/next.js/packages/next/src/client/app-dir/link.tsx:1-776` — App Router Link (AppRouterContext, useOptimistic, mountLinkInstance, FetchStrategy)
+- `ref/next.js/packages/next/src/client/app-dir/link.react-server.tsx:1-31` — Server Link (legacyBehavior + SC 검증, ClientLinkComponent 위임)
+- `ref/next.js/packages/next/src/build/create-compiler-aliases.ts:235-236` — App Router에서 link/form alias 교체
+- `ref/next.js/packages/next/src/build/define-env.ts:78-98` — getImageConfig() (__NEXT_IMAGE_OPTS 매핑)
+- `ref/next.js/packages/next/src/build/webpack-config.ts:2029-2030` — DefinePlugin으로 define env 주입
+- `ref/next.js/packages/next/src/api/form.ts:1-2` — Form re-export 진입점
+- `ref/next.js/packages/next/src/client/form.tsx:1-169` — Pages Router Form (RouterContext, prefetch 미지원, startTransition TODO)
+- `ref/next.js/packages/next/src/client/app-dir/form.tsx:1-233` — App Router Form (AppRouterContext, mountFormInstance, FetchStrategy.PPR)
+- `ref/next.js/packages/next/src/client/form-shared.ts` — Pages/App 공유 유틸 (checkFormActionUrl, createFormSubmitDestinationUrl 등)
+- `ref/next.js/packages/next/src/api/script.ts:1-2` — Script re-export 진입점
+- `ref/next.js/packages/next/src/client/script.tsx:1-385` — Script 컴포넌트 (Pages/App 단일 파일, HeadManagerContext, 4 strategies)
+
+### Q&A 전체 기록
+
+#### Step 4.1: image.ts & link.ts — Image/Link 컴포넌트 진입점
+
+**Q: `export { default } from '../shared/lib/image-external'` / `export * from '../shared/lib/image-external'` << 왜 두개로 export하는건가요? default export는 export *에 포함안되나요?**
+
+A: ES Module 스펙에 의해 `export *`는 default export를 포함하지 않는다. 이건 ECMAScript 명세의 의도적 설계로, 여러 모듈에서 `export *`를 할 때 default가 충돌하는 것을 방지하기 위한 것이다.
+
+```ts
+export { default } from '../shared/lib/image-external'  // Image 컴포넌트 (default)
+export * from '../shared/lib/image-external'             // getImageProps, ImageProps 등 (named)
+```
+
+첫 줄이 없으면 `import Image from 'next/image'`가 undefined가 된다.
+
+---
+
+**Q: next.config.js의 images 설정이 빌드 시 여기로 주입된다 << 어떤 단계로 주입된다는건가요?**
+
+A: 3단계 파이프라인으로 주입된다:
+
+**Step 1**: `next.config.js`에서 사용자 설정을 읽음
+
+**Step 2**: `define-env.ts:78-98`의 `getImageConfig()` 함수가 config에서 이미지 설정을 추출하여 `'process.env.__NEXT_IMAGE_OPTS'` 키로 매핑:
+```ts
+function getImageConfig(config: NextConfigComplete, dev: boolean) {
+  return {
+    'process.env.__NEXT_IMAGE_OPTS': {
+      deviceSizes: config.images.deviceSizes,
+      imageSizes: config.images.imageSizes,
+      qualities: config.images.qualities,
+      path: config.images.path,
+      loader: config.images.loader,
+      // dev일 때만 추가로 domains, remotePatterns 등 포함
+    }
+  }
+}
+```
+
+**Step 3**: `webpack-config.ts:2029-2030`에서 webpack `DefinePlugin`이 이 매핑을 받아, 소스 코드의 `process.env.__NEXT_IMAGE_OPTS` 문자열을 빌드 타임에 실제 JSON 값으로 치환:
+```ts
+new (getWebpackBundler().DefinePlugin)(
+  getDefineEnv({ ... })  // ← getImageConfig()의 결과가 여기 포함
+)
+```
+
+비유: 소스 코드에 "빈칸 ____"을 남겨두고, 빌드 시 webpack이 `next.config.js`의 실제 값으로 채워 넣는 것. 런타임에 config를 읽는 게 아니라, 번들된 JS 파일에 이미 값이 박혀있다.
+
+---
+
+**Q: Router Context가 다르다 << 왜 다른가요? 근거/이유는?**
+
+A: Pages Router와 App Router는 완전히 다른 라우터 구현이기 때문이다.
+
+`RouterContext` (`router-context.shared-runtime.ts:4`):
+```ts
+export const RouterContext = React.createContext<NextRouter | null>(null)
+```
+— `NextRouter` 타입. `pathname`, `query`, `locale`, `events`, `beforePopState` 등 Pages Router 전용 API.
+
+`AppRouterContext` (`app-router-context.shared-runtime.ts:65`):
+```ts
+export const AppRouterContext = React.createContext<AppRouterInstance | null>(null)
+```
+— `AppRouterInstance` 타입. `push`, `replace`, `refresh`, `prefetch` 등 App Router 전용 API. `query`, `locale`, `events` 같은 Pages 개념이 없다.
+
+두 Context가 분리된 근본 이유: 인터페이스가 다르다. Pages Router의 `router.push(href, as, { shallow, locale })`와 App Router의 `router.push(href, { scroll })`는 시그니처부터 다르다. Link 컴포넌트가 `linkClicked()`에서 navigation을 호출할 때 이 차이가 그대로 반영된다:
+
+```ts
+// client/link.tsx:258-268 (Pages)
+if ('beforePopState' in router) {
+  router[replace ? 'replace' : 'push'](href, as, { shallow, locale, scroll })
+} else {
+  router[replace ? 'replace' : 'push'](as || href, { scroll })
+}
+```
+
+---
+
+**Q: `router[replace ? 'replace' : 'push'](href, as, { shallow, locale, scroll })` << 이건 직접 호출이 아닌가요?**
+
+A: 맞다, Pages Link의 `router[method](...)` 자체는 직접 호출이다. 대비시키려 했던 포인트:
+
+| | Pages Link | App Link |
+|---|---|---|
+| 호출 대상 | `router.push()` — Context에서 가져온 router 인스턴스의 메서드를 직접 호출 | `dispatchNavigateAction()` — `app-router-instance` 모듈에서 require로 가져온 함수 호출 |
+| 래핑 | 없음 | `React.startTransition()`으로 래핑 |
+| Link 상태 추적 | 없음 | `linkInstanceRef`를 넘겨서 navigation 중 pending 상태 추적 |
+
+양쪽 다 "직접 호출"이지만, App Link는 `startTransition`으로 감싸서 navigation을 React의 transition 시스템에 통합시키고, `linkInstanceRef`를 통해 "어떤 Link가 이 navigation을 트리거했는지" 추적한다는 차이.
+
+---
+
+**Q: 항상 false << 이게 항상 false라면 그냥 뚫기만 하고 내부 로직은 없는 상황이였던건가요?**
+
+A: 그렇다. Pages Link에는 실제 link status 추적 로직이 없다.
+
+`client/link.tsx:700-711`:
+```ts
+const LinkStatusContext = createContext<{ pending: boolean }>({
+  // We do not support link status in the Pages Router, so we always return false
+  pending: false,
+})
+export const useLinkStatus = () => {
+  return useContext(LinkStatusContext)
+}
+```
+
+주석에 `We do not support link status in the Pages Router`라고 명시. Pages Link 컴포넌트 본체에 `<LinkStatusContext.Provider>`로 감싸는 코드가 없다 — `<a>` 태그를 직접 반환.
+
+반면 App Link (`client/app-dir/link.tsx:738-742`):
+```ts
+return (
+  <LinkStatusContext.Provider value={linkStatus}>
+    {link}
+  </LinkStatusContext.Provider>
+)
+```
+— `useOptimistic(IDLE_LINK_STATUS)`으로 생성한 `linkStatus`를 Provider로 감싸서 실제 pending 상태 추적.
+
+Pages의 `useLinkStatus`가 존재하는 이유는 API 호환성 — `useLinkStatus`를 사용하는 코드가 Pages Router 환경에서도 에러 없이 동작하도록, 항상 `{ pending: false }`를 반환하는 noop 구현을 제공. Step 2.3의 `noop-head` 패턴과 같은 맥락.
+
+---
+
+#### Step 4.2: form.ts & script.ts — Form/Script 컴포넌트 진입점
+
+**Q: 제가 지금까지 학습하면서 느낀건 "이정도면 pages와 app router 하나의 패키지에 공존 + 둘이 같이 사용 가능하게 대처" << 이것때문에 과하게 복잡한거같습니다**
+
+A: 사용자의 판단이 정확하다. 소스에서 확인된 사실만 놓고 보면:
+
+지금까지 본 패턴 정리:
+
+| 파일 | 공존 비용 |
+|------|----------|
+| `navigation.ts` | `.react-server.ts` 분리 + `create-compiler-aliases` 분기 |
+| `link.tsx` | Pages/App 완전 별도 구현 2개 + `.react-server` 서버 래퍼 = 3파일 |
+| `form.tsx` | 같은 구조 — Pages/App 2파일 + `form-shared.ts` 공유 모듈 |
+| `useRouter()` | `AppRouterContext` + `RouterContext` 2개 Context + 어댑터 함수 4개 |
+| `next/head` | `noop-head` 교체 + 빌드 경고 |
+| `useLinkStatus` | Pages에서 항상 `{ pending: false }` 반환하는 noop |
+| `script.tsx` | 단일 파일이지만 `appDir` 분기가 곳곳에 산재 |
+
+실제로는 이미 사실상 분리되어 있다. 공유되는 코드가 거의 없으면서 "공유하는 척 하느라 드는 비용"(alias, 어댑터, noop, Context 이중화)이 더 크다.
+
+Step 2.1에서 발견한 TODO 주석(`app-router.tsx:536-540`)에서 팀 스스로 "Pages와 공유하기 때문에 필요한 복잡성"이라 인정했지만, 3년 넘게 TODO로 남아있다는 건 우선순위에서 밀리고 있다는 뜻.
+
+---
+
+**Q: "기존 사용자 마이그레이션 경로를 끊는 대가가 있어서 현실적으로 쉽지 않은 선택이다" << 이 판단이 현실적인지 잘 모르겠습니다. / 지금 코드는 솔직히 과합니다, 조금더 말하면 "이렇게 했는데도 돌아간다고?" 정도입니다**
+
+A: 이전 표현이 너무 관대했음을 인정. 소스에서 확인된 사실만 놓고 보면 사용자의 판단이 더 정확하다.
+
+"링크를 클릭하면 다른 페이지로 이동한다"라는 기능 하나에 `api/link.ts`, `client/link.tsx`(714줄), `client/app-dir/link.tsx`(776줄), `client/app-dir/link.react-server.tsx`(32줄), `create-compiler-aliases.ts`, `webpack-config.ts`, `use-intersection.ts`, `components/links.ts`, `adapters.tsx` 등이 필요하다는 것 자체가 구조적 문제의 증거.
+
+실제 공유 vs 별도 구현:
+
+| 영역 | 실제 공유 | 별도 구현 |
+|------|----------|----------|
+| Link | `isModifiedEvent()` 정도 | 나머지 전부 |
+| Form | `form-shared.ts` | 나머지 전부 |
+| Navigation | 없음 | 완전 별도 |
+| Router | 없음 | `NextRouter` vs `AppRouterInstance` |
+
+공유하는 것보다 "두 개를 하나인 것처럼 보이게 하는 접착제"(alias 시스템, 어댑터, noop 패턴, Context 이중화) 비용이 더 크다. "돌아가는 것과 잘 설계된 것은 다르다"는 것이 이 코드베이스에 대한 정확한 평가.
+
+### 연결 토픽
+- `og.ts — OG Image Response 진입점`: Step 4.3에서 다룰 예정
+- `dynamic.ts vs app-dynamic.ts`: Step 5.1에서 다룰 Pages vs App dynamic() 분기 — 또 다른 포크 패턴
+- `segment cache 시스템`: App Router Link의 `mountLinkInstance`/`FetchStrategy` 동작 상세
+- `React Float API`: Script가 App Router에서 사용하는 `ReactDOM.preinit()`/`ReactDOM.preload()` 메커니즘
+- `self.__next_s 부트스트랩`: beforeInteractive 스크립트의 서버-클라이언트 전달 메커니즘
+
+---
