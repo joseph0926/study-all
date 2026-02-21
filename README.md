@@ -1,8 +1,8 @@
 # study-all
 
-Claude Code를 AI 튜터로 활용하여 소스 코드/공식 문서 기반으로 개발 기술을 학습하고, 기록을 축적하는 레포.
+Claude Code와 Codex를 AI 튜터로 활용하여 소스 코드/공식 문서 기반으로 개발 기술을 학습하고, 기록을 축적하는 레포.
 
-**학습 방식**: `ref/`에 학습할 라이브러리의 소스 코드와 공식 문서를 두고, Claude Code 커맨드(`/learn`, `/study-skill`, `/review`)로 토픽 단위 Q&A 세션을 진행한다. 모든 학습 기록은 `docs/`에 자동 저장되어 세션 간 연속성을 유지한다.
+**학습 방식**: `ref/`에 학습할 라이브러리의 소스 코드와 공식 문서를 두고, Claude Code 커맨드(`/learn`, `/study-skill`, `/review`) 또는 Codex 스킬(`$learn`, `$study-skill`, `$review`)로 토픽 단위 Q&A 세션을 진행한다. 모든 학습 기록은 `docs/`에 자동 저장되어 세션 간 연속성을 유지한다.
 
 ## Quick Start
 
@@ -40,6 +40,22 @@ Claude Code 세션 안에서 슬래시 커맨드로 사용한다.
 | `/project-learn <path> <topic>`     | 프로젝트 소스 코드 기반 토픽 Q&A 튜터링             | 프로젝트 `.study/` 디렉토리             |
 | `/project-study <path>`             | 프로젝트 소스 딥스터디 → 학습 플랜 → 토픽별 딥스터디 | 프로젝트 `.study/` 디렉토리             |
 | `/project-review <path> [topic]`    | 프로젝트 학습 기록 기반 복습 (AI 질문, 내가 답변)    | 프로젝트 `.study/` 디렉토리             |
+
+### Codex Skills (우선 6개)
+
+Codex에서는 슬래시 커맨드 대신 `$` 스킬 호출을 사용한다.
+
+| Codex 스킬                              | 대응 Claude 커맨드               | 상태 |
+| --------------------------------------- | -------------------------------- | ---- |
+| `$learn <skill-name> <topic>`           | `/learn <skill> <topic>`         | 지원 |
+| `$study-skill <skill-name>`             | `/study-skill <skill>`           | 지원 |
+| `$review <skill-name> [topic]`          | `/review <skill> [topic]`        | 지원 |
+| `$project-learn <project-path> <topic>` | `/project-learn <path> <topic>`  | 지원 |
+| `$project-study <project-path>`         | `/project-study <path>`          | 지원 |
+| `$project-review <project-path> [topic]` | `/project-review <path> [topic]` | 지원 |
+
+- 현재 우선 범위는 위 6개다. `/dashboard`, `/next`, `/plan`은 Codex 스킬 이식 대상에서 제외되어 있다.
+- 스킬 파일은 `.agents/skills/<skill-name>/SKILL.md` 경로를 사용한다.
 
 ### `/dashboard` — 현황 스냅샷 / `/next` — 학습 코치 / `/plan` — 마스터 플랜
 
@@ -118,6 +134,13 @@ study-all/
 │   ├── project-learn.md               # /project-learn 커맨드 정의
 │   ├── project-study.md               # /project-study 커맨드 정의
 │   └── project-review.md              # /project-review 커맨드 정의
+├── .agents/skills/
+│   ├── learn/SKILL.md                 # $learn
+│   ├── review/SKILL.md                # $review
+│   ├── study-skill/SKILL.md           # $study-skill
+│   ├── project-learn/SKILL.md         # $project-learn
+│   ├── project-study/SKILL.md         # $project-study
+│   └── project-review/SKILL.md        # $project-review
 ├── scripts/
 │   └── check-docs.sh                  # 정합성 검증 (pre-commit 훅)
 ├── docs/                              # 학습 기록 (자동 생성)
@@ -140,11 +163,17 @@ git clone https://github.com/vitejs/vite.git ref/vite-fork
 # 2. (선택) 공식 문서 준비
 git clone https://github.com/vitejs/vite.git ref/vite.dev  # docs 브랜치 등
 
-# 3. Claude Code에서 학습 시작
+# 3-A. Claude Code에서 학습 시작
 claude
 # 세션 안에서:
 #   /learn vite dev server       → 스킬 자동 생성 + 토픽 학습
 #   /study-skill vite            → 스킬 자동 생성 + 전체 학습 플랜 수립
+
+# 3-B. Codex에서 학습 시작
+codex
+# 세션 안에서:
+#   $learn vite dev server       → 토픽 학습
+#   $study-skill vite            → 전체 학습 플랜 수립
 ```
 
-스킬(`~/.claude/skills/vite-aio/`)이 없으면 `ref/`에서 소스 정보를 추출하여 기본 뼈대를 자동 생성한다. 학습을 진행하면서 레퍼런스가 점진적으로 채워진다. `docs/vite/` 디렉토리도 자동 생성되고 학습 기록이 쌓인다.
+스킬이 없으면 `ref/`에서 소스 정보를 추출하여 기본 뼈대를 자동 생성한다. Codex 기준 스킬 경로는 `.agents/skills/`다. 학습을 진행하면서 레퍼런스가 점진적으로 채워진다. `docs/vite/` 디렉토리도 자동 생성되고 학습 기록이 쌓인다.
