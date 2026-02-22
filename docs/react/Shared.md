@@ -1,6 +1,20 @@
-# Topic 1: shared
+# Topic 2: shared
 
 > `/learn react` 세션 기록. 소스 코드 기반 Q&A 히스토리.
+
+---
+
+## 병합 정리 기준 (Q&A 원문 보존)
+
+- plan 매핑: `docs/react/plan.md`의 Topic 2 (`shared`)
+- 진실 원천:
+  - `ref/react-fork/packages/shared/`
+  - `ref/react-fork/packages/react/src/jsx/ReactJSXElement.js` (교차 확인)
+- 중복 범위 병합 규칙:
+  - API export/Hook 진입점/Children 공개 API 설명은 `docs/react/React-Core-API.md`를 기준으로 사용
+  - 본 문서는 Symbol/타입/비교 알고리즘/FeatureFlag 같은 shared 하위 레이어를 기준으로 유지
+  - Fiber/Work Loop에서 재등장하는 shared 상수는 본 문서 개념을 재사용하고 상세 구현은 각 토픽 문서 기준
+- 원문 보존 정책: 아래 날짜별 Q&A 기록은 삭제/요약하지 않고 유지
 
 ---
 
@@ -281,6 +295,183 @@ function* MyList() { yield <li>A</li>; yield <li>B</li>; }
 ```
 
 `ReactChildFiber.js:1393-1398`에서 부모가 GeneratorFunction이고 자식이 Generator이면 경고를 건너뜀 — 컴포넌트 재호출로 매번 새 Generator를 만들 수 있으니까.
+
+
+## 2026-02-11 (이관 — SharedInternals & Dispatcher 패턴)
+
+### 이관 메모
+- 원문 출처: `docs/react/React-Core-API.md`의 `Step 2`
+- 이관 사유: `plan.md` Topic 2(shared)의 SharedInternals 범위와 직접 중첩
+
+#### Step 2: SharedInternals & Dispatcher 패턴
+
+**Q: resolveDispatcher는 H 적용이고, getCacheForType는 A 전용이고, ... 이런식으로 4개(또는 5개)에 대응되는 함수가 4~5개 존재하고, 각 사용처에서는 이 함수를 매번 호출해야하나요?**
+
+A: 아니다. **H만 resolveDispatcher()라는 전용 리졸버 함수가 있다.** 나머지는 직접 접근한다.
+
+슬롯을 두 카테고리로 나누면 이해가 쉽다:
+
+**카테고리 1: Dispatcher 슬롯 (H, A)** — 메서드를 가진 객체를 담는 슬롯
+
+| 슬롯 | 접근 방식 | 코드 |
+|------|----------|------|
+| H (Dispatcher) | `resolveDispatcher()` 전용 함수 | `ReactHooks.js:24-42` |
+| A (AsyncDispatcher) | 직접 접근: `ReactSharedInternals.A` | `ReactHooks.js:44-51` |
+
+H에만 리졸버가 있는 이유: 모든 Hook이 H를 경유하므로 **가장 빈번하게 호출**된다. DEV 가드(null 체크 + 에러 메시지) + 인라이닝 최적화를 한 곳에 모으기 위해 함수로 분리. A는 `getCacheForType()` 한 곳에서만 쓰이므로 인라인으로 충분.
+
+```js
+// H: 전용 리졸버 (ReactHooks.js:24-42)
+function resolveDispatcher() {
+  const dispatcher = ReactSharedInternals.H;
+  if (__DEV__) {
+    if (dispatcher === null) {
+      console.error('Invalid hook call...');
+    }
+  }
+  return ((dispatcher: any): Dispatcher);
+}
+
+// A: 직접 접근 (ReactHooks.js:44-51)
+export function getCacheForType<T>(resourceType: () => T): T {
+  const dispatcher = ReactSharedInternals.A;
+  if (!dispatcher) {
+    return resourceType(); // graceful fallback
+  }
+  return dispatcher.getCacheForType(resourceType);
+}
+```
+
+**카테고리 2: Context/값 슬롯 (T, S, G)** — 값을 직접 저장하는 슬롯
+
+이 슬롯들은 Dispatcher 패턴이 아니라 **값 자체를 직접 읽고 쓴다**:
+
+```js
+// ReactStartTransition.js — T 슬롯 직접 접근
+const prevTransition = ReactSharedInternals.T;  // 이전 값 저장
+ReactSharedInternals.T = transition;             // 새 값 설정
+// ... 작업 수행 ...
+ReactSharedInternals.T = prevTransition;         // 복원 (스택 패턴)
+```
+
+T/S/G는 리졸버 함수가 필요 없다. 값을 직접 읽고/쓰는 것이 전부.
+
+---
+
+**Q: 그러면 ReactSharedInternals 객체는 전역에 공유되는 객체인가요?**
+
+A: **맞다. 싱글턴 객체**이며, JS 모듈 시스템을 통해 공유된다.
+
+브릿지 경로를 추적하면:
+
+1. **생성**: `packages/react/src/ReactSharedInternalsClient.js:60-65`
+```js
+const ReactSharedInternals: SharedStateClient = ({
+  H: null,
+  A: null,
+  T: null,
+  S: null,
+}: any);
+```
+
+2. **외부 노출**: `packages/react/src/ReactClient.js:110`
+```js
+export {
+  ReactSharedInternals as __CLIENT_INTERNALS_DO_NOT_USE_OR_WARN_USERS_THEY_CANNOT_UPGRADE,
+  // ...
+};
+```
+
+3. **렌더러 쪽에서 접근**: `packages/shared/ReactSharedInternals.js`
+```js
+import * as React from 'react';
+const ReactSharedInternals =
+  React.__CLIENT_INTERNALS_DO_NOT_USE_OR_WARN_USERS_THEY_CANNOT_UPGRADE;
+export default ReactSharedInternals;
+```
+
+`react` 패키지가 `export`한 것을 `shared` 패키지가 다시 `import` → 같은 객체 참조. JS 모듈 시스템에서 모듈은 한 번만 평가되므로, `ReactSharedInternals`는 어디서 import해도 **동일한 하나의 객체**를 가리킨다.
+
+이름이 `__CLIENT_INTERNALS_DO_NOT_USE_OR_WARN_USERS_THEY_CANNOT_UPGRADE`인 이유: 서드파티가 이 내부 객체에 의존하는 것을 막기 위해 의도적으로 길고 경고성 이름을 사용. 하지만 실제로 React DevTools, 일부 라이브러리들이 이 경로를 통해 내부에 접근해왔다.
+
+---
+
+**Q: 제가 잘못 이해한걸수도있지만, 이렇게 복잡한 매커니즘을 왜 단일 객체로 관리할까요? 물론 중앙 집중형 장점도 있겠지만, H,A,T... 성격이 너무 다른것들의 집합인거같기도합니다, 또한 위험은 없나요?**
+
+A: 좋은 지적이다. 처음에 3가지 이유를 제시했다:
+
+1. **번들 크기**: 여러 객체 → 단일 객체로 합치면 import/export 오버헤드 절감
+2. **브릿지 단순화**: 렌더러↔react 연결 지점이 하나
+3. **개념적 통일**: "렌더러가 react에 주입하는 것들"이라는 공통 성격
+
+위험 측면: 슬롯 간 의도치 않은 상호작용 가능성은 있지만, 각 슬롯이 독립된 키(H, A, T, S, G)로 분리되어 있고, 접근하는 코드도 각각 다르므로 실질적 충돌 위험은 낮다.
+
+---
+
+**Q: 첫번째 이유인 성능적이유는 근거나 테스트가 있을까요? (깃허브나 react 팀 블로그 검색 허용)**
+
+A: GitHub에서 실제 PR을 찾아 확인했다.
+
+**PR #28783 "Flatten ReactSharedInternals"** (2024년 4월):
+- 기존: `ReactSharedInternals.ReactCurrentDispatcher.current`, `ReactSharedInternals.ReactCurrentCache.current` 등 중첩 구조
+- 변경: `ReactSharedInternals.H`, `ReactSharedInternals.A` 등 플랫 구조로 변경
+- PR 설명에서 Sebastian Markbåge: 이 변경은 "the first step to makeover the Dispatcher" → **Dispatcher 구조 전면 개편의 첫 단계**
+
+**PR #28771** (동일 시기):
+- 번들 크기 변화 측정: `react-dom`에서 **-0.76 kB** 감소
+- 이는 전체 react-dom 크기 대비 매우 작은 양
+
+**제가 처음 설명에서 "의미 있는 크기 절감"이라고 한 것은 과장이었다.** 실제 데이터를 보면 번들 크기는 부차적 효과였고, 주 목적은 다른 곳에 있었다.
+
+---
+
+**Q: 그러면 다시 근거 바탕으로 변경한 이유가 뭔지 정리해주세요**
+
+A: PR #28783의 실제 근거를 바탕으로 재정리:
+
+**1순위: React 19에서 Dispatcher 구조를 전면 개편하기 위한 사전 작업.**
+- PR 설명: "the first step to makeover the Dispatcher"
+- 플랫 구조가 되어야 후속 변경(슬롯 추가/제거/리네이밍)이 쉬워진다
+
+**2순위: 서드파티 내부 의존성 차단.**
+- 기존 `ReactSharedInternals.ReactCurrentDispatcher.current` 같은 경로를 통해 React DevTools, 서드파티 라이브러리들이 내부에 접근해왔다
+- 이름을 H/A/T 같은 난독화된 키로 바꾸면 이런 의존성이 끊긴다
+- `__CLIENT_INTERNALS_DO_NOT_USE_OR_WARN_USERS_THEY_CANNOT_UPGRADE`라는 이름도 같은 맥락
+
+**3순위: 번들 크기 (부차적 효과).**
+- react-dom -0.76 kB 감소
+- 있으면 좋지만 이것이 주 동기는 아니었다
+
+---
+
+**Q: 읽어보면 'React 19에서 Dispatcher 구조를 전면 개편하기 위한 사전 작업.' < 이게 메인인거 같은데 '전면 개편하기 위한~'은 아직 추상적인 이유로 들립니다**
+
+A: PR #28783의 후속 작업을 추적하면 구체적인 목표가 드러난다.
+
+**PR #28912 / #28798 "Move Current Owner (and Cache) to an Async Dispatcher"**:
+
+이 PR이 flatten의 실제 목적지였다. 구체적 변경:
+
+1. **기존 `CacheDispatcher` → `AsyncDispatcher`로 확장**
+   - 기존에는 A 슬롯이 `getCacheForType()` 하나만 가진 단순한 캐시 디스패처
+   - 변경 후: `getOwner()` 등 async 관련 메서드도 포함하는 범용 비동기 디스패처
+
+2. **왜 필요했나**: async 컴포넌트(Server Components 등)에서 `currentOwner` 추적 문제
+   - 동기 컴포넌트: 전역 변수(스택 기반)로 "현재 렌더링 중인 컴포넌트"를 추적 가능
+   - async 컴포넌트: `await`에서 실행이 중단되면 전역 변수가 다른 컴포넌트로 덮어씌워짐
+   - **해결**: `AsyncLocalStorage`를 사용하면 각 async 실행 컨텍스트별로 독립된 owner 추적 가능
+
+3. **PR 설명 원문**: "Current Owner inside an Async Component will need to be tracked using AsyncLocalStorage. This is similar to how cache() works."
+
+즉, **"Dispatcher 전면 개편"의 실체는 async 컴포넌트 지원을 위한 인프라 교체**였다. 단일 객체로 통합(flatten)한 것은 이 작업을 깔끔하게 수행하기 위한 사전 정리.
+
+요약하면:
+- 기존: `{ ReactCurrentDispatcher: { current: ... }, ReactCurrentCache: { current: ... } }` → 중첩, 이름 길고, 서드파티 의존
+- flatten: `{ H: ..., A: ... }` → 평평하게
+- 목적지: A(CacheDispatcher)를 AsyncDispatcher로 확장하여 async 컴포넌트에서 owner + cache를 AsyncLocalStorage로 추적
+
+---
+
 
 ### 연결 토픽
 - **ReactTypes (Step 2)**: ReactSymbols의 심볼들이 실제 타입 정의에서 어떻게 사용되는지

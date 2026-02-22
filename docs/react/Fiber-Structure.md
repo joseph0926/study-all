@@ -1,6 +1,21 @@
-# Fiber Node And Tags
+# Topic 3: Fiber Node And Tags
 
 > `/learn react` 세션 기록. 소스 코드 기반 Q&A 히스토리.
+
+---
+
+## 병합 정리 기준 (Q&A 원문 보존)
+
+- plan 매핑: `docs/react/plan.md`의 Topic 3 (`react-reconciler — Fiber Structure`)
+- 진실 원천:
+  - `ref/react-fork/packages/react-reconciler/src/ReactFiber.js`
+  - `ref/react-fork/packages/react-reconciler/src/ReactWorkTags.js`
+  - `ref/react-fork/packages/react-reconciler/src/ReactFiberFlags.js`
+  - `ref/react-fork/packages/react-reconciler/src/ReactTypeOfMode.js`
+- 중복 범위 병합 규칙:
+  - `scheduleUpdateOnFiber`, `renderRootSync/concurrent`, `commitRoot` 실행 흐름은 `docs/react/Work-Loop.md`를 기준으로 사용
+  - 본 문서는 Fiber 데이터 구조/태그/플래그/더블버퍼링 설명을 기준으로 유지
+- 원문 보존 정책: 아래 날짜별 Q&A 기록은 삭제/요약하지 않고 유지
 
 ---
 
@@ -836,3 +851,60 @@ function detachFiberAfterEffects(fiber: Fiber) {
 - Bailout 메커니즘: bailoutOnAlreadyFinishedWork와 cloneChildFibers의 관계 — 어디까지 alternate가 전파되는가
 
 ---
+
+## 부록: Work-Loop에서 이관된 Fiber 개념 Q&A
+
+### 이관 메모
+- 원문 출처: `docs/react/Work-Loop.md` Step 3 후반부
+- 이관 사유: Fiber 개념/범위 설명은 Topic 3(Fiber Structure)와 직접 중첩
+
+**Q: fiber에 대한 개념과 범위를 아직 완벽히 이해 못해서 실생활 예시로 완벽히 이해하고 싶습니다**
+
+A: 레스토랑 "주문 티켓 시스템" 비유로 설명:
+
+- **Fiber 하나 = 주문 티켓 1장**: 메뉴 종류(tag), 주문 내용(pendingProps), 지난번 결과(memoizedState), 해야 할 작업(flags), 긴급도(lanes) 등이 적혀 있음.
+- **Fiber 트리 = 티켓들의 연결**: child(첫 하위 항목), sibling(같은 레벨 다음), return(상위). 배열이 아니라 링크드 리스트이므로 한 장씩 처리하다 멈출 수 있음 — Concurrent 렌더링의 핵심.
+- **Double Buffering = 서빙 트레이 2개**: current(테이블 위, 손님이 보는 것) ↔ workInProgress(주방에서 준비 중). 완성되면 트레이 교체(Commit).
+- **workLoopSync = 모든 티켓 쉬지 않고 처리** (주방 문 잠금).
+- **workLoopConcurrent = 25ms마다 주방 문 열고 VIP 주문 확인**.
+- **Fiber 이전(Stack Reconciler)**: 재귀 호출로 전체 트리를 한 숨에 처리, 중단 불가. **Fiber 이후**: 각 엘리먼트가 독립 티켓이므로 아무 티켓 사이에서든 멈출 수 있음.
+
+한 줄 정리: **Fiber는 컴포넌트를 "한 번에 처리해야 하는 재귀 호출"에서 "하나씩 처리할 수 있는 독립 작업 단위"로 바꾼 자료구조.**
+
+---
+
+**Q: fiber 1개가 그러면 하나의 컴포넌트라고 매핑해서 이해해도됩니까?**
+
+A: 거의 맞지만, 정확히는 아니다. Fiber 1개 = 컴포넌트 1개가 아니라, **React 엘리먼트 1개**.
+
+```jsx
+function App() {
+  return (
+    <div>              // ← Fiber 1개 (HostComponent)
+      <Header />       // ← Fiber 1개 (FunctionComponent)
+      <span>hello</span> // ← Fiber 1개 (HostComponent)
+    </div>
+  );
+}
+```
+
+Fiber 트리: App(Fiber) → div(Fiber) → Header(Fiber) → h1(Fiber), span(Fiber). **Fiber 5개, 컴포넌트는 2개**(App, Header). `<div>`, `<span>` 같은 HTML 태그도 각각 Fiber.
+
+---
+
+**Q: React 엘리먼트 1개가 하나의 fiber이고, performUnitOfWork는 지금 처리해야할 fiber(리액트 엘리먼트)의 포인터를 가리킨다 << 이렇게 이해하면되나요?**
+
+A: 맞다. 한 가지만 정밀하게 하면:
+
+- `performUnitOfWork`는 **함수** (Fiber 1개를 처리하는 함수)
+- `workInProgress`가 **포인터** (지금 처리할 Fiber를 가리킴)
+
+```js
+function workLoopSync() {
+  while (workInProgress !== null) {       // ← 포인터가 null이 아닌 동안
+    performUnitOfWork(workInProgress);    // ← 그 Fiber를 처리
+  }
+}
+```
+
+정리: React 엘리먼트 1개 = Fiber 1개, `workInProgress` = 지금 처리할 Fiber를 가리키는 포인터, `performUnitOfWork` = 그 포인터가 가리키는 Fiber 1개를 처리하고 포인터를 다음으로 옮기는 함수.

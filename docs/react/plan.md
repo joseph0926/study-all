@@ -1024,7 +1024,7 @@ Phase 1~4에서 소스 코드로 내부 동작을 이해한 후, 공식 문서�
 | Topic | docs_file |
 |-------|-----------|
 | Topic 1: react | React-Core-API.md |
-| Topic 2: shared | Topic-1-Shared.md |
+| Topic 2: shared | Shared.md |
 | Topic 3: Fiber Structure | Fiber-Structure.md |
 | Topic 4: Work Loop | Work-Loop.md |
 
