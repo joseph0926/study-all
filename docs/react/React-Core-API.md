@@ -823,4 +823,214 @@ React 패키지 ─┤
 - **Server Components**: RSC 프로토콜, 직렬화 경계, Shared Component 동작 원리
 
 ---
-$$
+
+## 2026-02-22
+
+### 학습 로드맵
+- Step 1: ReactChildren — Children 순회 알고리즘
+  - [x] 1.1: mapIntoArray 재귀 순회 — 중첩 배열/iterable children을 평탄화하는 핵심 알고리즘
+  - [x] 1.2: Key 생성과 이스케이프 — children의 고유 키를 자동으로 결정하는 규칙
+  - [ ] 1.3: Lazy/Thenable children 처리 — children이 Promise/lazy일 때의 동기적 해결
+- Step 2: ReactContext — Context 생성 구조
+  - [ ] 2.1: createContext 내부 — Provider === context 순환 참조와 dual renderer(_currentValue/_currentValue2)
+- Step 3: ReactBaseClasses — 클래스 컴포넌트 기반
+  - [ ] 3.1: Component/PureComponent — updater 주입 패턴과 prototype 체인
+  - [ ] 3.2: Deprecated API 가드 — Object.defineProperty getter를 통한 경고
+- Step 4: ReactAct — 테스트 인프라
+  - [ ] 4.1: act() scope와 actQueue — 렌더러 작업을 큐로 모으는 메커니즘
+  - [ ] 4.2: flushActQueue — microtask/macrotask 재귀 플러시와 Suspense 처리
+- Step 5: Taint API & 유틸리티
+  - [ ] 5.1: taintUniqueValue/taintObjectReference — RSC 직렬화 보안과 FinalizationRegistry
+  - [ ] 5.2: createRef, CompilerRuntime, OwnerStack — 소형 유틸리티 일괄 학습
+
+### 학습 요약
+`React.Children.map()`의 핵심인 `mapIntoArray()`는 DFS(깊이 우선) 재귀로 중첩된 children 구조를 1차원 배열로 평탄화한다. 리프 노드(null, string, number, Element, Portal)에는 콜백을 적용하고, 컨테이너(배열, iterable)는 안으로 들어가서 재귀한다. 콜백 결과가 배열이면 `c => c` 항등 콜백으로 다시 재귀 평탄화하여 항상 1차원 배열을 보장한다. Lazy children은 즉시 `init(payload)`로 해결하고, Thenable은 `resolveThenable()`으로 동기적 해결을 시도한다.
+키 생성은 세 가지 장치로 충돌을 방지한다: (1) `$` 접두사로 사용자 키와 자동 인덱스 구분, (2) `.` 시작점으로 최상위 레벨 표시, (3) `:` 중첩 구분자로 배열 깊이 표현. `escape()`는 내부 구분자(`=`, `:`)를 이스케이프하고, `escapeUserProvidedKey()`는 복합 키 구분자(`/`)를 이스케이프한다. 인덱스는 `toString(36)`으로 36진수 변환하여 최단 알파뉴메릭 문자열을 생성한다.
+
+### 소스 코드 경로
+- `ref/react-fork/packages/react/src/ReactChildren.js:155-349` — mapIntoArray 전체 (재귀 순회, 리프/컨테이너 분기)
+- `ref/react-fork/packages/react/src/ReactChildren.js:162-198` — 리프 노드 판별 (invokeCallback 분기)
+- `ref/react-fork/packages/react/src/ReactChildren.js:200-265` — 리프 노드 처리 (콜백 적용, 배열 결과 재귀 평탄화)
+- `ref/react-fork/packages/react/src/ReactChildren.js:267-349` — 컨테이너 처리 (배열, iterable, thenable, 에러)
+- `ref/react-fork/packages/react/src/ReactChildren.js:366-381` — mapChildren (공개 API, mapIntoArray 래퍼)
+- `ref/react-fork/packages/react/src/ReactChildren.js:32-33` — SEPARATOR('.'), SUBSEPARATOR(':') 상수
+- `ref/react-fork/packages/react/src/ReactChildren.js:41-53` — escape() (=, : 이스케이프 + $ 접두사)
+- `ref/react-fork/packages/react/src/ReactChildren.js:62-65` — escapeUserProvidedKey() (/ 이스케이프)
+- `ref/react-fork/packages/react/src/ReactChildren.js:74-93` — getElementKey() (사용자 키 or 36진수 인덱스)
+- `ref/react-fork/packages/react/src/ReactChildren.js:225-239` — cloneAndReplaceKey (복합 키 구성)
+- `ref/react-fork/packages/react/src/ReactChildren.js:269-276` — 경로 누적 (nextNamePrefix + getElementKey)
+
+### Q&A 전체 기록
+
+#### Step 1.1: mapIntoArray 재귀 순회
+
+**Q: children 트리를 DFS(깊이 우선)로 순회 << 제가 자료구조를 잘 몰라서 그러는데, DFS로 순회하는것을 비유적으로 설명해주세요, 또한 그 장단점과 다른 방식과의 비교도 부탁합니다**
+
+A: **아파트 호별 방문 배달** 비유로 설명:
+
+- DFS = "한 동을 꼭대기까지 다 돌고 나서 다음 동으로" (한 갈래를 끝까지 파고듦)
+- BFS = "모든 동의 1층부터, 그 다음 모든 동의 2층" (같은 깊이를 전부 돌고 다음 깊이로)
+
+React children에서 DFS를 쓰는 이유: 재귀 호출 스택으로 자연스럽게 구현 가능, 별도 큐 자료구조 불필요. React children은 보통 깊이 2-3단계, 형제는 많을 수 있음 → DFS의 재귀가 가장 자연스럽고 메모리 효율적.
+
+| | DFS | BFS |
+|---|---|---|
+| 구현 | 재귀 호출 (콜스택 활용) | 별도 큐 필요 |
+| 메모리 | 트리 깊이만큼만 | 같은 깊이의 노드 수만큼 |
+| children 특성 | 중첩 배열은 깊지만 좁음 → DFS 유리 | 형제가 수천 개면 큐가 커짐 |
+
+---
+
+**Q: ?ReactNodeList << 이게 이전 학습 기억에 따르면 ReactNodeList | null | undefined와 대응된다고 기억하는데 맞나요?**
+
+A: 맞다. Flow의 `?T`는 `T | null | void`(void는 TypeScript의 undefined). `?ReactNodeList` → `ReactNodeList | null | undefined`.
+
+---
+
+**Q: React$Node << 왜 ReactNode가 아니라 React$Node처럼 중간에 "$"를 넣었을까요?**
+
+A: Flow의 내장(built-in) 타입 네이밍 컨벤션. `$`는 Flow 자체가 제공하는 유틸리티/글로벌 타입을 나타냄. `React$Node`는 Flow가 글로벌로 제공하는 React 타입(import 없이 사용 가능). TypeScript의 `React.ReactNode`에 대응. `ReactNodeList`는 `shared/ReactTypes.js`에서 React 팀이 직접 정의한 타입.
+
+---
+
+**Q: 리프 노드인가 << 리프 노드가 뭔가요?**
+
+A: **가계도(족보)** 비유: 리프(leaf) = 나뭇잎 = 더 이상 자식이 없는 끝 노드. React children에서 리프 = 콜백을 실행할 대상 (string, number, Element). 가지(배열, iterable) = 안으로 더 들어가야 할 대상.
+
+---
+
+**Q: `let mappedChild = callback(child);  // 사용자 콜백 적용` < 위 Flow 타입보면 callback이 null이나 undefined일수있는거아닌가요?**
+
+A: `?`가 붙은 것은 callback 자체가 아니라 인자와 반환값. 분해하면:
+- 인자: `?React$Node` = `React$Node | null | undefined` → child가 null일 수 있음
+- 반환값: `?ReactNodeList` → 결과가 null일 수 있음
+- callback 자체: `?` 없음 → 항상 함수
+
+만약 callback 자체가 nullable이었다면 `?((?React$Node) => ?ReactNodeList)`처럼 전체를 괄호로 감싸야 함.
+
+---
+
+**Q: "콜백의 반환값이 배열이면 ... 항상 1차원 배열을 반환하는 이유" << 반환값이 배열이면 재귀적으로 평탄화 시도 -> 근데 항상 1차원 배열 반환? 그러면 언제 끝남?**
+
+A: 핵심은 콜백 결과가 배열일 때 재귀하면서 **콜백을 `c => c` (항등 함수)로 교체**한다는 것 (`ReactChildren.js:212`):
+
+```js
+mapIntoArray(mappedChild, array, escapedChildKey, '', c => c);
+```
+
+`c => c`는 입력을 그대로 반환하므로, 각 원소가 Element/문자열 같은 리프면 바로 `invokeCallback = true` → `array.push()` → 끝. 중첩 `[[[A]]]`이어도 배열을 재귀적으로 벗기다가 결국 리프에 도달. 깊이가 유한하면 반드시 종료.
+
+---
+
+**Q: 전체 흐름 요약 << 실생활 예시로 설명해주세요**
+
+A: **편의점 도시락 포장 라인** 비유:
+
+규칙: 최종 출하 상자에는 개별 반찬만 1열로 나란히 담아야 함 (= 1차원 배열).
+
+- 김치(반찬 하나) → 라벨 붙여서 출하 상자에 (리프 → `array.push()`)
+- 비닐봉지 [밥, 국] → 봉지를 열어서 하나씩 처리 (배열 → 재귀)
+- 큰 박스 [비닐봉지[계란, 소세지], 샐러드] → 열어서 안의 것을 다시 분류 (중첩 → 재귀)
+- "준비 중" 표시 봉지 → 즉시 완성 요청(`init()`) → 결과를 다시 처리 (Lazy → 재귀)
+
+콜백 = 각 반찬에 할 작업. 콜백이 여러 개를 돌려주면(배열 반환) → 돌려받은 것도 다시 개별 포장 (재귀 평탄화, `c => c`).
+
+Map 경고(`ReactChildren.js:294-301`): Map의 기본 iterator는 `.entries()` = `[key, value]` 쌍 → React가 기대하는 ReactNode가 아닌 배열 튜플이 나와서 경고.
+
+---
+
+#### Step 1.2: Key 생성과 이스케이프
+
+**Q: 이스케이프해서 사용 << 이스케이프해서 사용이 무슨 말입니까? / =과 :는 내부 구분자로 사용될 수 있으므로 이스케이프합니다. << 아 이미 "=", ":"는 예약어 역할을 하므로 사용자가 그 값을 넘기면 예약어와 혼동되는것을 방지는하기 위해 값을 치환하는 것을 말하는건가요?**
+
+A: 정확하다. "이스케이프"는 특별한 의미를 가진 문자를 일반 문자로 취급되게 변환하는 것. `:`는 `SUBSEPARATOR`, `=`는 이스케이프 표시자로 쓰이므로, 사용자 키에 이 문자가 포함되면 치환:
+
+```
+사용자 key: "a:b"
+이스케이프 전: ".$a:b"   ← 모호
+이스케이프 후: ".$a=2b"  ← 명확
+```
+
+HTML의 `<` → `&lt;`와 같은 원리.
+
+---
+
+**Q: 36진수를 쓰는 이유 << 짧게 유지하는 이유는 성능때문인가요? (역추론 x, 근거 탐색) / 만약 36진수로 표현해도 모자르면 중복을 허용하나요?**
+
+A: React 소스나 PR에서 명시적 근거를 찾지 못했다. 웹 검색을 통해 확인한 결과:
+
+Wikipedia/GitHub Gist에 따르면 "Base 36 is the most compact case-insensitive alphanumeric numeral system using ASCII characters." `toString(36)`은 JS가 기본 제공하는 최단 알파뉴메릭 문자열 생성 방법. 실제 사용 사례: Reddit(게시물 ID), TinyURL 등.
+
+"모자라면?"에 대해: 36진수는 진법이므로 모자를 수 없다. 자릿수가 늘어나면서 어떤 정수든 표현 가능 (36 → "10", 1296 → "100"). 10진수가 숫자 10개(0-9)로 아무리 큰 수를 표현하는 것과 동일.
+
+---
+
+**Q: 슬래시 이스케이프 << 왜 슬래시 이스케이프는 위 두 이스케이프랑 같이 처리 안합니까?**
+
+A: 쓰이는 맥락이 완전히 다르기 때문:
+
+| 함수 | 대상 문자 | 쓰이는 곳 | 예약 용도 |
+|------|----------|----------|----------|
+| `escape()` | `=`, `:` | 내부 경로 구성 (`getElementKey`) | `.`과 `:` 경로 구분자 |
+| `escapeUserProvidedKey()` | `/` | 복합 키 구성 (`cloneAndReplaceKey`) | 매핑된 키와 원래 경로의 구분자 |
+
+비유: 주소에서 "서울시/강남구"의 `/`와 "123-45"의 `-`는 별개 구분자. 같은 이스케이프로 처리하면 오히려 혼란.
+
+---
+
+**Q: 그러면 사용자가 배열노드에 index를 key로 설정하면 .index(배열의 인덱스):index(배열 요소들의 인덱스) << 이렇게되나요?**
+
+A: `$` 접두사가 사용자 키와 자동 인덱스를 구분하므로 충돌하지 않는다.
+
+```
+A (index 0, key="1"):
+  getElementKey → key != null → escape("1") → "$1"
+  경로: ".$1"    ← $ 있음
+
+B (index 1, key 없음):
+  getElementKey → key == null → (1).toString(36) → "1"
+  경로: ".1"     ← $ 없음
+```
+
+`".$1"` ≠ `".1"` → 충돌 없음.
+
+---
+
+**Q: 이것은 "36개의 문자 중에서 고르는" 것이 아니라 진법이므로, 무한한 정수를 표현할 수 있습니다. << 그러면 왜 10진수가 아니라 36진수를 쓰나요?**
+
+A: React 소스/PR에서 "왜 36진수인가"에 대한 명시적 근거는 찾지 못했다. 웹 검색으로 확인한 일반적 특성:
+
+- Base36 = "JS `toString(radix)` 최대 radix(36)를 사용한, JS 기본 제공 가장 짧은 알파뉴메릭 표현"
+- 추가 라이브러리 없이 `toString(36)` 한 줄로 가능
+- 업계 관용적 패턴 (Reddit, TinyURL 등)
+
+| 인덱스 | 10진수 | 36진수 |
+|--------|--------|--------|
+| 35 | `"35"` (2글자) | `"z"` (1글자) |
+| 999 | `"999"` (3글자) | `"rr"` (2글자) |
+
+Sources: [Base36 - Wikipedia](http://taggedwiki.zubiaga.org/new_content/4371ed6069e9f63139c02a0e20563432), [GitHub Gist](https://gist.github.com/graste/615e263e7a99fa03a776), [MDN toString()](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Number/toString)
+
+---
+
+**Q: 10진수로 대체 가능합니까?**
+
+A: 소스 코드 기반 검증 결과, 대체 가능하다. `$` 접두사가 사용자 키와 인덱스 키를 분리하고, 경로 구분자(`.`, `:`)는 어느 진법의 문자셋과도 겹치지 않으므로, `toString(10)`으로 바꿔도 키 충돌은 발생하지 않는다. 유일한 차이는 문자열 길이뿐.
+
+---
+
+**Q: 그러면 문자열 길이가 10진수보다 약간 짧을 경우가 높겠군요?**
+
+A: 맞다. 인덱스 0~9는 동일, 10~35에서 36진수가 1자리 짧음, 36~99에서 동일, 100 이상에서 다시 36진수가 짧아짐. children 수가 10개 미만이면 차이 없고, 많아질수록 36진수가 점점 유리.
+
+---
+
+### 연결 토픽
+- **Lazy/Thenable children 처리 (Step 1.3)**: children이 Promise/lazy일 때 resolveThenable의 동기적 해결 메커니즘
+- **ReactContext (Step 2)**: createContext의 Provider/Consumer 순환 참조와 dual renderer
+- **ReactBaseClasses (Step 3)**: Component/PureComponent updater 주입 패턴
+- **ReactAct (Step 4)**: act() 테스트 유틸리티의 actQueue/flushActQueue 메커니즘
+- **Taint API (Step 5)**: RSC 직렬화 보안과 FinalizationRegistry
+- **Reconciliation (Topic 6)**: ReactChildFiber.js에서의 children reconciliation — Children.map과 다른 경로
+
+---
