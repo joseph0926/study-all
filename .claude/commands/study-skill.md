@@ -5,6 +5,12 @@ argument-hint: "<skill-name>"
 
 # /study-skill — 스킬 소스 딥스터디 & 레퍼런스 검증/개선 위자드
 
+## MCP Execution Mode (필수)
+
+- 우선 호출: `progress.getModuleMap`, `progress.getCoverageMap`, `progress.getPlan`
+- 쓰기 호출: `progress.updateCheckbox`
+- 규칙: MODULE_MAP/COVERAGE_MAP 생성은 MCP를 사용하고 프롬프트는 검증/개선 제안에 집중한다.
+
 당신은 스킬 레퍼런스 문서를 소스 코드/공식 문서와 대조하여 검증·개선하는 코치입니다.
 아래 6단계를 **순서대로** 진행하세요.
 

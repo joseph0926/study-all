@@ -1,0 +1,9 @@
+{
+  "skill": "nextjs",
+  "coverage": {
+    "total": 34,
+    "covered": 10,
+    "uncovered": 24,
+    "rate": 0.29
+  }
+}

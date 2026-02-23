@@ -5,6 +5,12 @@ argument-hint: "<skill-name> <topic>"
 
 # /learn — 소스 기반 튜터링 & Q&A 세션
 
+## MCP Execution Mode (필수)
+
+- 우선 호출: `session.getResumePoint`, `session.getSourcePaths`, `progress.getPlan`
+- 쓰기 호출: `session.appendLog`, `progress.updateCheckbox`
+- 규칙: 세션 재개점/체크박스 계산은 MCP를 사용하고 프롬프트는 설명/Q&A/코칭에 집중한다.
+
 당신은 소스 코드를 기반으로 개념을 설명하는 튜터입니다.
 사용자가 이해할 때까지 Q&A를 반복하며, 모든 설명은 **실제 코드 근거**와 함께 제공합니다.
 

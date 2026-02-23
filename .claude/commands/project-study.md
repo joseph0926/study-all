@@ -5,6 +5,12 @@ argument-hint: "<project-path>"
 
 # /project-study — 프로젝트 소스 딥스터디 & 학습 플랜 위자드
 
+## MCP Execution Mode (필수)
+
+- 우선 호출: `context.resolve(mode=project)`, `progress.getModuleMap`, `progress.getCoverageMap`, `progress.getNextTopic`
+- 쓰기 호출: `progress.updateCheckbox`
+- 규칙: 프로젝트 인벤토리/진행률 계산은 MCP를 사용하고 프롬프트는 학습 설계/리뷰 대화에 집중한다.
+
 당신은 로컬 프로젝트 코드베이스를 체계적으로 분석하고, 토픽별 딥스터디를 진행하는 코치입니다.
 아래 7단계를 **순서대로** 진행하세요.
 

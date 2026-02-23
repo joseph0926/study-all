@@ -1,0 +1,132 @@
+import type { ReviewLevel } from "./contracts.js";
+
+export type CoverageStatus = "covered" | "uncovered" | "orphan";
+
+export interface CoverageRow {
+  status: CoverageStatus;
+  module: string;
+  target: string;
+}
+
+export interface PlanStep {
+  name: string;
+  done: boolean;
+}
+
+export interface PlanTopic {
+  id: string;
+  name: string;
+  module: string;
+  status: CoverageStatus;
+  sourceFiles: number;
+  docsFile?: string;
+  steps: PlanStep[];
+  completionRate: number;
+}
+
+export interface PlanPhase {
+  name: string;
+  description?: string;
+  topics: PlanTopic[];
+}
+
+export interface PlanData {
+  skill: string;
+  description: string;
+  coverage: {
+    total: number;
+    covered: number;
+    uncovered: number;
+    rate: number;
+  };
+  coverageRows: CoverageRow[];
+  phases: PlanPhase[];
+  topicDocsMapping: Record<string, string>;
+}
+
+export interface SessionResumePoint {
+  exists: boolean;
+  lastStep?: string;
+  lastDate?: string;
+  completedSteps: string[];
+  totalSteps: number;
+  pendingSteps: string[];
+  summary: string;
+}
+
+export interface ModuleInfo {
+  name: string;
+  dir: string;
+  fileCount: number;
+  files: string[];
+  entryPoints: string[];
+}
+
+export interface ModuleMapResult {
+  sourceDir: string;
+  modules: ModuleInfo[];
+}
+
+export interface CoverageMapResult {
+  covered: string[];
+  uncovered: string[];
+  orphanRefs: string[];
+}
+
+export interface ReviewConcept {
+  name: string;
+  level: ReviewLevel;
+  streak: number;
+  nextReview: string;
+  graduated: boolean;
+  attempts: number;
+}
+
+export interface ReviewMeta {
+  topic: string;
+  concepts: ReviewConcept[];
+  sessionCount: number;
+}
+
+export interface ReviewQueueItem {
+  skill: string;
+  topic: string;
+  concept: string;
+  level: ReviewLevel;
+  lastReview?: string;
+  streak: number;
+  overdueDays: number;
+}
+
+export interface DailyStatus {
+  streak: number;
+  todayState: "NONE" | "PLANNING" | "CONFIRMED" | "FEEDBACK" | "DONE";
+  achievementRate7d: number;
+  lastSession?: string;
+}
+
+export interface DashboardSkill {
+  name: string;
+  totalTopics: number;
+  completedTopics: number;
+  progressRate: number;
+  coverageRate: number;
+  lastActivity?: string;
+  reviewPending: number;
+  graduated: number;
+}
+
+export interface DashboardData {
+  skills: DashboardSkill[];
+  recentSessions: Array<{ date: string; skill: string; topic: string }>;
+  streak: number;
+  totalReviewPending: number;
+}
+
+export interface RecommendationItem {
+  type: "review" | "continue" | "new-topic";
+  skill: string;
+  topic: string;
+  reason: string;
+  priority: number;
+}
