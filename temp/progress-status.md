@@ -1,6 +1,6 @@
 # MCP 수정 작업 진행 상황
 
-> 최종 갱신: 2026-02-23 (Unit 6 완료)
+> 최종 갱신: 2026-02-23 (Unit 7 완료)
 
 ## 전체 진행도
 
@@ -12,7 +12,7 @@
 | 4 | config.ts 전역 상태 제거 | ✅ 완료 | overrides Map 제거, STUDY_ROOT 필수화 |
 | 5 | Tool 버그 수정 | ✅ 완료 | review/plan-parser/stats/error-wrapper 반영, test 36/36 |
 | 6 | 서버 등록 + E2E | ✅ 완료 | `.mcp.json` 등록 + SDK stdio E2E(listTools 20개) |
-| 7 | 커맨드 프롬프트 축소 | ⬜ 대기 | Unit 6 의존 |
+| 7 | 커맨드 프롬프트 축소 | ✅ 완료 | 10개 command MCP-only 축소, 4,438→363줄 |
 
 ---
 
@@ -154,8 +154,21 @@
 
 ---
 
-## Unit 7: 커맨드 프롬프트 축소 — ⬜ 대기 (별도 세션 권장)
+## Unit 7: 커맨드 프롬프트 축소 — ✅ 완료
 
-### 예정 항목
-- 10개 커맨드의 수동 파싱/계산 → MCP 호출로 대체
-- 목표: 4,438줄 → ~690줄 (84% 절감)
+### 사전 검증 (근거 기반, 2026-02-23)
+- [x] `.claude/commands/*.md`는 계속 지원되지만, 최신 구조는 skills 중심으로 통합됨
+- [x] 동일 이름 skill/command 공존 시 skill 우선 적용됨 (전환 시 충돌 관리 필요)
+- [x] 장문 프롬프트는 분할 권장: `SKILL.md` 500줄 이하 + 보조 파일 분리
+- [x] 현 상태는 MCP 모드 선언과 레거시 수동 파싱 지시가 혼재 (`dashboard`,`next`,`plan`,`study`)하여 Unit 7 우선 정리가 필요
+
+### 완료 항목
+- [x] 10개 command를 MCP-only 템플릿으로 재작성 (`.claude/commands/*.md`)
+- [x] 레거시 수동 파싱 지시 제거, 도구 호출/저장 규칙을 MCP 기반으로 통일
+- [x] 길이 축소: 4,438줄 → 363줄 (약 91.8% 절감)
+- [x] skills 전환 사이드이펙트 반영: 동명이인 충돌/자동 호출/권한 범위 리스크를 Unit 7 게이트로 문서화
+
+### 검증
+- [x] `bash scripts/check-docs.sh` 통과 (0 errors, 기존 warning 4건 유지)
+- [x] `/Users/younghoonkim/Library/pnpm/pnpm -C mcp typecheck` 통과
+- [x] `/Users/younghoonkim/Library/pnpm/pnpm -C mcp test` 통과 (36/36)

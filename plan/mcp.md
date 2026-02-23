@@ -482,6 +482,31 @@ React 패키지의 Core API Surface...         ← 요약 텍스트
 
 ## 6. 커맨드 리팩터링 방향
 
+### 6.0 최신 Claude Code 스펙 반영 (2026-02-23 검증)
+
+- 커스텀 슬래시 커맨드는 skills로 통합되었고, 기존 `.claude/commands/*.md`도 계속 동작합니다.
+- 같은 이름의 skill(`.claude/skills/<name>/SKILL.md`)과 command(`.claude/commands/<name>.md`)가 공존하면 skill이 우선합니다.
+- skills는 `SKILL.md`를 500줄 이하로 유지하고 상세 자료는 보조 파일로 분리하는 구성이 권장됩니다.
+- 따라서 Unit 7은 "기존 commands 최소화(즉시)" + "skills 구조로 단계적 전환(중기)" 2단계로 진행합니다.
+
+### 6.1 skills 전환 사이드이펙트 분석 (기존 구현 영향)
+
+| 항목 | 사이드이펙트 | 현재 상태 | Unit 7 대응 |
+|------|--------------|-----------|-------------|
+| 이름 우선순위 | skill/command 동명 공존 시 skill이 우선되어 기존 command 동작이 바뀔 수 있음 | 동명 skill 신규 생성 시 즉시 영향 가능 | 전환 시 `skill 추가 + command 제거/rename`을 같은 변경 세트로 처리 |
+| 자동 호출 | skill 기본 설정은 모델 자동 호출 가능 → 쓰기 워크플로우(`learn/review/study/...`)에서 비의도성 write 위험 | 현재 command 중심이라 영향 낮음, skills 전환 시 상승 | 쓰기형 skill은 `disable-model-invocation: true` 기본 적용 |
+| 권한 우회 | skill의 `allowed-tools`가 넓으면 승인 플로우를 우회할 수 있음 | 현재 frontmatter에 `allowed-tools` 없음 | 쓰기형 skill은 최소 권한/기본 비워두기, 읽기형만 제한적으로 허용 |
+| 컨텍스트/가용성 | 장문 프롬프트는 관리 난이도 상승, slash-command tool 컨텍스트 예산 초과 시 일부 제외 가능 | commands 총 4,438줄, 단일 파일 최대 639줄 | `SKILL.md`는 요약본으로 축소하고 상세 절차는 보조 파일 분리 |
+| 결정성 회귀 | MCP 모드 선언과 레거시 수동 파싱 지시가 혼재되면 수동 경로가 재개될 수 있음 | `dashboard/next/plan/study`에 혼재 확인 | Unit 7 1차 대상: 혼재 섹션 제거 후 MCP-only 지시로 정규화 |
+| 범위 우선순위 | enterprise/personal/project skill 우선순위에 따라 프로젝트 의도와 다른 skill 선택 가능 | 개인 스킬 다수 존재, 충돌 가능성 잠재 | 전환 전 동명 스킬 인벤토리 점검, 필요 시 이름 namespace 부여 |
+
+### 6.2 Unit 7 전환 게이트 (skills 적용 전 필수)
+
+1. 쓰기형 커맨드 대응 skill(`learn`, `review`, `study`, `study-skill`, `project-*`, `plan`)에 `disable-model-invocation: true` 적용
+2. 동명 충돌 0건 확인 (project/personal/enterprise 범위 포함)
+3. `dashboard/next/plan/study`의 레거시 수동 파싱 지시 제거
+4. command→skill 전환 커밋마다 동등성 시나리오 1회(`stats/review/session/progress`) 재실행
+
 ### Before/After 비교
 
 #### `/learn` (633줄 → ~100줄)
@@ -917,6 +942,8 @@ Phase 5: 커맨드 리팩터링
   22. /study — MCP 도구 활용으로 축소
   23. /project-* — MCP 도구 활용으로 축소
   24. /plan — MCP 도구 활용으로 축소
+  24-1. skills 전환 시 동명 command 제거/rename 동시 적용 (shadowing 방지)
+  24-2. 쓰기형 skill frontmatter hardening (`disable-model-invocation`, 최소 `allowed-tools`)
 
 Phase 6: 검증
   25. 커맨드 동등성 시나리오 테스트 (Layer 4)
@@ -937,6 +964,7 @@ Phase 6: 검증
 | ref/ 디렉토리 구조 변경 (소스 업데이트) | MODULE_MAP 불일치 | 캐시 키(`gitHead`,`fileCount`,`maxMtime`,`parserVersion`) 기반 자동 무효화 |
 | 다중 프로젝트 병행 세션 | 경로 오염/데이터 혼선 | `context.resolve`로 호출 단위 경로 격리, 전역 경로 상태 금지 |
 | 날짜 기반 테스트 | 플래키 테스트 | Clock 주입 + fake timer로 고정 시각 테스트 |
+| command/skill 동명이인 충돌 | 의도한 프롬프트 미적용 | 동일 이름 전환 시 command 제거/rename, 우선순위 회귀 테스트 추가 |
 
 ---
 
