@@ -1,4 +1,6 @@
 import { createHash } from "node:crypto";
+import type { Clock } from "./clock.js";
+import { systemClock } from "./clock.js";
 
 interface CacheEntry<T> {
   value: T;
@@ -14,6 +16,11 @@ export interface CacheSnapshot {
 
 export class MemoryCache {
   private readonly store = new Map<string, CacheEntry<unknown>>();
+  private readonly clock: Clock;
+
+  constructor(clock: Clock = systemClock) {
+    this.clock = clock;
+  }
 
   get<T>(key: string): T | undefined {
     const entry = this.store.get(key);
@@ -21,7 +28,7 @@ export class MemoryCache {
       return undefined;
     }
 
-    if (Date.now() > entry.expiresAt) {
+    if (this.clock.now().getTime() > entry.expiresAt) {
       this.store.delete(key);
       return undefined;
     }
@@ -32,7 +39,7 @@ export class MemoryCache {
   set<T>(key: string, value: T, ttlMs: number): void {
     this.store.set(key, {
       value,
-      expiresAt: Date.now() + ttlMs,
+      expiresAt: this.clock.now().getTime() + ttlMs,
     });
   }
 

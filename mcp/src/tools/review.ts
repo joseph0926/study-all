@@ -4,6 +4,8 @@ import { makeEnvelope } from "../lib/envelope.js";
 import { listFiles, readText, writeText } from "../lib/fs.js";
 import { parseMeta } from "../parsers/meta-parser.js";
 import { resolveContextData } from "./context.js";
+import type { Clock } from "../lib/clock.js";
+import { systemClock } from "../lib/clock.js";
 import type { ContextInput, Envelope, ReviewLevel, ReviewScore } from "../types/contracts.js";
 import type { ReviewConcept, ReviewMeta, ReviewQueueItem } from "../types/domain.js";
 
@@ -186,13 +188,14 @@ export async function reviewSaveMeta(
 
 export async function reviewRecordResult(
   input: z.input<typeof recordResultInputSchema>,
+  clock: Clock = systemClock,
 ): Promise<Envelope<{ nextReviewDate: string; streak: number; level: ReviewLevel; graduated: boolean }>> {
   const parsed = recordResultInputSchema.parse(input);
   const context = await resolveContextData(parsed.context as ContextInput);
   const dir = resolveReviewDir(context, parsed.skill);
 
   const { path: filePath, meta } = await readMetaFile(dir, parsed.topic);
-  const now = new Date();
+  const now = clock.now();
 
   let concept = meta.concepts.find((item) => item.name === parsed.concept);
   if (!concept) {
@@ -233,11 +236,12 @@ export async function reviewRecordResult(
 
 export async function reviewGetQueue(
   input: z.input<typeof getQueueInputSchema>,
+  clock: Clock = systemClock,
 ): Promise<Envelope<{ today: string; items: ReviewQueueItem[]; graduated: number; totalActive: number }>> {
   const parsed = getQueueInputSchema.parse(input);
   const context = await resolveContextData(parsed.context as ContextInput);
 
-  const today = toDateOnly(new Date());
+  const today = toDateOnly(clock.now());
   const dirs: Array<{ skill: string; dir: string }> = [];
 
   if (context.mode === "project") {

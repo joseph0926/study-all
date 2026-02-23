@@ -1,16 +1,18 @@
-import { describe, expect, it } from "vitest";
-import { configGet, configSet } from "../../src/tools/config.js";
+import { describe, expect, it, vi } from "vitest";
+import { configGet } from "../../src/tools/config.js";
 
 describe("config tools", () => {
-  it("config.get returns config", async () => {
+  it("config.get returns config from env", async () => {
+    vi.stubEnv("STUDY_ROOT", "/tmp/study-root");
     const result = await configGet();
-    expect(result.data.studyRoot.length).toBeGreaterThan(0);
-    expect(result.data.docsDir.length).toBeGreaterThan(0);
+    expect(result.data.studyRoot).toBe("/tmp/study-root");
+    expect(result.data.docsDir).toContain("docs");
+    vi.unstubAllEnvs();
   });
 
-  it("config.set updates override", async () => {
-    await configSet({ key: "docsDir", value: "/tmp/docs" });
-    const result = await configGet();
-    expect(result.data.docsDir).toBe("/tmp/docs");
+  it("config.get throws if STUDY_ROOT is not set", async () => {
+    vi.stubEnv("STUDY_ROOT", "");
+    await expect(configGet()).rejects.toThrow("STUDY_ROOT");
+    vi.unstubAllEnvs();
   });
 });

@@ -1,6 +1,8 @@
 import { z } from "zod";
+import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
+import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
 import { contextResolve, contextResolveInputSchema } from "./tools/context.js";
-import { configGet, configSchemas, configSet } from "./tools/config.js";
+import { configGet, configSchemas } from "./tools/config.js";
 import {
   progressGetCoverageMap,
   progressGetModuleMap,
@@ -14,7 +16,7 @@ import { dailyFinalize, dailyGetStatus, dailyLogDone, dailyLogPlan, dailySchemas
 import { reviewGetMeta, reviewGetQueue, reviewRecordResult, reviewSaveMeta, reviewSchemas } from "./tools/review.js";
 import { statsGetDashboard, statsGetRecommendation, statsSchemas } from "./tools/stats.js";
 
-interface RegisteredTool {
+interface ToolDef {
   name: string;
   description: string;
   schema: z.ZodTypeAny;
@@ -22,7 +24,7 @@ interface RegisteredTool {
   run: (input: any) => Promise<unknown>;
 }
 
-const tools: RegisteredTool[] = [
+const tools: ToolDef[] = [
   {
     name: "context.resolve",
     description: "Resolve skill/project context and normalized paths.",
@@ -34,12 +36,6 @@ const tools: RegisteredTool[] = [
     description: "Get current config.",
     schema: configSchemas.get ?? z.object({}),
     run: async () => configGet(),
-  },
-  {
-    name: "config.set",
-    description: "Set mutable config override.",
-    schema: configSchemas.set,
-    run: configSet,
   },
   {
     name: "progress.getPlan",
@@ -152,42 +148,33 @@ const tools: RegisteredTool[] = [
 ];
 
 export async function startServer(): Promise<void> {
-  const mcpModule = (await import("@modelcontextprotocol/sdk/server/mcp.js")) as {
-    McpServer: new (meta: { name: string; version: string }) => unknown;
-  };
-  const transportModule = (await import("@modelcontextprotocol/sdk/server/stdio.js")) as {
-    StdioServerTransport: new () => unknown;
-  };
-
-  const server = new mcpModule.McpServer({
+  const server = new McpServer({
     name: "study-all-mcp",
     version: "0.1.0",
-  }) as {
-    tool: (
-      name: string,
-      description: string,
-      schema: z.ZodTypeAny,
-      handler: (args: unknown) => Promise<{ content: Array<{ type: string; text: string }> }>,
-    ) => void;
-    connect: (transport: unknown) => Promise<void>;
-  };
+  });
 
   for (const tool of tools) {
-    server.tool(tool.name, tool.description, tool.schema, async (args) => {
-      const parsed = tool.schema.parse(args);
-      const payload = await tool.run(parsed);
-      return {
-        content: [
-          {
-            type: "text",
-            text: JSON.stringify(payload, null, 2),
-          },
-        ],
-      };
-    });
+    server.registerTool(
+      tool.name,
+      {
+        description: tool.description,
+        inputSchema: tool.schema,
+      },
+      async (args: unknown) => {
+        const payload = await tool.run(args);
+        return {
+          content: [
+            {
+              type: "text" as const,
+              text: JSON.stringify(payload, null, 2),
+            },
+          ],
+        };
+      },
+    );
   }
 
-  const transport = new transportModule.StdioServerTransport();
+  const transport = new StdioServerTransport();
   await server.connect(transport);
 }
 

@@ -18,7 +18,11 @@ export function expandHome(input: string): string {
 }
 
 export function loadConfig(env: NodeJS.ProcessEnv = process.env): AppConfig {
-  const studyRoot = expandHome(env.STUDY_ROOT ?? process.cwd());
+  const rawRoot = env.STUDY_ROOT;
+  if (!rawRoot) {
+    throw new Error("STUDY_ROOT environment variable is required");
+  }
+  const studyRoot = expandHome(rawRoot);
   return {
     studyRoot,
     docsDir: env.DOCS_DIR ? path.resolve(studyRoot, env.DOCS_DIR) : path.join(studyRoot, "docs"),

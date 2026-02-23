@@ -7,6 +7,7 @@ import { dailyFinalize, dailyGetStatus, dailyLogDone, dailyLogPlan } from "../..
 describe("daily tools", () => {
   it("status -> plan -> done -> finalize 흐름", async () => {
     const logsDir = mkdtempSync(path.join(os.tmpdir(), "mcp-daily-"));
+    process.env.STUDY_ROOT = logsDir;
     process.env.STUDY_LOGS_DIR = logsDir;
 
     const baseCtx = { context: { mode: "skill" as const, skill: "react" } };

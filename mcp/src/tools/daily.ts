@@ -3,6 +3,8 @@ import { z } from "zod";
 import { makeEnvelope } from "../lib/envelope.js";
 import { exists, listFiles, readText, writeText } from "../lib/fs.js";
 import { resolveContextData } from "./context.js";
+import type { Clock } from "../lib/clock.js";
+import { systemClock } from "../lib/clock.js";
 import type { ContextInput, Envelope } from "../types/contracts.js";
 import type { DailyStatus } from "../types/domain.js";
 
@@ -37,8 +39,8 @@ function dateOnly(date: Date): string {
   return date.toISOString().slice(0, 10);
 }
 
-function todayFile(logDir: string): string {
-  return path.join(logDir, `${dateOnly(new Date())}.md`);
+function todayFile(logDir: string, clock: Clock = systemClock): string {
+  return path.join(logDir, `${dateOnly(clock.now())}.md`);
 }
 
 function detectState(text: string): DailyStatus["todayState"] {
@@ -85,10 +87,10 @@ function replaceSection(text: string, heading: string, body: string): string {
   return `${prefix}\n${headingLine}\n\n${body.trim()}\n${suffix}`.trimEnd() + "\n";
 }
 
-function replaceStatus(text: string, statusLabel: string): string {
+function replaceStatus(text: string, statusLabel: string, clock: Clock = systemClock): string {
   const statusLine = `> 상태: ${statusLabel}`;
   if (!text.trim()) {
-    return `# ${dateOnly(new Date())}\n\n${statusLine}\n`;
+    return `# ${dateOnly(clock.now())}\n\n${statusLine}\n`;
   }
 
   if (/>\s*상태:\s*/.test(text)) {
@@ -105,7 +107,7 @@ function replaceStatus(text: string, statusLabel: string): string {
   return `${statusLine}\n\n${text}`;
 }
 
-async function computeStreak(logDir: string): Promise<number> {
+async function computeStreak(logDir: string, clock: Clock = systemClock): Promise<number> {
   const files = await listFiles(logDir, { extension: ".md", maxDepth: 1 });
   const dateFiles = files
     .map((file) => path.basename(file, ".md"))
@@ -113,7 +115,7 @@ async function computeStreak(logDir: string): Promise<number> {
     .sort();
 
   let streak = 0;
-  const now = new Date(`${dateOnly(new Date())}T00:00:00.000Z`);
+  const now = new Date(`${dateOnly(clock.now())}T00:00:00.000Z`);
   for (let i = 0; i < 366; i += 1) {
     const target = new Date(now);
     target.setUTCDate(now.getUTCDate() - i);
@@ -152,78 +154,81 @@ async function computeAchievementRate7d(logDir: string): Promise<number> {
   return Math.round((sum / rates.length) * 10) / 10;
 }
 
-export async function dailyGetStatus(input: z.input<typeof getStatusInputSchema>): Promise<Envelope<DailyStatus>> {
+export async function dailyGetStatus(input: z.input<typeof getStatusInputSchema>, clock: Clock = systemClock): Promise<Envelope<DailyStatus>> {
   const parsed = getStatusInputSchema.parse(input);
   const context = await resolveContextData(parsed.context as ContextInput);
   const logDir = context.studyLogsDir;
-  const filePath = todayFile(logDir);
+  const filePath = todayFile(logDir, clock);
   const text = await readText(filePath);
 
   const status: DailyStatus = {
-    streak: await computeStreak(logDir),
+    streak: await computeStreak(logDir, clock),
     todayState: detectState(text),
     achievementRate7d: await computeAchievementRate7d(logDir),
-    lastSession: (await exists(filePath)) ? dateOnly(new Date()) : undefined,
+    lastSession: (await exists(filePath)) ? dateOnly(clock.now()) : undefined,
   };
 
-  return makeEnvelope(status);
+  return makeEnvelope(status, clock);
 }
 
 export async function dailyLogPlan(
   input: z.input<typeof logPlanInputSchema>,
+  clock: Clock = systemClock,
 ): Promise<Envelope<{ ok: boolean; logPath: string }>> {
   const parsed = logPlanInputSchema.parse(input);
   const context = await resolveContextData(parsed.context as ContextInput);
-  const logPath = todayFile(context.studyLogsDir);
+  const logPath = todayFile(context.studyLogsDir, clock);
 
   let text = await readText(logPath);
   if (!text.trim()) {
-    text = `# ${dateOnly(new Date())}\n\n> 상태: 🟡 계획 수립 중\n`;
+    text = `# ${dateOnly(clock.now())}\n\n> 상태: 🟡 계획 수립 중\n`;
   }
 
-  text = replaceStatus(text, "🟡 계획 수립 중");
+  text = replaceStatus(text, "🟡 계획 수립 중", clock);
   text = replaceSection(text, "계획", parsed.plan);
   await writeText(logPath, text.trimEnd() + "\n");
 
-  return makeEnvelope({ ok: true, logPath });
+  return makeEnvelope({ ok: true, logPath }, clock);
 }
 
 export async function dailyLogDone(
   input: z.input<typeof logDoneInputSchema>,
+  clock: Clock = systemClock,
 ): Promise<Envelope<{ ok: boolean; achievementRate: number }>> {
   const parsed = logDoneInputSchema.parse(input);
   const context = await resolveContextData(parsed.context as ContextInput);
-  const logPath = todayFile(context.studyLogsDir);
+  const logPath = todayFile(context.studyLogsDir, clock);
 
   let text = await readText(logPath);
   if (!text.trim()) {
-    text = `# ${dateOnly(new Date())}\n\n> 상태: 🔵 피드백 완료\n`;
+    text = `# ${dateOnly(clock.now())}\n\n> 상태: 🔵 피드백 완료\n`;
   }
 
   const achievementRate = inferAchievement(parsed.report);
-  text = replaceStatus(text, "🔵 피드백 완료");
+  text = replaceStatus(text, "🔵 피드백 완료", clock);
   text = replaceSection(text, "실제 수행", parsed.report);
   text = replaceSection(text, "달성률", `${achievementRate}%`);
 
   await writeText(logPath, text.trimEnd() + "\n");
 
-  return makeEnvelope({ ok: true, achievementRate });
+  return makeEnvelope({ ok: true, achievementRate }, clock);
 }
 
 export async function dailyFinalize(
   input: z.input<typeof finalizeInputSchema>,
+  clock: Clock = systemClock,
 ): Promise<Envelope<{ ok: boolean }>> {
   const parsed = finalizeInputSchema.parse(input);
   const context = await resolveContextData(parsed.context as ContextInput);
-  const logPath = todayFile(context.studyLogsDir);
+  const logPath = todayFile(context.studyLogsDir, clock);
   let text = await readText(logPath);
   if (!text.trim()) {
-    text = `# ${dateOnly(new Date())}\n\n> 상태: 🟣 완료\n`;
+    text = `# ${dateOnly(clock.now())}\n\n> 상태: 🟣 완료\n`;
   }
-  text = replaceStatus(text, "🟣 완료");
+  text = replaceStatus(text, "🟣 완료", clock);
   await writeText(logPath, text.trimEnd() + "\n");
 
-  return makeEnvelope({ ok: true });
+  return makeEnvelope({ ok: true }, clock);
 }
 
 export const dailySchemas = {

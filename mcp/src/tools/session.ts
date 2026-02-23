@@ -5,6 +5,8 @@ import { appendText, getDirSnapshot, listFiles, readText, toTitleCaseTopic } fro
 import { makeEnvelope } from "../lib/envelope.js";
 import { getResumePoint } from "../parsers/session-parser.js";
 import { resolveContextData } from "./context.js";
+import type { Clock } from "../lib/clock.js";
+import { systemClock } from "../lib/clock.js";
 import type { CacheMeta, ContextInput, Envelope } from "../types/contracts.js";
 import type { SessionResumePoint } from "../types/domain.js";
 
@@ -106,12 +108,13 @@ export async function sessionGetResumePoint(
 
 export async function sessionAppendLog(
   input: z.input<typeof appendInputSchema>,
+  clock: Clock = systemClock,
 ): Promise<Envelope<{ ok: boolean; filePath: string }>> {
   const parsed = appendInputSchema.parse(input);
   const context = await resolveContextData(parsed.context as ContextInput);
   const dir = resolveSessionDir(context, parsed.skill);
   const file = await resolveTopicFile(dir, parsed.topic);
-  const today = new Date().toISOString().slice(0, 10);
+  const today = clock.now().toISOString().slice(0, 10);
   const marker = context.mode === "project" ? "via /project-learn" : "via /learn";
 
   const payload = `\n\n---\n\n## ${today} (${marker})\n\n${parsed.content.trim()}\n`;

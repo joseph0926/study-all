@@ -7,6 +7,7 @@ import { reviewGetMeta, reviewGetQueue, reviewRecordResult, reviewSaveMeta } fro
 describe("review tools", () => {
   it("review.saveMeta and review.getMeta round-trip", async () => {
     const base = path.join(os.tmpdir(), `mcp-review-${Date.now()}`);
+    process.env.STUDY_ROOT = base;
     mkdirSync(path.join(base, ".study"), { recursive: true });
 
     await reviewSaveMeta({
@@ -38,6 +39,7 @@ describe("review tools", () => {
 
   it("review.recordResult updates interval", async () => {
     const base = path.join(os.tmpdir(), `mcp-review-record-${Date.now()}`);
+    process.env.STUDY_ROOT = base;
     mkdirSync(path.join(base, ".study"), { recursive: true });
 
     await reviewSaveMeta({
@@ -72,6 +74,7 @@ describe("review tools", () => {
 
   it("review.getQueue returns due items", async () => {
     const base = path.join(os.tmpdir(), `mcp-review-queue-${Date.now()}`);
+    process.env.STUDY_ROOT = base;
     mkdirSync(path.join(base, ".study"), { recursive: true });
 
     await reviewSaveMeta({
