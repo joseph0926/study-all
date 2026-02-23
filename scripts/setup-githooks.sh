@@ -12,4 +12,5 @@ git -C "$ROOT" config core.hooksPath .githooks
 
 echo "[hooks] core.hooksPath=.githooks"
 echo "[hooks] enabled: post-checkout, post-merge"
+echo "[hooks] managed sync targets: ~/.claude, ~/.codex"
 echo "[hooks] disable temporarily: export STUDY_ALL_SYNC_DISABLE=1"

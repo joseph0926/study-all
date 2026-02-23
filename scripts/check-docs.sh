@@ -17,6 +17,7 @@ ok()   { dim    "  OK:    $1"; }
 header() { printf '\n\033[1m[%s]\033[0m\n' "$1"; }
 
 SKILLS_DIR="$ROOT/.claude/skills"
+CODEX_SKILLS_DIR="$ROOT/.codex/skills"
 COMMANDS_DIR="$ROOT/.claude/commands"
 README="$ROOT/README.md"
 CLAUDE_MD="$ROOT/CLAUDE.md"
@@ -41,6 +42,48 @@ if [[ -d "$SKILLS_DIR" && -f "$README" ]]; then
   fi
 else
   err "README 또는 .claude/skills/ 디렉토리가 없음"
+fi
+
+header "1-B. Codex skills sync — README.md vs .codex/skills/"
+
+if [[ -d "$CODEX_SKILLS_DIR" && -f "$README" ]]; then
+  codex_skill_count=0
+  while IFS= read -r skill_file; do
+    codex_skill_count=$((codex_skill_count + 1))
+    skill_name="$(basename "$(dirname "$skill_file")")"
+
+    if grep -Fq "\$$skill_name" "$README"; then
+      ok "\$$skill_name — README에 존재"
+    else
+      err "\$$skill_name — README Codex 섹션에 누락"
+    fi
+  done < <(find "$CODEX_SKILLS_DIR" -mindepth 2 -maxdepth 2 -name 'SKILL.md' -type f | sort)
+
+  if [[ $codex_skill_count -eq 0 ]]; then
+    err ".codex/skills/ 아래 SKILL.md가 없음"
+  fi
+else
+  err "README 또는 .codex/skills/ 디렉토리가 없음"
+fi
+
+header "1-C. Skill parity — .claude/skills vs .codex/skills"
+
+if [[ -d "$SKILLS_DIR" && -d "$CODEX_SKILLS_DIR" ]]; then
+  while IFS= read -r claude_skill_file; do
+    skill_name="$(basename "$(dirname "$claude_skill_file")")"
+    if [[ -f "$CODEX_SKILLS_DIR/$skill_name/SKILL.md" ]]; then
+      ok "parity: $skill_name"
+    else
+      err "parity 누락: .codex/skills/$skill_name/SKILL.md 없음"
+    fi
+  done < <(find "$SKILLS_DIR" -mindepth 2 -maxdepth 2 -name 'SKILL.md' -type f | sort)
+
+  while IFS= read -r codex_skill_file; do
+    skill_name="$(basename "$(dirname "$codex_skill_file")")"
+    if [[ ! -f "$SKILLS_DIR/$skill_name/SKILL.md" ]]; then
+      warn "codex 전용 스킬 감지: $skill_name (.claude/skills에는 없음)"
+    fi
+  done < <(find "$CODEX_SKILLS_DIR" -mindepth 2 -maxdepth 2 -name 'SKILL.md' -type f | sort)
 fi
 
 header "2. docs/ filename conventions"
@@ -92,6 +135,13 @@ if [[ -d "$SKILLS_DIR" ]]; then
     skill_name="$(basename "$(dirname "$skill_file")")"
     check_shell_refs "$skill_file" "skill:$skill_name"
   done < <(find "$SKILLS_DIR" -mindepth 2 -maxdepth 2 -name 'SKILL.md' -type f | sort)
+fi
+
+if [[ -d "$CODEX_SKILLS_DIR" ]]; then
+  while IFS= read -r skill_file; do
+    skill_name="$(basename "$(dirname "$skill_file")")"
+    check_shell_refs "$skill_file" "codex-skill:$skill_name"
+  done < <(find "$CODEX_SKILLS_DIR" -mindepth 2 -maxdepth 2 -name 'SKILL.md' -type f | sort)
 fi
 
 if [[ -d "$COMMANDS_DIR" ]]; then

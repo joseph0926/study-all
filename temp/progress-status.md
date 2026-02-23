@@ -1,6 +1,6 @@
 # MCP 수정 작업 진행 상황
 
-> 최종 갱신: 2026-02-23 (Unit 9 구현 완료)
+> 최종 갱신: 2026-02-23 (Unit 10 완료)
 
 ## 전체 진행도
 
@@ -15,6 +15,7 @@
 | 7 | 커맨드 프롬프트 축소 | ✅ 완료 | 10개 command MCP-only 축소, 4,438→363줄 |
 | 8 | skills 전환 + README/CLAUDE 개선 | ✅ 완료 | skills-first 전환 + legacy 충돌 해소 + 문서/검증 갱신 |
 | 9 | 사용성 개선 + `~/.claude` 동기화 자동화 | ✅ 완료 | guide 문서 + sync/hook 자동화 반영 |
+| 10 | Codex 기능 동등화 (`$` 호출) | ✅ 완료 | `.codex/skills` 10종 + Codex sync/hook/docs 반영 |
 
 ---
 
@@ -221,3 +222,37 @@
 - [x] `bash scripts/sync-claude-home.sh --dry-run` 통과 (create 23, skip 0)
 - [x] `/Users/younghoonkim/Library/pnpm/pnpm -C mcp typecheck` 통과
 - [x] `/Users/younghoonkim/Library/pnpm/pnpm -C mcp test` 통과 (36/36)
+
+---
+
+## Unit 10: Codex 기능 동등화 (`$` 호출) — ✅ 완료
+
+### 계획 문서
+- `plan/unit10-codex-parity.md`
+
+### 완료 항목
+- [x] `.codex/skills`를 canonical 경로로 고정 (`.agents/skills` 미사용)
+- [x] Codex 스킬 10종 동등화
+  - 신규 추가: `dashboard`, `next`, `plan`, `study`
+  - 기존 6개(`learn`, `study-skill`, `review`, `project-study`, `project-learn`, `project-review`)를 MCP-only 규칙으로 교체
+- [x] Unit 9 parity를 Codex에도 확장
+  - `scripts/sync-codex-home.sh` 추가 (`--dry-run`, `--apply`, `--prune-managed`, manifest)
+  - `.githooks/post-checkout`, `.githooks/post-merge`에 Codex sync 병행
+  - `scripts/setup-githooks.sh` 안내에 `~/.codex` 포함
+- [x] 문서 반영
+  - `README.md` 명령 매핑/동기화/검증 절차에 Codex 섹션 추가
+  - `docs/guide/Quickstart.md`, `docs/guide/Daily-Workflow.md`, `docs/guide/Troubleshooting.md`에 Codex 흐름 반영
+- [x] 문서 정합성 검사 강화
+  - `scripts/check-docs.sh`에 `.codex/skills` 검사 및 `.claude`/`.codex` parity 체크 추가
+
+### 검증
+- [x] `bash scripts/check-docs.sh` 통과 (warning 5건, error 0건)
+- [x] `bash scripts/sync-codex-home.sh --dry-run` 통과 (create 4, skip 6)
+- [x] `bash scripts/sync-codex-home.sh --apply` 실행 (create 4, skip 6, manifest 갱신)
+- [x] `bash scripts/setup-githooks.sh` 실행 후 `git config --get core.hooksPath`=`.githooks` 확인
+- [x] `codex mcp list` 실행: 현재 서버 미등록 (`No MCP servers configured yet`)
+- [x] `/Users/younghoonkim/Library/pnpm/pnpm -C mcp typecheck` 통과
+- [x] `/Users/younghoonkim/Library/pnpm/pnpm -C mcp test` 통과 (36/36)
+
+### 근거 (웹 검증)
+- OpenAI Codex Skills/Agents/Config/MCP 공식 문서(2026-02-23 확인)

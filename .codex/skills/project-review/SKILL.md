@@ -1,29 +1,23 @@
 ---
 name: project-review
-description: 프로젝트 학습 기록 기반 적응형 복습 세션을 수행한다. Codex에서 `$project-review <project-path> [topic]` 형태의 호출(또는 동등한 요청)을 받았을 때 사용한다.
+description: 프로젝트 복습 대기열을 기준으로 1문제씩 출제하고 결과를 project MCP에 기록한다. Codex에서는 `$project-review <project-path> [topic]`으로 호출한다.
 ---
 
 # project-review
 
-이 스킬은 `~/.claude/commands/project-review.md`의 절차를 Codex에서 동일하게 수행하기 위한 브리지다.
+입력: `$project-review <project-path> [topic]`
 
-## Invocation
+실행 순서:
+1. `mcp__study__context.resolve(mode=project)`
+2. `mcp__study__review.getQueue`
+3. topic 지정 시 `mcp__study__review.getMeta`
+4. 문제별 채점 후 `mcp__study__review.recordResult`
+5. "정리" 시 `mcp__study__review.saveMeta`
 
-- 기본 호출: `$project-review <project-path> [topic]`
-- 인자가 부족하면 원본 명세의 질문 흐름대로 사용자에게 확인한다.
+점수 매핑:
+- 오답: `wrong`
+- 힌트 후 통과: `retry_pass`
+- 첫 시도 통과: `first_pass`
 
-## Source Of Truth
-
-- `~/.claude/commands/project-review.md`
-
-## Execution Rules
-
-1. 실행 시작 시 항상 `~/.claude/commands/project-review.md`를 먼저 읽고, Phase/체크리스트를 그대로 따른다.
-2. 원본의 슬래시 커맨드 표기(예: `/learn`, `/review`)는 Codex 호출 표기(예: `$learn`, `$review`)로 해석한다.
-3. 원본의 `$ARGUMENTS`는 사용자가 `$project-review` 뒤에 입력한 문자열 전체로 해석한다.
-4. 원본의 `AskUserQuestion` 지시는 Codex 대화에서 간결한 확인 질문으로 대체한다.
-5. 스킬 경로는 아래 우선순위로 탐색한다.
-   - `~/.codex/skills`
-   - `<repo>/.codex/skills`
-6. 파일 생성/수정 범위와 안전 원칙(근거 기반 설명, 최소 변경, 세션 재개 규칙, 정합성 체크)은 원본 명세를 그대로 유지한다.
-7. 원본 명세와 레포의 `AGENTS.md`가 충돌하면 `AGENTS.md`를 우선한다.
+규칙:
+- `.study/*-meta.md` 수동 파싱 계산 금지

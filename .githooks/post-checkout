@@ -2,29 +2,44 @@
 set -euo pipefail
 
 ROOT="$(git rev-parse --show-toplevel 2>/dev/null || pwd)"
-SYNC_SCRIPT="$ROOT/scripts/sync-claude-home.sh"
+CLAUDE_SYNC="$ROOT/scripts/sync-claude-home.sh"
+CODEX_SYNC="$ROOT/scripts/sync-codex-home.sh"
 
 if [[ "${STUDY_ALL_SYNC_DISABLE:-0}" == "1" ]]; then
   exit 0
 fi
 
-if [[ ! -x "$SYNC_SCRIPT" ]]; then
-  exit 0
-fi
+need_claude=0
+need_codex=0
 
 if [[ $# -ge 2 ]]; then
   old_ref="$1"
   new_ref="$2"
   if [[ "$old_ref" =~ ^[0-9a-f]{40}$ && "$new_ref" =~ ^[0-9a-f]{40}$ ]]; then
-    if git -C "$ROOT" diff --quiet "$old_ref" "$new_ref" -- .claude; then
-      exit 0
+    if ! git -C "$ROOT" diff --quiet "$old_ref" "$new_ref" -- .claude; then
+      need_claude=1
     fi
+    if ! git -C "$ROOT" diff --quiet "$old_ref" "$new_ref" -- .codex; then
+      need_codex=1
+    fi
+  fi
+else
+  [[ -x "$CLAUDE_SYNC" ]] && need_claude=1
+  [[ -x "$CODEX_SYNC" ]] && need_codex=1
+fi
+
+if [[ "$need_claude" -eq 1 && -x "$CLAUDE_SYNC" ]]; then
+  if ! bash "$CLAUDE_SYNC" --apply >/dev/null 2>&1; then
+    echo "[study-all] warning: ~/.claude sync failed after checkout" >&2
+    echo "[study-all] run manually: bash scripts/sync-claude-home.sh --apply" >&2
   fi
 fi
 
-if ! bash "$SYNC_SCRIPT" --apply >/dev/null 2>&1; then
-  echo "[study-all] warning: ~/.claude sync failed after checkout" >&2
-  echo "[study-all] run manually: bash scripts/sync-claude-home.sh --apply" >&2
+if [[ "$need_codex" -eq 1 && -x "$CODEX_SYNC" ]]; then
+  if ! bash "$CODEX_SYNC" --apply >/dev/null 2>&1; then
+    echo "[study-all] warning: ~/.codex sync failed after checkout" >&2
+    echo "[study-all] run manually: bash scripts/sync-codex-home.sh --apply" >&2
+  fi
 fi
 
 exit 0

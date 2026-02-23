@@ -1,5 +1,6 @@
 !.claude
-.claude/settings.*
+.claude/settings.local.json
+!.codex
 
 ref
 

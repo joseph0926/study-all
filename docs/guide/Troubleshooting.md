@@ -18,7 +18,23 @@ bash scripts/sync-claude-home.sh --dry-run
 - 필요한 경우 충돌 파일을 백업한 뒤 재실행한다.
 - managed 파일 정리가 필요하면 `--prune-managed --apply`를 사용한다.
 
-## 2) Git hook 자동 동기화가 안 됨
+## 2) `~/.codex` 동기화가 안 됨
+
+증상:
+- `sync-codex-home.sh`에서 충돌/skip 메시지 발생
+
+확인:
+
+```bash
+bash scripts/sync-codex-home.sh --dry-run
+```
+
+해결:
+- 기존 `~/.codex/skills` 파일과 충돌하면 기본 동작은 skip이다.
+- 충돌 파일 백업 후 재실행하거나, 수동 병합 후 재시도한다.
+- managed 정리가 필요하면 `--prune-managed --apply`를 사용한다.
+
+## 3) Git hook 자동 동기화가 안 됨
 
 확인:
 
@@ -36,11 +52,12 @@ bash scripts/setup-githooks.sh
 추가:
 - 일시적으로 비활성화: `export STUDY_ALL_SYNC_DISABLE=1`
 
-## 3) MCP 관련 에러가 발생
+## 4) MCP 관련 에러가 발생
 
 확인:
 
 ```bash
+codex mcp list
 /Users/younghoonkim/Library/pnpm/pnpm -C mcp typecheck
 /Users/younghoonkim/Library/pnpm/pnpm -C mcp test
 ```
@@ -50,16 +67,14 @@ bash scripts/setup-githooks.sh
 - `.mcp.json` 서버 등록 값
 - 툴 호출 인자(`mode`, `skill`, `topic`) 누락 여부
 
-## 4) command/skill 동작이 혼동됨
+## 5) command/skill 동작이 혼동됨
 
 원칙:
-- 기본은 skills-first (`/learn`, `/review`, `/study-skill` ...)
-- `.claude/commands/legacy-*.md`는 호환용
+- Claude 기본은 skills-first (`/learn`, `/review`, `/study-skill` ...)
+- Codex 기본은 `$` skills (`$learn`, `$review`, `$study-skill` ...)
+- `.claude/commands/legacy-*.md`는 Claude 호환용
 
-권장:
-- 신규 워크플로우에서는 `legacy-*` 호출을 사용하지 않는다.
-
-## 5) 문서 정합성 체크 warning
+## 6) 문서 정합성 체크 warning
 
 확인:
 
