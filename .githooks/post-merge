@@ -1,0 +1,26 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+ROOT="$(git rev-parse --show-toplevel 2>/dev/null || pwd)"
+SYNC_SCRIPT="$ROOT/scripts/sync-claude-home.sh"
+
+if [[ "${STUDY_ALL_SYNC_DISABLE:-0}" == "1" ]]; then
+  exit 0
+fi
+
+if [[ ! -x "$SYNC_SCRIPT" ]]; then
+  exit 0
+fi
+
+if git -C "$ROOT" rev-parse -q --verify ORIG_HEAD >/dev/null 2>&1; then
+  if git -C "$ROOT" diff --quiet ORIG_HEAD HEAD -- .claude; then
+    exit 0
+  fi
+fi
+
+if ! bash "$SYNC_SCRIPT" --apply >/dev/null 2>&1; then
+  echo "[study-all] warning: ~/.claude sync failed after merge" >&2
+  echo "[study-all] run manually: bash scripts/sync-claude-home.sh --apply" >&2
+fi
+
+exit 0

@@ -1,6 +1,6 @@
 # MCP 수정 작업 진행 상황
 
-> 최종 갱신: 2026-02-23 (Unit 8 구현 완료)
+> 최종 갱신: 2026-02-23 (Unit 9 구현 완료)
 
 ## 전체 진행도
 
@@ -14,6 +14,7 @@
 | 6 | 서버 등록 + E2E | ✅ 완료 | `.mcp.json` 등록 + SDK stdio E2E(listTools 20개) |
 | 7 | 커맨드 프롬프트 축소 | ✅ 완료 | 10개 command MCP-only 축소, 4,438→363줄 |
 | 8 | skills 전환 + README/CLAUDE 개선 | ✅ 완료 | skills-first 전환 + legacy 충돌 해소 + 문서/검증 갱신 |
+| 9 | 사용성 개선 + `~/.claude` 동기화 자동화 | ✅ 완료 | guide 문서 + sync/hook 자동화 반영 |
 
 ---
 
@@ -190,5 +191,33 @@
 
 ### 검증
 - [x] `bash scripts/check-docs.sh` 통과 (warning 5건, error 0건)
+- [x] `/Users/younghoonkim/Library/pnpm/pnpm -C mcp typecheck` 통과
+- [x] `/Users/younghoonkim/Library/pnpm/pnpm -C mcp test` 통과 (36/36)
+
+---
+
+## Unit 9: 사용성 개선 + `~/.claude` 동기화 자동화 — ✅ 완료
+
+### 계획 문서
+- `plan/unit9-usability-sync-automation.md`
+
+### 완료 항목
+- [x] 사용 가이드 3종 신설
+  - `docs/guide/Quickstart.md`
+  - `docs/guide/Daily-Workflow.md`
+  - `docs/guide/Troubleshooting.md`
+- [x] `scripts/sync-claude-home.sh` 구현
+  - 기본 dry-run, `--apply`, `--prune-managed`
+  - `--rules-mode copy|symlink`, `--target` 지원
+  - unmanaged 충돌 skip + manifest(`~/.claude/.study-all-sync-manifest`) 관리
+- [x] Git hook 자동 동기화 추가
+  - `.githooks/post-checkout`
+  - `.githooks/post-merge`
+  - `scripts/setup-githooks.sh`로 `core.hooksPath=.githooks` 설정
+- [x] README를 가이드+자동화 중심으로 개편
+
+### 검증
+- [x] `bash scripts/check-docs.sh` 통과 (warning 5건, error 0건)
+- [x] `bash scripts/sync-claude-home.sh --dry-run` 통과 (create 23, skip 0)
 - [x] `/Users/younghoonkim/Library/pnpm/pnpm -C mcp typecheck` 통과
 - [x] `/Users/younghoonkim/Library/pnpm/pnpm -C mcp test` 통과 (36/36)
