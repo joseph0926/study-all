@@ -1,6 +1,6 @@
 # MCP 수정 작업 진행 상황
 
-> 최종 갱신: 2026-02-23 (Unit 7 완료)
+> 최종 갱신: 2026-02-23 (Unit 8 구현 완료)
 
 ## 전체 진행도
 
@@ -13,6 +13,7 @@
 | 5 | Tool 버그 수정 | ✅ 완료 | review/plan-parser/stats/error-wrapper 반영, test 36/36 |
 | 6 | 서버 등록 + E2E | ✅ 완료 | `.mcp.json` 등록 + SDK stdio E2E(listTools 20개) |
 | 7 | 커맨드 프롬프트 축소 | ✅ 완료 | 10개 command MCP-only 축소, 4,438→363줄 |
+| 8 | skills 전환 + README/CLAUDE 개선 | ✅ 완료 | skills-first 전환 + legacy 충돌 해소 + 문서/검증 갱신 |
 
 ---
 
@@ -170,5 +171,24 @@
 
 ### 검증
 - [x] `bash scripts/check-docs.sh` 통과 (0 errors, 기존 warning 4건 유지)
+- [x] `/Users/younghoonkim/Library/pnpm/pnpm -C mcp typecheck` 통과
+- [x] `/Users/younghoonkim/Library/pnpm/pnpm -C mcp test` 통과 (36/36)
+
+---
+
+## Unit 8: skills 전환 + README/CLAUDE 개선 — ✅ 완료
+
+### 계획 문서
+- `plan/unit8-skills-readme-claude.md`
+
+### 완료 항목
+- [x] `.claude/skills/*/SKILL.md` 10개 스킬 운영 구조 도입
+- [x] command/skill 동명이인 충돌 제거: `.claude/commands/*.md` → `legacy-*.md`로 리네임
+- [x] `README.md`를 skills-first 구조로 개편, legacy command를 호환 계층으로 분리 문서화
+- [x] `CLAUDE.md`를 import 엔트리포인트로 축소하고 `.claude/rules/{core,skills,docs}.md` 분리
+- [x] `scripts/check-docs.sh`를 command 중심에서 skills-first 정합성 검사로 전환
+
+### 검증
+- [x] `bash scripts/check-docs.sh` 통과 (warning 5건, error 0건)
 - [x] `/Users/younghoonkim/Library/pnpm/pnpm -C mcp typecheck` 통과
 - [x] `/Users/younghoonkim/Library/pnpm/pnpm -C mcp test` 통과 (36/36)

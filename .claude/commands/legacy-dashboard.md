@@ -1,8 +1,8 @@
 ---
-description: "전체 학습 현황 대시보드 — MCP 집계 기반"
+description: "LEGACY shim - 전체 학습 현황 대시보드 — MCP 집계 기반"
 ---
 
-# /dashboard — 전체 학습 현황 스냅샷
+# /legacy-dashboard — 전체 학습 현황 스냅샷
 
 ## 목적
 - 스킬별 진행률, 최근 활동, 복습 대기를 빠르게 보여준다.

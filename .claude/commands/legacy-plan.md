@@ -1,8 +1,8 @@
 ---
-description: "크로스-스킬 마스터 로드맵 생성/갱신 — MCP 기반"
+description: "LEGACY shim - 크로스-스킬 마스터 로드맵 생성/갱신 — MCP 기반"
 ---
 
-# /plan — 마스터 학습 로드맵
+# /legacy-plan — 마스터 학습 로드맵
 
 ## 목적
 - 스킬별 plan 데이터를 합쳐 `docs/master-plan.md`를 생성/갱신한다.

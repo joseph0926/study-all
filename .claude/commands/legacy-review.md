@@ -1,9 +1,9 @@
 ---
-description: "학습 기록 기반 복습 — MCP 간격반복 연동"
+description: "LEGACY shim - 학습 기록 기반 복습 — MCP 간격반복 연동"
 argument-hint: "<skill-name> [topic]"
 ---
 
-# /review — 적응형 복습 세션
+# /legacy-review — 적응형 복습 세션
 
 ## 목적
 - 복습 대기열 기반으로 한 문제씩 출제하고 결과를 기록한다.

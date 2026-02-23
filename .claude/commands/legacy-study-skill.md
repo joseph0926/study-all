@@ -1,9 +1,9 @@
 ---
-description: "스킬 딥스터디/레퍼런스 검증 — MCP 인벤토리 기반"
+description: "LEGACY shim - 스킬 딥스터디/레퍼런스 검증 — MCP 인벤토리 기반"
 argument-hint: "<skill-name>"
 ---
 
-# /study-skill — 스킬 검증/개선
+# /legacy-study-skill — 스킬 검증/개선
 
 ## 목적
 - 스킬 소스 대비 레퍼런스 커버리지를 점검하고 개선 우선순위를 제시한다.

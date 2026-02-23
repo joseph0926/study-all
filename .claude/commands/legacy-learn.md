@@ -1,9 +1,9 @@
 ---
-description: "스킬 소스 기반 튜터링 — MCP 재개점/기록 연동"
+description: "LEGACY shim - 스킬 소스 기반 튜터링 — MCP 재개점/기록 연동"
 argument-hint: "<skill-name> <topic>"
 ---
 
-# /learn — 소스 기반 튜터링
+# /legacy-learn — 소스 기반 튜터링
 
 ## 목적
 - 소스 근거로 설명/Q&A를 진행한다.

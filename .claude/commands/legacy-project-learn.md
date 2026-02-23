@@ -1,9 +1,9 @@
 ---
-description: "프로젝트 소스 기반 튜터링 — MCP 재개점/기록 연동"
+description: "LEGACY shim - 프로젝트 소스 기반 튜터링 — MCP 재개점/기록 연동"
 argument-hint: "<project-path> <topic>"
 ---
 
-# /project-learn — 프로젝트 소스 튜터링
+# /legacy-project-learn — 프로젝트 소스 튜터링
 
 ## 목적
 - 프로젝트 코드를 학습 대상으로 설명하고 Q&A를 진행한다.

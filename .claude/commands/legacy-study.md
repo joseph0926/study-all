@@ -1,8 +1,8 @@
 ---
-description: "일일 공부 관리 — daily MCP 상태머신 기반"
+description: "LEGACY shim - 일일 공부 관리 — daily MCP 상태머신 기반"
 ---
 
-# /study — 일일 공부 컨트롤 타워
+# /legacy-study — 일일 공부 컨트롤 타워
 
 ## 목적
 - 일일 계획/수행/마감 상태를 MCP로 관리한다.

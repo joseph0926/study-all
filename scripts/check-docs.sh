@@ -16,21 +16,31 @@ ok()   { dim    "  OK:    $1"; }
 
 header() { printf '\n\033[1m[%s]\033[0m\n' "$1"; }
 
+SKILLS_DIR="$ROOT/.claude/skills"
 COMMANDS_DIR="$ROOT/.claude/commands"
 README="$ROOT/README.md"
 CLAUDE_MD="$ROOT/CLAUDE.md"
 
-header "1. Command table sync — README.md vs .claude/commands/"
+header "1. Skills table sync — README.md vs .claude/skills/"
 
-if [[ -d "$COMMANDS_DIR" && -f "$README" ]]; then
-  for cmd_file in "$COMMANDS_DIR"/*.md; do
-    cmd_name="$(basename "$cmd_file" .md)"
-    if grep -q "/$cmd_name" "$README"; then
-      ok "/$cmd_name — README에 존재"
+if [[ -d "$SKILLS_DIR" && -f "$README" ]]; then
+  skill_count=0
+  while IFS= read -r skill_file; do
+    skill_count=$((skill_count + 1))
+    skill_name="$(basename "$(dirname "$skill_file")")"
+
+    if grep -Fq "\$$skill_name" "$README" || grep -Fq "/$skill_name" "$README"; then
+      ok "$skill_name — README에 존재"
     else
-      err "/$cmd_name — README Commands 테이블에 누락"
+      err "$skill_name — README skills 섹션에 누락"
     fi
-  done
+  done < <(find "$SKILLS_DIR" -mindepth 2 -maxdepth 2 -name 'SKILL.md' -type f | sort)
+
+  if [[ $skill_count -eq 0 ]]; then
+    err ".claude/skills/ 아래 SKILL.md가 없음"
+  fi
+else
+  err "README 또는 .claude/skills/ 디렉토리가 없음"
 fi
 
 header "2. docs/ filename conventions"
@@ -59,34 +69,42 @@ if [[ -d "$ROOT/docs" ]]; then
   done < <(find "$ROOT/docs" -name '*.md' -type f)
 fi
 
-header "3. Phantom references — commands에서 참조하는 스크립트/커맨드 존재 여부"
+header "3. Phantom references — scripts referenced by skills/commands"
 
-for cmd_file in "$COMMANDS_DIR"/*.md; do
-  cmd_name="$(basename "$cmd_file" .md)"
+check_shell_refs() {
+  local md_file="$1"
+  local label="$2"
 
   while IFS= read -r script_path; do
     [[ -z "$script_path" ]] && continue
     [[ "$script_path" == *"{"* ]] && continue
     if [[ ! -f "$ROOT/$script_path" ]]; then
-      err "/$cmd_name — 참조 스크립트 '$script_path' 없음"
+      err "$label — 참조 스크립트 '$script_path' 없음"
     else
-      ok "/$cmd_name — $script_path 존재"
+      ok "$label — $script_path 존재"
     fi
-  done < <(grep -oE '(python |bash |sh )[^ `]+' "$cmd_file" 2>/dev/null \
+  done < <(grep -oE '(python |bash |sh )[^ `]+' "$md_file" 2>/dev/null \
     | sed 's/^python //;s/^bash //;s/^sh //' || true)
+}
 
-  while IFS= read -r ref_cmd; do
-    [[ -z "$ref_cmd" ]] && continue
-    if [[ ! -f "$COMMANDS_DIR/$ref_cmd.md" ]]; then
-      warn "/$cmd_name — 참조 커맨드 '$ref_cmd' 없음 (.claude/commands/에 없음)"
-    fi
-  done < <(grep -oE '`study-aio`' "$cmd_file" 2>/dev/null | sed 's/`//g' | sort -u || true)
-done
+if [[ -d "$SKILLS_DIR" ]]; then
+  while IFS= read -r skill_file; do
+    skill_name="$(basename "$(dirname "$skill_file")")"
+    check_shell_refs "$skill_file" "skill:$skill_name"
+  done < <(find "$SKILLS_DIR" -mindepth 2 -maxdepth 2 -name 'SKILL.md' -type f | sort)
+fi
+
+if [[ -d "$COMMANDS_DIR" ]]; then
+  while IFS= read -r cmd_file; do
+    cmd_name="$(basename "$cmd_file" .md)"
+    check_shell_refs "$cmd_file" "command:$cmd_name"
+  done < <(find "$COMMANDS_DIR" -maxdepth 1 -name '*.md' -type f | sort)
+fi
 
 header "4. CLAUDE.md structure tree vs reality"
 
 if [[ -f "$CLAUDE_MD" ]]; then
-  for d in ".claude/commands" "docs" "ref"; do
+  for d in ".claude/skills" "docs" "ref"; do
     if [[ -d "$ROOT/$d" ]]; then
       ok "$d/ — 존재"
     else
@@ -94,14 +112,18 @@ if [[ -f "$CLAUDE_MD" ]]; then
     fi
   done
 
-  for cmd_file in "$COMMANDS_DIR"/*.md; do
-    cmd_name="$(basename "$cmd_file")"
-    if grep -q "$cmd_name" "$CLAUDE_MD"; then
-      ok "CLAUDE.md에 $cmd_name 언급됨"
+  if [[ -d "$COMMANDS_DIR" ]]; then
+    warn ".claude/commands/는 legacy shim으로 유지 중"
+  fi
+
+  while IFS= read -r skill_file; do
+    skill_name="$(basename "$(dirname "$skill_file")")"
+    if grep -Fq "/$skill_name" "$CLAUDE_MD" || grep -Fq "$skill_name/SKILL.md" "$CLAUDE_MD"; then
+      ok "CLAUDE.md에 $skill_name 언급됨"
     else
-      err "CLAUDE.md 구조 트리에 $cmd_name 누락"
+      err "CLAUDE.md에 skill '$skill_name' 누락"
     fi
-  done
+  done < <(find "$SKILLS_DIR" -mindepth 2 -maxdepth 2 -name 'SKILL.md' -type f | sort)
 fi
 
 header "5. plan.md checklist vs session files"

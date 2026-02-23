@@ -1,8 +1,8 @@
 ---
-description: "다음 학습 추천 — MCP 우선순위 기반"
+description: "LEGACY shim - 다음 학습 추천 — MCP 우선순위 기반"
 ---
 
-# /next — 다음 뭐 하지?
+# /legacy-next — 다음 뭐 하지?
 
 ## 목적
 - 오늘의 학습 우선순위 1~3개를 추천한다.

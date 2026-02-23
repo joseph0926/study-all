@@ -1,9 +1,9 @@
 ---
-description: "프로젝트 딥스터디 플랜 — MCP project mode 기반"
+description: "LEGACY shim - 프로젝트 딥스터디 플랜 — MCP project mode 기반"
 argument-hint: "<project-path>"
 ---
 
-# /project-study — 프로젝트 학습 플랜
+# /legacy-project-study — 프로젝트 학습 플랜
 
 ## 목적
 - 프로젝트 구조를 분석하고 `.study/plan.md` 학습 플랜을 운영한다.

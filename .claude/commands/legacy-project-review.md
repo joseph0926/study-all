@@ -1,9 +1,9 @@
 ---
-description: "프로젝트 학습 기록 복습 — MCP 간격반복 연동"
+description: "LEGACY shim - 프로젝트 학습 기록 복습 — MCP 간격반복 연동"
 argument-hint: "<project-path> [topic]"
 ---
 
-# /project-review — 프로젝트 복습 세션
+# /legacy-project-review — 프로젝트 복습 세션
 
 ## 목적
 - `.study/` 학습 기록 기반으로 복습 질문을 출제하고 결과를 기록한다.
