@@ -12,7 +12,7 @@ function parseSessionBlocks(markdown: string): SessionBlock[] {
   lines.forEach((line, idx) => {
     const match = line.match(/^##\s+(\d{4}-\d{2}-\d{2})(?:\s*\(.+\))?$/);
     if (match) {
-      indices.push({ idx, date: match[1] });
+      indices.push({ idx, date: match[1]! });
     }
   });
 
@@ -22,10 +22,11 @@ function parseSessionBlocks(markdown: string): SessionBlock[] {
 
   const blocks: SessionBlock[] = [];
   for (let i = 0; i < indices.length; i += 1) {
-    const start = indices[i].idx;
-    const end = i === indices.length - 1 ? lines.length : indices[i + 1].idx;
+    const current = indices[i]!;
+    const start = current.idx;
+    const end = i === indices.length - 1 ? lines.length : indices[i + 1]!.idx;
     blocks.push({
-      date: indices[i].date,
+      date: current.date,
       content: lines.slice(start, end).join("\n"),
     });
   }
@@ -77,10 +78,10 @@ export function getResumePoint(markdown: string): SessionResumePoint {
   const completedSteps: string[] = [];
   const pendingSteps: string[] = [];
   for (const line of roadmap.split(/\r?\n/)) {
-    const stepMatch = line.match(/^-\s+\[(x|X|\s)\]\s+(.+)$/);
+    const stepMatch = line.match(/^\s*-\s+\[(x|X|\s)\]\s+(.+)$/);
     if (!stepMatch) continue;
-    const stepName = stepMatch[2].trim();
-    if (stepMatch[1].toLowerCase() === "x") {
+    const stepName = stepMatch[2]!.trim();
+    if (stepMatch[1]!.toLowerCase() === "x") {
       completedSteps.push(stepName);
     } else {
       pendingSteps.push(stepName);

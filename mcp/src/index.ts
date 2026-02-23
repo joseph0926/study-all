@@ -18,7 +18,8 @@ interface RegisteredTool {
   name: string;
   description: string;
   schema: z.ZodTypeAny;
-  run: (input: unknown) => Promise<unknown>;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- each tool's run is called with its own schema.parse() result
+  run: (input: any) => Promise<unknown>;
 }
 
 const tools: RegisteredTool[] = [

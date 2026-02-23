@@ -8,23 +8,23 @@ describe("getResumePoint", () => {
     const result = getResumePoint(fixture);
 
     expect(result.exists).toBe(true);
-    expect(result.lastDate).toBe("2026-02-11");
-    expect(result.completedSteps).toContain("Step 1: ReactElement & $$typeof");
+    expect(result.lastDate).toBe("2026-02-22");
+    expect(result.completedSteps).toContain("1.1: mapIntoArray 재귀 순회 — 중첩 배열/iterable children을 평탄화하는 핵심 알고리즘");
   });
 
   it("완료/미완료 스텝 분리", () => {
     const fixture = readFileSync(new URL("../fixtures/react/React-Core-API.md", import.meta.url), "utf8");
     const result = getResumePoint(fixture);
 
-    expect(result.completedSteps.length).toBe(6);
-    expect(result.pendingSteps.length).toBe(0);
+    expect(result.completedSteps.length).toBe(2);
+    expect(result.pendingSteps.length).toBe(8);
   });
 
   it("학습 요약 추출", () => {
     const fixture = readFileSync(new URL("../fixtures/react/React-Core-API.md", import.meta.url), "utf8");
     const result = getResumePoint(fixture);
 
-    expect(result.summary).toContain("React 패키지의 Core API Surface");
+    expect(result.summary).toContain("React.Children.map()");
   });
 
   it("세션 기록 없는 경우", () => {

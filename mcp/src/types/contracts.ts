@@ -5,14 +5,14 @@ export const SCHEMA_VERSION = "1.0.0" as const;
 export interface CacheMeta {
   hit: boolean;
   key: string;
-  invalidatedReason?: string;
+  invalidatedReason?: string | undefined;
 }
 
 export interface Envelope<T> {
   schemaVersion: typeof SCHEMA_VERSION;
   generatedAt: string;
   data: T;
-  cache?: CacheMeta;
+  cache?: CacheMeta | undefined;
 }
 
 export type ContextMode = "skill" | "project";
@@ -35,12 +35,12 @@ export interface ResolvedContext {
   refDir: string;
   skillsDir: string;
   studyLogsDir: string;
-  skill?: string;
-  topic?: string;
-  projectPath?: string;
-  skillDocsDir?: string;
-  studyDir?: string;
-  sourceDir?: string;
+  skill?: string | undefined;
+  topic?: string | undefined;
+  projectPath?: string | undefined;
+  skillDocsDir?: string | undefined;
+  studyDir?: string | undefined;
+  sourceDir?: string | undefined;
 }
 
 export const scoreSchema = z.enum(["wrong", "retry_pass", "first_pass"]);

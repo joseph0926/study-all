@@ -9,7 +9,7 @@ describe("daily tools", () => {
     const logsDir = mkdtempSync(path.join(os.tmpdir(), "mcp-daily-"));
     process.env.STUDY_LOGS_DIR = logsDir;
 
-    const baseCtx = { context: { mode: "skill", skill: "react" as const } };
+    const baseCtx = { context: { mode: "skill" as const, skill: "react" } };
 
     const before = await dailyGetStatus(baseCtx);
     expect(before.data.todayState).toBe("NONE");

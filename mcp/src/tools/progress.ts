@@ -100,13 +100,15 @@ function pickNextTopic(plan: PlanData): {
 function replaceCheckboxInRange(lines: string[], start: number, end: number, step: string, done: boolean): boolean {
   for (let i = start; i < end; i += 1) {
     const line = lines[i];
+    if (!line) continue;
     const match = line.match(/^(\s*-\s+)\[(x|X|\s)\](\s+.+)$/);
     if (!match) continue;
-    if (!match[3].toLowerCase().includes(step.trim().toLowerCase())) {
+    const captured = match[3];
+    if (!captured || !captured.toLowerCase().includes(step.trim().toLowerCase())) {
       continue;
     }
     const marker = done ? "x" : " ";
-    lines[i] = `${match[1]}[${marker}]${match[3]}`;
+    lines[i] = `${match[1]}[${marker}]${captured}`;
     return true;
   }
   return false;
@@ -177,11 +179,13 @@ export async function progressUpdateCheckbox(
   let sectionEnd = lines.length;
 
   for (let i = 0; i < lines.length; i += 1) {
-    if (lines[i].startsWith("### ") && lines[i].toLowerCase().includes(parsed.topic.toLowerCase())) {
+    const currentLine = lines[i]!;
+    if (currentLine.startsWith("### ") && currentLine.toLowerCase().includes(parsed.topic.toLowerCase())) {
       sectionStart = i;
       sectionEnd = lines.length;
       for (let j = i + 1; j < lines.length; j += 1) {
-        if (lines[j].startsWith("### ") || lines[j].startsWith("## ")) {
+        const innerLine = lines[j]!;
+        if (innerLine.startsWith("### ") || innerLine.startsWith("## ")) {
           sectionEnd = j;
           break;
         }
@@ -247,12 +251,14 @@ export async function progressGetCoverageMap(
     const moduleName = mod.name.toLowerCase();
     let hit = false;
     for (let i = 0; i < refFiles.length; i += 1) {
-      const fileName = path.basename(refFiles[i]).toLowerCase();
+      const refFile = refFiles[i]!;
+      const refText = refTexts[i]!;
+      const fileName = path.basename(refFile).toLowerCase();
       if (fileName.includes(moduleName)) {
         hit = true;
         break;
       }
-      if (refTexts[i].toLowerCase().includes(moduleName)) {
+      if (refText.toLowerCase().includes(moduleName)) {
         hit = true;
         break;
       }
@@ -264,8 +270,10 @@ export async function progressGetCoverageMap(
 
   const orphanRefs: string[] = [];
   for (let i = 0; i < refFiles.length; i += 1) {
-    const fileName = path.basename(refFiles[i]);
-    const hasAny = moduleMap.modules.some((mod) => refTexts[i].toLowerCase().includes(mod.name.toLowerCase()));
+    const refFile = refFiles[i]!;
+    const refText = refTexts[i]!;
+    const fileName = path.basename(refFile);
+    const hasAny = moduleMap.modules.some((mod) => refText.toLowerCase().includes(mod.name.toLowerCase()));
     if (!hasAny) {
       orphanRefs.push(fileName);
     }

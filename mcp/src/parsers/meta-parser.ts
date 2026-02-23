@@ -36,16 +36,16 @@ export function parseMeta(markdown: string, topic = ""): ReviewMeta {
     }
 
     const cols = parseTableLine(trimmed);
-    if (cols.length < 5 || cols[0].toLowerCase() === "concept") {
+    if (cols.length < 5 || cols[0]!.toLowerCase() === "concept") {
       continue;
     }
 
     concepts.push({
-      name: cols[0],
-      level: normalizeLevel(cols[1]),
+      name: cols[0]!,
+      level: normalizeLevel(cols[1]!),
       streak: Number(cols[2]) || 0,
-      nextReview: cols[3],
-      graduated: parseBoolean(cols[4]),
+      nextReview: cols[3]!,
+      graduated: parseBoolean(cols[4]!),
       attempts: Number(cols[5]) || 0,
     });
   }
@@ -55,11 +55,11 @@ export function parseMeta(markdown: string, topic = ""): ReviewMeta {
       const match = line.match(/^-\s*concept\s*:\s*(.+?),\s*level\s*:\s*(L[1-4]),\s*streak\s*:\s*(\d+),\s*next\s*:\s*([^,]+),\s*graduated\s*:\s*(true|false)/i);
       if (!match) continue;
       concepts.push({
-        name: match[1].trim(),
-        level: normalizeLevel(match[2]),
+        name: match[1]!.trim(),
+        level: normalizeLevel(match[2]!),
         streak: Number(match[3]) || 0,
-        nextReview: match[4].trim(),
-        graduated: match[5].toLowerCase() === "true",
+        nextReview: match[4]!.trim(),
+        graduated: match[5]!.toLowerCase() === "true",
         attempts: 0,
       });
     }

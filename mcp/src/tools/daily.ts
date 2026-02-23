@@ -74,7 +74,7 @@ function replaceSection(text: string, heading: string, body: string): string {
 
   let end = lines.length;
   for (let i = start + 1; i < lines.length; i += 1) {
-    if (lines[i].startsWith("## ")) {
+    if (lines[i]!.startsWith("## ")) {
       end = i;
       break;
     }

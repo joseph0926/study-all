@@ -19,14 +19,14 @@ export interface PlanTopic {
   module: string;
   status: CoverageStatus;
   sourceFiles: number;
-  docsFile?: string;
+  docsFile?: string | undefined;
   steps: PlanStep[];
   completionRate: number;
 }
 
 export interface PlanPhase {
   name: string;
-  description?: string;
+  description?: string | undefined;
   topics: PlanTopic[];
 }
 
@@ -46,8 +46,8 @@ export interface PlanData {
 
 export interface SessionResumePoint {
   exists: boolean;
-  lastStep?: string;
-  lastDate?: string;
+  lastStep?: string | undefined;
+  lastDate?: string | undefined;
   completedSteps: string[];
   totalSteps: number;
   pendingSteps: string[];
@@ -93,7 +93,7 @@ export interface ReviewQueueItem {
   topic: string;
   concept: string;
   level: ReviewLevel;
-  lastReview?: string;
+  lastReview?: string | undefined;
   streak: number;
   overdueDays: number;
 }
@@ -102,7 +102,7 @@ export interface DailyStatus {
   streak: number;
   todayState: "NONE" | "PLANNING" | "CONFIRMED" | "FEEDBACK" | "DONE";
   achievementRate7d: number;
-  lastSession?: string;
+  lastSession?: string | undefined;
 }
 
 export interface DashboardSkill {
@@ -111,7 +111,7 @@ export interface DashboardSkill {
   completedTopics: number;
   progressRate: number;
   coverageRate: number;
-  lastActivity?: string;
+  lastActivity?: string | undefined;
   reviewPending: number;
   graduated: number;
 }

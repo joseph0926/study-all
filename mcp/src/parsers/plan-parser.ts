@@ -47,8 +47,8 @@ function parseCoverageRows(lines: string[]): CoverageRow[] {
     }
 
     out.push({
-      status: mapStatus(cols[0]),
-      module: cols[1],
+      status: mapStatus(cols[0]!),
+      module: cols[1]!,
       target: cols.slice(2).join(" | "),
     });
   }
@@ -120,10 +120,10 @@ export function parsePlan(markdown: string, skill: string): PlanData {
     const topicMatch = line.match(/^###\s+Topic\s+(\d+):\s+(.+)$/);
     if (topicMatch && currentPhase) {
       closeTopic();
-      const topicText = topicMatch[2].trim();
+      const topicText = topicMatch[2]!.trim();
       const status = mapStatus(topicText);
       const cleanTopicName = topicText.replace(/[✅⬜🔗].*$/, "").trim();
-      const module = cleanTopicName.split(/[\s—-]/)[0] || cleanTopicName;
+      const module = cleanTopicName.split(/[\s—-]/)[0] ?? cleanTopicName;
       currentTopic = {
         id: `topic-${topicMatch[1]}`,
         name: cleanTopicName,
@@ -148,7 +148,7 @@ export function parsePlan(markdown: string, skill: string): PlanData {
 
     const skillTargetMatch = line.match(/^\*\*Skill Target\*\*:\s*(.+)$/);
     if (skillTargetMatch) {
-      const docs = skillTargetMatch[1].match(/[A-Za-z0-9._-]+\.md/g);
+      const docs = skillTargetMatch[1]!.match(/[A-Za-z0-9._-]+\.md/g);
       if (docs && docs.length > 0) {
         currentTopic.docsFile = docs[0].replace(/^references\//, "");
       }
@@ -158,8 +158,8 @@ export function parsePlan(markdown: string, skill: string): PlanData {
     const stepMatch = line.match(/^-\s+\[(x|X|\s)\]\s+(.+)$/);
     if (stepMatch) {
       currentTopic.steps.push({
-        name: stepMatch[2].trim(),
-        done: stepMatch[1].toLowerCase() === "x",
+        name: stepMatch[2]!.trim(),
+        done: stepMatch[1]!.toLowerCase() === "x",
       });
     }
   }

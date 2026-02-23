@@ -16,7 +16,7 @@ describe("session tools", () => {
     });
 
     expect(result.data.exists).toBe(true);
-    expect(result.data.lastDate).toBe("2026-02-11");
+    expect(result.data.lastDate).toBe("2026-02-22");
   });
 
   it("session.appendLog appends section", async () => {
