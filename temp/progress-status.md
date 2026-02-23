@@ -1,6 +1,6 @@
 # MCP 수정 작업 진행 상황
 
-> 최종 갱신: 2026-02-23 (Unit 5 완료)
+> 최종 갱신: 2026-02-23 (Unit 6 완료)
 
 ## 전체 진행도
 
@@ -11,7 +11,7 @@
 | 3 | Clock 주입 | ✅ 완료 | daily/review/session/cache 11곳 주입 |
 | 4 | config.ts 전역 상태 제거 | ✅ 완료 | overrides Map 제거, STUDY_ROOT 필수화 |
 | 5 | Tool 버그 수정 | ✅ 완료 | review/plan-parser/stats/error-wrapper 반영, test 36/36 |
-| 6 | 서버 등록 + E2E | ⬜ 대기 | Unit 2 의존 |
+| 6 | 서버 등록 + E2E | ✅ 완료 | `.mcp.json` 등록 + SDK stdio E2E(listTools 20개) |
 | 7 | 커맨드 프롬프트 축소 | ⬜ 대기 | Unit 6 의존 |
 
 ---
@@ -142,12 +142,15 @@
 
 ---
 
-## Unit 6: 서버 등록 + E2E — ⬜ 대기
+## Unit 6: 서버 등록 + E2E — ✅ 완료
 
-### 예정 항목
-- `pnpm build` → `dist/` 생성
-- `.claude/settings.local.json`에 `mcpServers.study` 등록
-- 수동 연결 테스트
+### 완료 항목
+- [x] `/Users/younghoonkim/Library/pnpm/pnpm -C /Users/younghoonkim/dev/personal/@skills/study-all/mcp build` 실행 (`dist/src/index.js` 생성 확인)
+- [x] 프로젝트 루트 `.mcp.json` 생성 후 `mcpServers.study` 등록 (`STUDY_ROOT` env 포함)
+- [x] SDK stdio 클라이언트 스모크 E2E 성공: 서버 연결 + `listTools` 호출(20개 도구 확인)
+
+### 검증 메모
+- 이 셸 환경에서는 `claude` CLI가 PATH에 없어(`/mcp`/`claude mcp list` 미실행), SDK 기반 stdio E2E로 동등 검증 수행
 
 ---
 

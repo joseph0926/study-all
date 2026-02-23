@@ -143,7 +143,7 @@ TO-BE:
 - **런타임**: Node.js (TypeScript)
 - **MCP SDK**: `@modelcontextprotocol/sdk`
 - **테스트**: Vitest
-- **빌드**: `tsc`로 `dist/` 생성 후 `node dist/index.js` 실행 (개발용 `tsx` 직실행은 사용하지 않음)
+- **빌드**: `tsc`로 `dist/` 생성 후 `node dist/src/index.js` 실행 (개발용 `tsx` 직실행은 사용하지 않음)
 - **도구 등록 API**: `registerTool` 사용 (`tool()`은 SDK v1.x에서 deprecated)
 
 ### 5.2 디렉토리 구조
@@ -849,7 +849,7 @@ it("review.getQueue는 고정 날짜 기준으로 계산", async () => {
   "mcpServers": {
     "study": {
       "command": "node",
-      "args": ["/Users/younghoonkim/dev/personal/@skills/study-all/mcp/dist/index.js"],
+      "args": ["/Users/younghoonkim/dev/personal/@skills/study-all/mcp/dist/src/index.js"],
       "env": {
         "STUDY_ROOT": "/Users/younghoonkim/dev/personal/@skills/study-all"
       }
@@ -861,13 +861,13 @@ it("review.getQueue는 고정 날짜 기준으로 계산", async () => {
 또는 CLI로 동일 설정 등록:
 
 ```bash
-claude mcp add --transport stdio --scope project --env STUDY_ROOT=/Users/younghoonkim/dev/personal/@skills/study-all study -- node /Users/younghoonkim/dev/personal/@skills/study-all/mcp/dist/index.js
+claude mcp add --transport stdio --scope project --env STUDY_ROOT=/Users/younghoonkim/dev/personal/@skills/study-all study -- node /Users/younghoonkim/dev/personal/@skills/study-all/mcp/dist/src/index.js
 ```
 
 ### 빌드/실행 규약
 
 - 빌드: `/Users/younghoonkim/Library/pnpm/pnpm -C mcp build`
-- 실행: `node mcp/dist/index.js`
+- 실행: `node mcp/dist/src/index.js`
 - 개발 중 타입체크: `/Users/younghoonkim/Library/pnpm/pnpm -C mcp typecheck`
 
 ### 환경 변수
