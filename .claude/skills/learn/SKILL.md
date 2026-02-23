@@ -3,7 +3,7 @@ name: learn
 description: 스킬 토픽 학습 세션을 진행하고 재개점/기록/체크박스를 study MCP로 동기화한다.
 argument-hint: "<skill-name> <topic>"
 disable-model-invocation: true
-allowed-tools: Read, Grep, Glob, mcp__study__context.resolve, mcp__study__session.getResumePoint, mcp__study__session.getSourcePaths, mcp__study__progress.getPlan, mcp__study__session.appendLog, mcp__study__progress.updateCheckbox
+allowed-tools: Read, Grep, Glob, WebSearch, WebFetch, mcp__study__context_resolve, mcp__study__session_getResumePoint, mcp__study__session_getSourcePaths, mcp__study__progress_getPlan, mcp__study__session_appendLog, mcp__study__progress_updateCheckbox
 ---
 
 입력: `$ARGUMENTS` (`<skill> <topic>`)

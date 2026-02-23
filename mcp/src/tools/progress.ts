@@ -236,8 +236,8 @@ export async function progressGetCoverageMap(
 
   const refsDir =
     parsed.refsDir ??
-    (context.mode === "skill" && context.skill
-      ? path.join(context.skillsDir, `${context.skill}-aio`, "references")
+    (context.mode === "skill" && context.skillDocsDir
+      ? context.skillDocsDir
       : path.join(context.studyDir ?? context.projectPath ?? sourceDir, "references"));
 
   const { value: moduleMap, cacheMeta } = await getCachedModuleMap(sourceDir);

@@ -1,7 +1,7 @@
 ---
 name: next
 description: study MCP 추천 데이터로 오늘의 학습 우선순위 1~3개를 제시한다.
-allowed-tools: mcp__study__stats.getRecommendation, mcp__study__review.getQueue, mcp__study__progress.getNextTopic
+allowed-tools: mcp__study__stats_getRecommendation, mcp__study__review_getQueue, mcp__study__progress_getNextTopic
 ---
 
 `/next` 실행 규칙:

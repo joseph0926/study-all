@@ -6,14 +6,7 @@ import { makeEnvelope } from "../lib/envelope.js";
 import type { Envelope, ResolvedContext } from "../types/contracts.js";
 import { contextInputSchema, type ContextInput } from "../types/contracts.js";
 
-const sourceCandidateSuffixes = [
-  "-fork",
-  "",
-  ".js",
-  ".dev",
-  "-docs",
-  "-source",
-];
+const STRIP_SUFFIXES = ["-fork", ".js", ".dev", "-docs", "-source"];
 
 async function exists(target: string): Promise<boolean> {
   try {
@@ -28,27 +21,64 @@ function normalizeSkill(skill: string): string {
   return skill.trim().toLowerCase();
 }
 
+function stripPunctuation(name: string): string {
+  return name.replace(/[.\-_]/g, "").toLowerCase();
+}
+
+function stripSuffix(name: string): string | undefined {
+  const lower = name.toLowerCase();
+  for (const suffix of STRIP_SUFFIXES) {
+    if (lower.endsWith(suffix)) {
+      return lower.slice(0, -suffix.length);
+    }
+  }
+  return undefined;
+}
+
+export async function scanRefDirs(refDir: string): Promise<string[]> {
+  try {
+    const entries = await fs.readdir(refDir, { withFileTypes: true });
+    return entries.filter((e) => e.isDirectory()).map((e) => e.name);
+  } catch {
+    return [];
+  }
+}
+
 async function detectSourceDir(refDir: string, skill?: string): Promise<string | undefined> {
   if (!skill) {
     return undefined;
   }
 
   const normalized = normalizeSkill(skill);
-  const directCandidates = new Set<string>([normalized]);
 
-  if (normalized === "nextjs") {
-    directCandidates.add("next.js");
-  }
-  if (normalized === "react") {
-    directCandidates.add("react-fork");
+  // Priority 1: exact match
+  const exact = path.join(refDir, normalized);
+  if (await exists(exact)) {
+    return exact;
   }
 
-  for (const base of directCandidates) {
-    for (const suffix of sourceCandidateSuffixes) {
-      const candidate = path.join(refDir, `${base}${suffix}`);
-      if (await exists(candidate)) {
-        return candidate;
-      }
+  const dirs = await scanRefDirs(refDir);
+
+  // Priority 2: stripped-punctuation match ("nextjs" → "next.js")
+  const normalizedStripped = stripPunctuation(normalized);
+  for (const dir of dirs) {
+    if (stripPunctuation(dir) === normalizedStripped) {
+      return path.join(refDir, dir);
+    }
+  }
+
+  // Priority 3: suffix-stripped match ("react" → "react-fork")
+  for (const dir of dirs) {
+    const base = stripSuffix(dir);
+    if (base && base === normalized) {
+      return path.join(refDir, dir);
+    }
+  }
+
+  // Priority 4: prefix match ("react" → "react-anything")
+  for (const dir of dirs) {
+    if (dir.toLowerCase().startsWith(normalized)) {
+      return path.join(refDir, dir);
     }
   }
 

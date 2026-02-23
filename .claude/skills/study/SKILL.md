@@ -3,7 +3,7 @@ name: study
 description: 일일 학습 상태(계획/수행/마감)를 daily MCP 상태머신으로 관리한다.
 argument-hint: "[help|plan <text>|done <text>|log]"
 disable-model-invocation: true
-allowed-tools: mcp__study__daily.getStatus, mcp__study__daily.logPlan, mcp__study__daily.logDone, mcp__study__daily.finalize, mcp__study__stats.getRecommendation
+allowed-tools: mcp__study__daily_getStatus, mcp__study__daily_logPlan, mcp__study__daily_logDone, mcp__study__daily_finalize, mcp__study__stats_getRecommendation
 ---
 
 입력: `$ARGUMENTS`

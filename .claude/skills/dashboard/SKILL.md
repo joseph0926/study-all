@@ -1,7 +1,7 @@
 ---
 name: dashboard
 description: 학습 대시보드 수치(진행률/최근활동/복습대기)를 study MCP에서 조회해 요약한다.
-allowed-tools: mcp__study__stats.getDashboard, mcp__study__config.get
+allowed-tools: mcp__study__stats_getDashboard, mcp__study__config_get
 ---
 
 `/dashboard`를 실행하면 아래 순서로 동작한다.

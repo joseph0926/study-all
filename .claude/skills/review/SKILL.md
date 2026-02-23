@@ -3,7 +3,7 @@ name: review
 description: 복습 대기열을 기준으로 1문제씩 출제하고 결과를 study MCP에 기록한다.
 argument-hint: "<skill-name> [topic]"
 disable-model-invocation: true
-allowed-tools: Read, Grep, Glob, mcp__study__context.resolve, mcp__study__review.getQueue, mcp__study__review.getMeta, mcp__study__review.recordResult, mcp__study__review.saveMeta
+allowed-tools: Read, Grep, Glob, WebSearch, WebFetch, mcp__study__context_resolve, mcp__study__review_getQueue, mcp__study__review_getMeta, mcp__study__review_recordResult, mcp__study__review_saveMeta
 ---
 
 입력: `$ARGUMENTS` (`<skill> [topic]`)

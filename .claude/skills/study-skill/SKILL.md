@@ -3,7 +3,7 @@ name: study-skill
 description: 스킬 레퍼런스 커버리지를 MODULE_MAP/COVERAGE_MAP 기반으로 검증한다.
 argument-hint: "<skill-name>"
 disable-model-invocation: true
-allowed-tools: Read, Grep, Glob, mcp__study__context.resolve, mcp__study__progress.getModuleMap, mcp__study__progress.getCoverageMap, mcp__study__progress.getPlan, mcp__study__progress.updateCheckbox
+allowed-tools: Read, Grep, Glob, WebSearch, WebFetch, mcp__study__context_resolve, mcp__study__progress_getModuleMap, mcp__study__progress_getCoverageMap, mcp__study__progress_getPlan, mcp__study__progress_updateCheckbox
 ---
 
 입력: `$ARGUMENTS` (`<skill>`)

@@ -3,7 +3,7 @@ name: plan
 description: 스킬별 plan 데이터를 MCP로 수집해 docs/master-plan.md를 생성/갱신한다.
 argument-hint: "[goal]"
 disable-model-invocation: true
-allowed-tools: Read, Glob, Write, Edit, mcp__study__config.get, mcp__study__progress.getPlan
+allowed-tools: Read, Glob, Write, Edit, mcp__study__config_get, mcp__study__progress_getPlan
 ---
 
 `/plan $ARGUMENTS` 실행 규칙:
