@@ -1,8 +1,8 @@
-import { mkdirSync } from "node:fs";
+import { mkdirSync, readFileSync } from "node:fs";
 import os from "node:os";
 import path from "node:path";
 import { describe, expect, it } from "vitest";
-import { reviewGetMeta, reviewGetQueue, reviewRecordResult, reviewSaveMeta } from "../../src/tools/review.js";
+import { reviewAppendQnA, reviewGetMeta, reviewGetQueue, reviewRecordResult, reviewSaveMeta } from "../../src/tools/review.js";
 
 describe("review tools", () => {
   it("review.saveMeta and review.getMeta round-trip", async () => {
@@ -70,6 +70,75 @@ describe("review tools", () => {
 
     expect(result.data.streak).toBe(1);
     expect(result.data.level).toBe("L2");
+  });
+
+  it("review.appendQnA creates and appends to qa file", async () => {
+    const base = path.join(os.tmpdir(), `mcp-review-qa-${Date.now()}`);
+    process.env.STUDY_ROOT = base;
+    mkdirSync(path.join(base, ".study"), { recursive: true });
+
+    const result = await reviewAppendQnA({
+      context: { mode: "project", projectPath: base },
+      topic: "Demo",
+      items: [
+        {
+          concept: "dispatcher",
+          question: "Dispatcher 생명주기는?",
+          userAnswer: "Mount→OnMount, Update→OnUpdate, 완료→ContextOnly",
+          score: "first_pass",
+          level: "L2",
+        },
+      ],
+    });
+
+    expect(result.data.ok).toBe(true);
+    const content = readFileSync(result.data.filePath, "utf8");
+    expect(content).toContain("# Demo Review QnA");
+    expect(content).toContain("dispatcher");
+    expect(content).toContain("first_pass → L2");
+  });
+
+  it("review.appendQnA appends to existing qa file", async () => {
+    const base = path.join(os.tmpdir(), `mcp-review-qa-append-${Date.now()}`);
+    process.env.STUDY_ROOT = base;
+    mkdirSync(path.join(base, ".study"), { recursive: true });
+
+    await reviewAppendQnA({
+      context: { mode: "project", projectPath: base },
+      topic: "Demo",
+      items: [
+        {
+          concept: "concept-a",
+          question: "Q1?",
+          userAnswer: "A1",
+          score: "first_pass",
+          level: "L1",
+        },
+      ],
+    });
+
+    await reviewAppendQnA({
+      context: { mode: "project", projectPath: base },
+      topic: "Demo",
+      items: [
+        {
+          concept: "concept-b",
+          question: "Q2?",
+          userAnswer: "A2",
+          hint: "힌트입니다",
+          score: "retry_pass",
+          level: "L2",
+        },
+      ],
+    });
+
+    const content = readFileSync(path.join(base, ".study", "Demo-qa.md"), "utf8");
+    // 헤더는 1번만
+    const headerCount = (content.match(/# Demo Review QnA/g) ?? []).length;
+    expect(headerCount).toBe(1);
+    expect(content).toContain("concept-a");
+    expect(content).toContain("concept-b");
+    expect(content).toContain("**Hint**: 힌트입니다");
   });
 
   it("review.getQueue returns due items", async () => {

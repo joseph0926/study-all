@@ -1,7 +1,7 @@
 import path from "node:path";
 import { z } from "zod";
 import { makeEnvelope } from "../lib/envelope.js";
-import { listFiles, readText, writeText } from "../lib/fs.js";
+import { appendText, listFiles, readText, writeText } from "../lib/fs.js";
 import { parseMeta } from "../parsers/meta-parser.js";
 import { resolveContextData } from "./context.js";
 import type { Clock } from "../lib/clock.js";
@@ -55,6 +55,22 @@ const saveMetaInputSchema = z.object({
     ),
     sessionCount: z.number().int().nonnegative().default(0),
   }),
+});
+
+const appendQnAInputSchema = z.object({
+  context: contextSchema,
+  skill: z.string().optional(),
+  topic: z.string(),
+  items: z.array(
+    z.object({
+      concept: z.string(),
+      question: z.string(),
+      userAnswer: z.string(),
+      hint: z.string().optional(),
+      score: z.enum(["wrong", "retry_pass", "first_pass"]),
+      level: z.enum(["L1", "L2", "L3", "L4"]),
+    }),
+  ),
 });
 
 function toDateOnly(date: Date): string {
@@ -268,7 +284,7 @@ export async function reviewGetQueue(
 
     if (metaFiles.length === 0) {
       const topicFiles = (await listFiles(dir, { extension: ".md", maxDepth: 1 })).filter(
-        (file) => !file.endsWith("plan.md") && !file.endsWith("-quiz.md") && !file.endsWith("-meta.md"),
+        (file) => !file.endsWith("plan.md") && !file.endsWith("-quiz.md") && !file.endsWith("-meta.md") && !file.endsWith("-qa.md"),
       );
       for (const topicFile of topicFiles) {
         items.push({
@@ -321,9 +337,43 @@ export async function reviewGetQueue(
   });
 }
 
+export async function reviewAppendQnA(
+  input: z.input<typeof appendQnAInputSchema>,
+  clock: Clock = systemClock,
+): Promise<Envelope<{ ok: boolean; filePath: string }>> {
+  const parsed = appendQnAInputSchema.parse(input);
+  const context = await resolveContextData(parsed.context as ContextInput);
+  const dir = resolveReviewDir(context, parsed.skill);
+  const filePath = path.join(dir, `${parsed.topic}-qa.md`);
+
+  const existing = await readText(filePath);
+  const today = toDateOnly(clock.now());
+  const marker = context.mode === "project" ? "via /project-review" : "via /review";
+
+  const itemsText = parsed.items
+    .map((item) => {
+      const lines = [
+        `### ${item.concept} [${item.score} → ${item.level}]`,
+        `**Q**: ${item.question}`,
+        `**A**: ${item.userAnswer}`,
+      ];
+      if (item.hint) lines.push(`**Hint**: ${item.hint}`);
+      lines.push(`**Score**: ${item.score}`);
+      return lines.join("\n");
+    })
+    .join("\n\n");
+
+  const header = existing.trim() === "" ? `# ${parsed.topic} Review QnA\n` : "";
+  const payload = `${header}\n---\n\n## ${today} (${marker})\n\n${itemsText}\n`;
+
+  await appendText(filePath, payload);
+  return makeEnvelope({ ok: true, filePath });
+}
+
 export const reviewSchemas = {
   getQueue: getQueueInputSchema,
   recordResult: recordResultInputSchema,
   getMeta: getMetaInputSchema,
   saveMeta: saveMetaInputSchema,
+  appendQnA: appendQnAInputSchema,
 };

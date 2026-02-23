@@ -12,7 +12,7 @@ description: 프로젝트 복습 대기열을 기준으로 1문제씩 출제하�
 2. `mcp__study__review_getQueue`
 3. topic 지정 시 `mcp__study__review_getMeta`
 4. 문제별 채점 후 `mcp__study__review_recordResult`
-5. "정리" 시 `mcp__study__review_saveMeta`
+5. "정리" 시 `mcp__study__review_saveMeta` + `mcp__study__review_appendQnA`(세션 QnA 기록)
 
 점수 매핑:
 - 오답: `wrong`

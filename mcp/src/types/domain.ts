@@ -1,4 +1,4 @@
-import type { ReviewLevel } from "./contracts.js";
+import type { ReviewLevel, ReviewScore } from "./contracts.js";
 
 export type CoverageStatus = "covered" | "uncovered" | "orphan";
 
@@ -71,6 +71,15 @@ export interface CoverageMapResult {
   covered: string[];
   uncovered: string[];
   orphanRefs: string[];
+}
+
+export interface QnAItem {
+  concept: string;
+  question: string;
+  userAnswer: string;
+  hint?: string;
+  score: ReviewScore;
+  level: ReviewLevel;
 }
 
 export interface ReviewConcept {

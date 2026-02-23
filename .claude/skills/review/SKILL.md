@@ -3,7 +3,7 @@ name: review
 description: 복습 대기열을 기준으로 1문제씩 출제하고 결과를 study MCP에 기록한다.
 argument-hint: "<skill-name> [topic]"
 disable-model-invocation: true
-allowed-tools: Read, Grep, Glob, WebSearch, WebFetch, mcp__study__context_resolve, mcp__study__review_getQueue, mcp__study__review_getMeta, mcp__study__review_recordResult, mcp__study__review_saveMeta
+allowed-tools: Read, Grep, Glob, WebSearch, WebFetch, mcp__study__context_resolve, mcp__study__review_getQueue, mcp__study__review_getMeta, mcp__study__review_recordResult, mcp__study__review_saveMeta, mcp__study__review_appendQnA
 ---
 
 입력: `$ARGUMENTS` (`<skill> [topic]`)
@@ -13,7 +13,7 @@ allowed-tools: Read, Grep, Glob, WebSearch, WebFetch, mcp__study__context_resolv
 2. `review.getQueue`
 3. topic 지정 시 `review.getMeta`
 4. 문제별 채점 후 `review.recordResult`
-5. 사용자가 "정리"를 말하면 `review.saveMeta`
+5. 사용자가 "정리"를 말하면 `review.saveMeta` + `review.appendQnA`(세션 QnA 기록)
 
 점수 매핑:
 - 오답: `wrong`

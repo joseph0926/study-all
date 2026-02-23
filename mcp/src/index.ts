@@ -13,7 +13,7 @@ import {
 } from "./tools/progress.js";
 import { sessionAppendLog, sessionGetResumePoint, sessionGetSourcePaths, sessionSchemas } from "./tools/session.js";
 import { dailyFinalize, dailyGetStatus, dailyLogDone, dailyLogPlan, dailySchemas } from "./tools/daily.js";
-import { reviewGetMeta, reviewGetQueue, reviewRecordResult, reviewSaveMeta, reviewSchemas } from "./tools/review.js";
+import { reviewAppendQnA, reviewGetMeta, reviewGetQueue, reviewRecordResult, reviewSaveMeta, reviewSchemas } from "./tools/review.js";
 import { statsGetDashboard, statsGetRecommendation, statsSchemas } from "./tools/stats.js";
 import { makeEnvelope } from "./lib/envelope.js";
 
@@ -109,6 +109,12 @@ const tools: ToolDef[] = [
     description: "Persist topic review metadata.",
     schema: reviewSchemas.saveMeta,
     run: reviewSaveMeta,
+  },
+  {
+    name: "review.appendQnA",
+    description: "Append review QnA records to topic QnA file.",
+    schema: reviewSchemas.appendQnA,
+    run: reviewAppendQnA,
   },
   {
     name: "daily.getStatus",
