@@ -8,8 +8,8 @@ description: 학습 대시보드 수치(진행률/최근활동/복습대기)를 
 입력: 없음 (`$dashboard`)
 
 실행 순서:
-1. `mcp__study__stats.getDashboard` 호출
-2. 실패 시 `mcp__study__config.get`로 경로 정보를 확인하고 에러를 짧게 보고
+1. `mcp__study__stats_getDashboard` 호출
+2. 실패 시 `mcp__study__config_get`로 경로 정보를 확인하고 에러를 짧게 보고
 3. 결과를 아래 섹션으로 출력
 - 요약: 스킬 수, total review pending, streak
 - 스킬별 표: name, progressRate, coverageRate, reviewPending, lastActivity

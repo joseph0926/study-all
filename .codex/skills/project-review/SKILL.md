@@ -8,16 +8,21 @@ description: 프로젝트 복습 대기열을 기준으로 1문제씩 출제하�
 입력: `$project-review <project-path> [topic]`
 
 실행 순서:
-1. `mcp__study__context.resolve(mode=project)`
-2. `mcp__study__review.getQueue`
-3. topic 지정 시 `mcp__study__review.getMeta`
-4. 문제별 채점 후 `mcp__study__review.recordResult`
-5. "정리" 시 `mcp__study__review.saveMeta`
+1. `mcp__study__context_resolve(mode=project)`
+2. `mcp__study__review_getQueue`
+3. topic 지정 시 `mcp__study__review_getMeta`
+4. 문제별 채점 후 `mcp__study__review_recordResult`
+5. "정리" 시 `mcp__study__review_saveMeta`
 
 점수 매핑:
 - 오답: `wrong`
 - 힌트 후 통과: `retry_pass`
 - 첫 시도 통과: `first_pass`
 
-규칙:
+출제 규칙:
+- 이해도 확인 문제 외에 "이 코드의 개선점은?" 유형도 출제한다.
+- 피드백 시 현재 구현의 한계와 대안을 근거와 함께 설명한다.
+- 근거가 필요하면 공식 문서/관례를 확인한다.
+
+금지:
 - `.study/*-meta.md` 수동 파싱 계산 금지
