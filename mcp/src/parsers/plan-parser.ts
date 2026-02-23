@@ -45,6 +45,9 @@ function parseCoverageRows(lines: string[]): CoverageRow[] {
     if (cols.length < 3) {
       continue;
     }
+    if (cols[0]!.toLowerCase() === "status" && cols[1]!.toLowerCase() === "module") {
+      continue;
+    }
 
     out.push({
       status: mapStatus(cols[0]!),
@@ -123,7 +126,7 @@ export function parsePlan(markdown: string, skill: string): PlanData {
       const topicText = topicMatch[2]!.trim();
       const status = mapStatus(topicText);
       const cleanTopicName = topicText.replace(/[✅⬜🔗].*$/, "").trim();
-      const module = cleanTopicName.split(/[\s—-]/)[0] ?? cleanTopicName;
+      const module = cleanTopicName.split(/[\s—]/)[0] ?? cleanTopicName;
       currentTopic = {
         id: `topic-${topicMatch[1]}`,
         name: cleanTopicName,

@@ -1,6 +1,6 @@
 # MCP 수정 작업 진행 상황
 
-> 최종 갱신: 2026-02-23 (Unit 2~4 완료)
+> 최종 갱신: 2026-02-23 (Unit 5 완료)
 
 ## 전체 진행도
 
@@ -10,7 +10,7 @@
 | 2 | SDK 마이그레이션 | ✅ 완료 | `registerTool()` 전환, 정적 import |
 | 3 | Clock 주입 | ✅ 완료 | daily/review/session/cache 11곳 주입 |
 | 4 | config.ts 전역 상태 제거 | ✅ 완료 | overrides Map 제거, STUDY_ROOT 필수화 |
-| 5 | Tool 버그 수정 | ⬜ 대기 | Unit 1 의존 |
+| 5 | Tool 버그 수정 | ✅ 완료 | review/plan-parser/stats/error-wrapper 반영, test 36/36 |
 | 6 | 서버 등록 + E2E | ⬜ 대기 | Unit 2 의존 |
 | 7 | 커맨드 프롬프트 축소 | ⬜ 대기 | Unit 6 의존 |
 
@@ -115,13 +115,30 @@
 
 ---
 
-## Unit 5: Tool 버그 수정 — ⬜ 대기
+## Unit 5: Tool 버그 수정 ✅
 
-### 예정 항목
-- 5-A. `review.getQueue`: `lastReview`에 `nextReview` 값이 잘못 할당되는 버그
-- 5-B. `plan-parser.ts`: 테이블 헤더 행 필터링 + module 추출 하이픈 보존
-- 5-C. `stats.ts`: `for...of` → `Promise.all` 병렬화 + 중복 dashboard 호출 제거
-- 5-D. 에러 Envelope 래핑 통일
+### 변경 내용
+- [x] 5-A. `review.getQueue`: `lastReview` 오용 제거, `nextReview` 필드로 의미 명확화
+  - `ReviewQueueItem`에 `nextReview?: string` 추가
+  - meta 기반 대기열 항목에 `nextReview` 반환
+  - meta 없는 첫 복습 항목도 `nextReview=today`로 일관성 유지
+- [x] 5-B. `plan-parser.ts`: Coverage 테이블 헤더 행 필터링 + topic module 추출 시 하이픈 보존
+  - `| Status | Module | ... |` 헤더가 `coverageRows`에 들어가지 않도록 필터 추가
+  - `react-reconciler` 같은 모듈명이 `react`로 잘리지 않도록 split regex 수정
+- [x] 5-C. `stats.ts`: 스킬 집계 루프 병렬화 + 내부 중복 계산 경로 정리
+  - 스킬별 집계를 `Promise.all`로 전환
+  - `statsGetRecommendation`이 `statsGetDashboard`를 재호출하지 않고 공통 `buildDashboardData` 사용
+- [x] 5-D. `index.ts`: 도구 핸들러 에러를 envelope + `isError: true`로 통일
+  - `registerTool` 콜백에 `try/catch` 추가
+  - 실패 시 `{ isError: true, content: [...] }` 규약으로 반환
+
+### 테스트 보강
+- [x] `test/parsers/plan-parser.test.ts`: 헤더 행 필터링, 하이픈 모듈명 보존 케이스 추가
+- [x] `test/tools/review.test.ts`: `nextReview` 회귀 케이스 추가
+
+### 검증
+- [x] `/Users/younghoonkim/Library/pnpm/pnpm -C mcp typecheck` 통과
+- [x] `/Users/younghoonkim/Library/pnpm/pnpm -C mcp test` 통과 (36/36)
 
 ---
 

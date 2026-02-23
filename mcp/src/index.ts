@@ -15,6 +15,7 @@ import { sessionAppendLog, sessionGetResumePoint, sessionGetSourcePaths, session
 import { dailyFinalize, dailyGetStatus, dailyLogDone, dailyLogPlan, dailySchemas } from "./tools/daily.js";
 import { reviewGetMeta, reviewGetQueue, reviewRecordResult, reviewSaveMeta, reviewSchemas } from "./tools/review.js";
 import { statsGetDashboard, statsGetRecommendation, statsSchemas } from "./tools/stats.js";
+import { makeEnvelope } from "./lib/envelope.js";
 
 interface ToolDef {
   name: string;
@@ -147,6 +148,18 @@ const tools: ToolDef[] = [
   },
 ];
 
+function normalizeError(error: unknown): { message: string; name?: string } {
+  if (error instanceof Error) {
+    return {
+      message: error.message,
+      name: error.name,
+    };
+  }
+  return {
+    message: typeof error === "string" ? error : "Unknown error",
+  };
+}
+
 export async function startServer(): Promise<void> {
   const server = new McpServer({
     name: "study-all-mcp",
@@ -161,15 +174,31 @@ export async function startServer(): Promise<void> {
         inputSchema: tool.schema,
       },
       async (args: unknown) => {
-        const payload = await tool.run(args);
-        return {
-          content: [
-            {
-              type: "text" as const,
-              text: JSON.stringify(payload, null, 2),
-            },
-          ],
-        };
+        try {
+          const payload = await tool.run(args);
+          return {
+            content: [
+              {
+                type: "text" as const,
+                text: JSON.stringify(payload, null, 2),
+              },
+            ],
+          };
+        } catch (error) {
+          const errorEnvelope = makeEnvelope({
+            ok: false,
+            error: normalizeError(error),
+          });
+          return {
+            isError: true,
+            content: [
+              {
+                type: "text" as const,
+                text: JSON.stringify(errorEnvelope, null, 2),
+              },
+            ],
+          };
+        }
       },
     );
   }

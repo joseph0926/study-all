@@ -100,5 +100,7 @@ describe("review tools", () => {
     });
 
     expect(result.data.items.length).toBeGreaterThan(0);
+    expect(result.data.items[0]?.nextReview).toBe("2026-01-01");
+    expect(result.data.items[0]?.lastReview).toBeUndefined();
   });
 });

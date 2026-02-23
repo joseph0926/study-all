@@ -93,6 +93,7 @@ export interface ReviewQueueItem {
   topic: string;
   concept: string;
   level: ReviewLevel;
+  nextReview?: string | undefined;
   lastReview?: string | undefined;
   streak: number;
   overdueDays: number;

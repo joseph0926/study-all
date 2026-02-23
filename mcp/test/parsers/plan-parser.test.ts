@@ -35,4 +35,33 @@ describe("parsePlan", () => {
     expect(result.phases).toEqual([]);
     expect(result.coverage.total).toBe(0);
   });
+
+  it("Coverage Analysis 헤더 행은 coverageRows에 포함하지 않는다", () => {
+    const markdown = `# Demo
+
+## Coverage Analysis
+| Status | Module | Skill Target |
+|--------|--------|--------------|
+| ✅ 커버 | react | hooks.md |
+
+## Phase 1: Familiar
+### Topic 1: react ✅ 커버 — 1 files
+- [ ] Step 1: demo
+`;
+    const result = parsePlan(markdown, "react");
+    expect(result.coverageRows).toHaveLength(1);
+    expect(result.coverageRows[0]?.module).toBe("react");
+  });
+
+  it("Topic module 추출 시 하이픈이 포함된 모듈명을 보존한다", () => {
+    const markdown = `# Demo
+
+## Phase 1: Familiar
+### Topic 1: react-reconciler ✅ 커버 — 3 files
+- [ ] Step 1: demo
+`;
+    const result = parsePlan(markdown, "react");
+    const topic = result.phases[0]?.topics[0];
+    expect(topic?.module).toBe("react-reconciler");
+  });
 });

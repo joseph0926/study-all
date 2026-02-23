@@ -276,6 +276,7 @@ export async function reviewGetQueue(
           topic: path.basename(topicFile, ".md"),
           concept: "핵심 개념",
           level: "L1",
+          nextReview: today,
           streak: 0,
           overdueDays: 0,
         });
@@ -301,8 +302,8 @@ export async function reviewGetQueue(
             topic,
             concept: concept.name,
             level: concept.level,
+            nextReview: concept.nextReview,
             streak: concept.streak,
-            lastReview: concept.nextReview,
             overdueDays,
           });
         }

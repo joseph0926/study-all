@@ -106,7 +106,7 @@ study-all/
 
 컷오버 이후 이상 징후(오독, 데이터 손상 가능성, 주요 커맨드 장애) 발생 시:
 
-1. `.claude/settings.json`에서 `mcpServers.study` 비활성화
+1. 프로젝트 루트 `.mcp.json`에서 `mcpServers.study` 제거/비활성화 (또는 `claude mcp remove -s project study`)
 2. 커맨드를 프롬프트 기반 fallback 버전으로 즉시 전환
 3. 장애 원인/재현 케이스를 fixture로 추가 후 재배포
 4. 컷오버 게이트를 다시 충족할 때까지 MCP 기본 전환 중지
@@ -144,6 +144,7 @@ TO-BE:
 - **MCP SDK**: `@modelcontextprotocol/sdk`
 - **테스트**: Vitest
 - **빌드**: `tsc`로 `dist/` 생성 후 `node dist/index.js` 실행 (개발용 `tsx` 직실행은 사용하지 않음)
+- **도구 등록 API**: `registerTool` 사용 (`tool()`은 SDK v1.x에서 deprecated)
 
 ### 5.2 디렉토리 구조
 
@@ -226,12 +227,16 @@ study-all/
 
 아래의 도구별 출력 스키마 예시는 `data` 필드 내부를 설명합니다.
 
+- 도구 실행 실패 시 MCP `CallToolResult`의 `isError: true`를 사용하고, `content[].text`에는 에러 envelope JSON을 직렬화해 반환합니다.
+- 근거:
+  - MCP Spec (Tool Result): https://modelcontextprotocol.io/specification/draft/server/tools
+  - TypeScript SDK docs (tool definition / registerTool): https://raw.githubusercontent.com/modelcontextprotocol/typescript-sdk/v1.x/docs/server.md
+
 #### 설정/경로
 
 | 도구 | 입력 | 출력 | 용도 |
 |------|------|------|------|
-| `config.get` | — | `{ studyRoot, docsDir, refDir, skillsDir }` | 모든 커맨드의 경로 해결 |
-| `config.set` | `{ context, key, value }` | `{ ok }` | 워크스페이스별 경로 설정 |
+| `config.get` | — | `{ studyRoot, docsDir, refDir, skillsDir, studyLogsDir }` | 모든 커맨드의 경로 해결 |
 
 #### 진행 상태 (`progress.*`)
 
@@ -333,7 +338,7 @@ study-all/
       "topic": "React-Core-API",
       "concept": "$$typeof XSS 방어 원리",
       "level": "L2",
-      "lastReview": "2026-02-16",
+      "nextReview": "2026-02-16",
       "streak": 1,
       "overdueDays": 0
     }
@@ -839,7 +844,7 @@ it("review.getQueue는 고정 날짜 기준으로 계산", async () => {
 ### Claude Code 설정
 
 ```json
-// ~/.claude/settings.json 또는 프로젝트 .claude/settings.json
+// 프로젝트 루트 .mcp.json (project scope 권장)
 {
   "mcpServers": {
     "study": {
@@ -853,11 +858,17 @@ it("review.getQueue는 고정 날짜 기준으로 계산", async () => {
 }
 ```
 
+또는 CLI로 동일 설정 등록:
+
+```bash
+claude mcp add --transport stdio --scope project --env STUDY_ROOT=/Users/younghoonkim/dev/personal/@skills/study-all study -- node /Users/younghoonkim/dev/personal/@skills/study-all/mcp/dist/index.js
+```
+
 ### 빌드/실행 규약
 
-- 빌드: `pnpm -C mcp exec tsc -p tsconfig.json`
+- 빌드: `/Users/younghoonkim/Library/pnpm/pnpm -C mcp build`
 - 실행: `node mcp/dist/index.js`
-- 개발 중 타입체크: `pnpm -C mcp exec tsc --noEmit`
+- 개발 중 타입체크: `/Users/younghoonkim/Library/pnpm/pnpm -C mcp typecheck`
 
 ### 환경 변수
 

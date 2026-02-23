@@ -56,51 +56,57 @@ async function getLastActivityDate(skillDir: string): Promise<string | undefined
   return latest;
 }
 
-export async function statsGetDashboard(
-  input: z.input<typeof dashboardInputSchema>,
-): Promise<Envelope<DashboardData>> {
-  const parsed = dashboardInputSchema.parse(input);
-  const context = await resolveContextData(parsed.context as ContextInput);
-
+async function buildDashboardData(contextInput: ContextInput): Promise<DashboardData> {
+  const context = await resolveContextData(contextInput);
   const skillDirs = await discoverSkillDirs(context.docsDir);
-  const skills: DashboardSkill[] = [];
-  const recentSessions: Array<{ date: string; skill: string; topic: string }> = [];
 
-  for (const skillDir of skillDirs) {
-    const skill = path.basename(skillDir);
-    const planText = await readText(path.join(skillDir, "plan.md"));
-    const plan = parsePlan(planText, skill);
-    const topics = plan.phases.flatMap((phase) => phase.topics);
-    const completedTopics = topics.filter((topic) => topic.status === "covered").length;
+  const aggregated = await Promise.all(
+    skillDirs.map(async (skillDir) => {
+      const skill = path.basename(skillDir);
+      const [planText, queue, lastActivity] = await Promise.all([
+        readText(path.join(skillDir, "plan.md")),
+        reviewGetQueue({
+          context: {
+            mode: "skill",
+            skill,
+          },
+          skill,
+        }),
+        getLastActivityDate(skillDir),
+      ]);
 
-    const queue = await reviewGetQueue({
-      context: {
-        mode: "skill",
-        skill,
-      },
-      skill,
-    });
+      const plan = parsePlan(planText, skill);
+      const topics = plan.phases.flatMap((phase) => phase.topics);
+      const completedTopics = topics.filter((topic) => topic.status === "covered").length;
 
-    const lastActivity = await getLastActivityDate(skillDir);
-    if (lastActivity) {
-      recentSessions.push({
-        date: lastActivity,
-        skill,
-        topic: topics[0]?.name ?? "",
-      });
-    }
+      const skillData: DashboardSkill = {
+        name: skill,
+        totalTopics: topics.length,
+        completedTopics,
+        progressRate: topics.length > 0 ? completedTopics / topics.length : 0,
+        coverageRate: plan.coverage.rate,
+        lastActivity,
+        reviewPending: queue.data.items.length,
+        graduated: queue.data.graduated,
+      };
 
-    skills.push({
-      name: skill,
-      totalTopics: topics.length,
-      completedTopics,
-      progressRate: topics.length > 0 ? completedTopics / topics.length : 0,
-      coverageRate: plan.coverage.rate,
-      lastActivity,
-      reviewPending: queue.data.items.length,
-      graduated: queue.data.graduated,
-    });
-  }
+      const recentSession = lastActivity
+        ? {
+            date: lastActivity,
+            skill,
+            topic: topics[0]?.name ?? "",
+          }
+        : undefined;
+
+      return { skillData, recentSession };
+    }),
+  );
+
+  const skills = aggregated.map((entry) => entry.skillData);
+  const recentSessions = aggregated
+    .flatMap((entry) => (entry.recentSession ? [entry.recentSession] : []))
+    .sort((a, b) => b.date.localeCompare(a.date))
+    .slice(0, 10);
 
   const dailyStatus = await dailyGetStatus({
     context: {
@@ -111,22 +117,30 @@ export async function statsGetDashboard(
 
   const totalReviewPending = skills.reduce((acc, cur) => acc + cur.reviewPending, 0);
 
-  return makeEnvelope({
+  return {
     skills,
-    recentSessions: recentSessions.sort((a, b) => b.date.localeCompare(a.date)).slice(0, 10),
+    recentSessions,
     streak: dailyStatus.data.streak,
     totalReviewPending,
-  });
+  };
+}
+
+export async function statsGetDashboard(
+  input: z.input<typeof dashboardInputSchema>,
+): Promise<Envelope<DashboardData>> {
+  const parsed = dashboardInputSchema.parse(input);
+  const data = await buildDashboardData(parsed.context as ContextInput);
+  return makeEnvelope(data);
 }
 
 export async function statsGetRecommendation(
   input: z.input<typeof recommendationInputSchema>,
 ): Promise<Envelope<{ items: RecommendationItem[] }>> {
   const parsed = recommendationInputSchema.parse(input);
-  const dashboard = await statsGetDashboard({ context: parsed.context });
+  const dashboard = await buildDashboardData(parsed.context as ContextInput);
 
   const items: RecommendationItem[] = [];
-  for (const skill of dashboard.data.skills) {
+  for (const skill of dashboard.skills) {
     if (skill.reviewPending > 0) {
       items.push({
         type: "review",
