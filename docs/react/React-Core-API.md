@@ -879,3 +879,36 @@ A: 맞다. 인덱스 0~9는 동일, 10~35에서 36진수가 1자리 짧음, 36~9
 - **Reconciliation (Topic 6)**: ReactChildFiber.js에서의 children reconciliation — Children.map과 다른 경로
 
 ---
+
+
+---
+
+## 2026-02-24 (via /learn)
+
+## Session: 2026-02-24 — Step 1.3: Lazy/Thenable children 처리
+
+### 학습 내용
+
+**Lazy children 경로** (`ReactChildren.js:186-195`):
+- `$$typeof === REACT_LAZY_TYPE`이면 `_init(payload)`를 즉시 호출하고 결과로 재귀
+- 키 경로(`nameSoFar`)는 변경 없이 전달 — lazy는 키 트리에서 한 겹을 차지하지 않는 "투명한 래퍼"
+
+**lazyInitializer 상태 머신** (`ReactLazy.js:70-219`):
+- 4단계: Uninitialized(-1) → Pending(0) → Resolved(1) / Rejected(2)
+- `_result` 필드가 상태에 따라 다른 타입을 저장하는 union 패턴 (팩토리 함수 → thenable → 모듈 객체 → 에러)
+- ctor = `() => import('./MyComponent')` — `React.lazy()`에 전달하는 팩토리 함수
+
+**Thenable children 경로** (`ReactChildren.js:320-328`):
+- `.then`이 있는 object → `resolveThenable()` 호출 후 결과로 재귀
+
+**resolveThenable() 3단계** (`ReactChildren.js:95-152`):
+1. 이미 settled면 즉시 반환/throw
+2. pending이면 `.then()` 등록 + status 프로토콜 주입
+3. 등록 직후 status 재확인 (동기 resolve 가능성)
+4. 여전히 pending이면 `throw thenable` → Suspense 위임
+
+### Q&A 핵심
+- "동기적 해결"은 모순이 아님 — "동기적으로 해결 가능한지 시도, 불가능하면 throw로 Suspense 위임"
+- "투명한 래퍼" = 배열은 키 경로에 `:` 구분자를 추가하지만, lazy/thenable은 nameSoFar 그대로 전달
+- Element/Portal은 리프 노드(invokeCallback=true), Lazy는 벗겨서 재귀하는 래퍼
+- `_result` 하나의 필드가 상태별로 다른 타입을 저장하는 메모리 효율적 union 패턴
