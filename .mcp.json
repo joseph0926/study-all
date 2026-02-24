@@ -1,13 +1,8 @@
 {
   "mcpServers": {
     "study": {
-      "command": "node",
-      "args": [
-        "/Users/younghoonkim/dev/personal/@skills/study-all/mcp/dist/src/index.js"
-      ],
-      "env": {
-        "STUDY_ROOT": "/Users/younghoonkim/dev/personal/@skills/study-all"
-      }
+      "command": "bash",
+      "args": ["scripts/start-mcp.sh"]
     }
   }
 }

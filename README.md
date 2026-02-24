@@ -9,7 +9,7 @@ Claude Code/Codex 기반 학습 저장소입니다.
 ## 1) 빠른 시작
 
 ```bash
-cd /Users/younghoonkim/dev/personal/@skills/study-all
+cd <this-repo-root>  # clone한 경로로 이동
 
 # 홈 디렉토리 동기화 (권장)
 bash scripts/sync-claude-home.sh --dry-run
@@ -21,7 +21,7 @@ bash scripts/sync-codex-home.sh --apply
 bash scripts/setup-githooks.sh
 ```
 
-실행 가이드는 `/Users/younghoonkim/dev/personal/@skills/study-all/docs/guide/Quickstart.md` 참고.
+실행 가이드는 `docs/guide/Quickstart.md` 참고.
 
 ## 2) 명령 매핑 (`/` ↔ `$`)
 
@@ -38,9 +38,9 @@ bash scripts/setup-githooks.sh
 
 ## 3) 사용자 가이드
 
-- Quickstart: `/Users/younghoonkim/dev/personal/@skills/study-all/docs/guide/Quickstart.md`
-- Daily Workflow: `/Users/younghoonkim/dev/personal/@skills/study-all/docs/guide/Daily-Workflow.md`
-- Troubleshooting: `/Users/younghoonkim/dev/personal/@skills/study-all/docs/guide/Troubleshooting.md`
+- Quickstart: `docs/guide/Quickstart.md`
+- Daily Workflow: `docs/guide/Daily-Workflow.md`
+- Troubleshooting: `docs/guide/Troubleshooting.md`
 
 ## 4) 홈 디렉토리 동기화 자동화
 
