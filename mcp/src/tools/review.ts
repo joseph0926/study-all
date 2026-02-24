@@ -14,7 +14,7 @@ const contextSchema = z.object({
   skill: z.string().optional(),
   topic: z.string().optional(),
   projectPath: z.string().optional(),
-  docsDir: z.string().optional(),
+  notesDir: z.string().optional(),
   studyDir: z.string().optional(),
 });
 
@@ -146,7 +146,7 @@ function resolveReviewDir(context: Awaited<ReturnType<typeof resolveContextData>
   if (!resolvedSkill) {
     throw new Error("skill is required in skill mode");
   }
-  return path.join(context.docsDir, resolvedSkill);
+  return path.join(context.notesDir, resolvedSkill);
 }
 
 function topicFromMetaFile(file: string): string {
@@ -264,13 +264,13 @@ export async function reviewGetQueue(
     dirs.push({ skill: path.basename(context.projectPath ?? "project"), dir: context.studyDir! });
   } else if (parsed.skill ?? context.skill) {
     const skill = parsed.skill ?? context.skill!;
-    dirs.push({ skill, dir: path.join(context.docsDir, skill) });
+    dirs.push({ skill, dir: path.join(context.notesDir, skill) });
   } else {
-    const skillDirs = await listFiles(context.docsDir, { maxDepth: 1 });
+    const skillDirs = await listFiles(context.notesDir, { maxDepth: 1 });
     const names = [...new Set(skillDirs.map((file) => path.basename(path.dirname(file))))];
     for (const name of names) {
-      if (name && name !== "docs") {
-        dirs.push({ skill: name, dir: path.join(context.docsDir, name) });
+      if (name) {
+        dirs.push({ skill: name, dir: path.join(context.notesDir, name) });
       }
     }
   }

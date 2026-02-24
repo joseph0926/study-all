@@ -18,7 +18,7 @@ const contextSchema = z.object({
   skill: z.string().optional(),
   topic: z.string().optional(),
   projectPath: z.string().optional(),
-  docsDir: z.string().optional(),
+  notesDir: z.string().optional(),
   studyDir: z.string().optional(),
 });
 
@@ -58,7 +58,7 @@ function resolvePlanPath(context: Awaited<ReturnType<typeof resolveContextData>>
     return path.join(context.studyDir!, "plan.md");
   }
   const skill = (skillOverride ?? context.skill)!;
-  return path.join(context.docsDir, skill, "plan.md");
+  return path.join(context.notesDir, skill, "plan.md");
 }
 
 function flattenTopics(plan: PlanData): PlanTopic[] {
@@ -236,8 +236,8 @@ export async function progressGetCoverageMap(
 
   const refsDir =
     parsed.refsDir ??
-    (context.mode === "skill" && context.skillDocsDir
-      ? context.skillDocsDir
+    (context.mode === "skill" && context.skillNotesDir
+      ? context.skillNotesDir
       : path.join(context.studyDir ?? context.projectPath ?? sourceDir, "references"));
 
   const { value: moduleMap, cacheMeta } = await getCachedModuleMap(sourceDir);

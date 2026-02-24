@@ -15,7 +15,7 @@ const contextSchema = z.object({
   skill: z.string().optional(),
   topic: z.string().optional(),
   projectPath: z.string().optional(),
-  docsDir: z.string().optional(),
+  notesDir: z.string().optional(),
   studyDir: z.string().optional(),
 });
 
@@ -27,12 +27,12 @@ const recommendationInputSchema = z.object({
   context: contextSchema,
 });
 
-async function discoverSkillDirs(docsDir: string): Promise<string[]> {
-  const files = await listFiles(docsDir, { extension: ".md", maxDepth: 2 });
+async function discoverSkillDirs(notesDir: string): Promise<string[]> {
+  const files = await listFiles(notesDir, { extension: ".md", maxDepth: 2 });
   const dirs = new Set<string>();
   for (const file of files) {
     const dir = path.dirname(file);
-    if (dir !== docsDir) {
+    if (dir !== notesDir) {
       dirs.add(dir);
     }
   }
@@ -59,7 +59,7 @@ async function getLastActivityDate(skillDir: string): Promise<string | undefined
 
 async function buildDashboardData(contextInput: ContextInput): Promise<DashboardData> {
   const context = await resolveContextData(contextInput);
-  const skillDirs = await discoverSkillDirs(context.docsDir);
+  const skillDirs = await discoverSkillDirs(context.notesDir);
 
   const aggregated = await Promise.all(
     skillDirs.map(async (skillDir) => {

@@ -3,7 +3,7 @@ name: study
 description: 소스코드 기반 딥 학습 — 토픽 제안 → 선택 → 설명+Q&A → 대화 기록
 argument-hint: "<주제>"
 disable-model-invocation: true
-allowed-tools: Read, Grep, Glob, Bash, mcp__study__context_resolve, mcp__study__config_get, mcp__study__session_getResumePoint, mcp__study__session_getSourcePaths, mcp__study__session_appendLog, mcp__study__review_saveMeta
+allowed-tools: Read, Grep, Glob, Bash, mcp__study__context_resolve, mcp__study__config_get, mcp__study__session_getResumePoint, mcp__study__session_getSourcePaths, mcp__study__session_getSourceDigest, mcp__study__session_appendLog, mcp__study__review_saveMeta
 ---
 
 입력: `$ARGUMENTS` (예: `react`, `nextjs`)
@@ -11,7 +11,7 @@ allowed-tools: Read, Grep, Glob, Bash, mcp__study__context_resolve, mcp__study__
 실행 순서:
 
 1. `context.resolve(mode=skill, skill=$ARGUMENTS)`로 컨텍스트 확인
-2. `ref/` 소스코드 탐색 + `study/<주제>/` 기존 파일 확인 (이미 학습한 토픽 파악)
+2. `session.getSourceDigest(context, skill)`로 소스 트리 요약 + 기존 토픽 목록을 캐시에서 조회 (캐시 미스 시 자동 빌드)
 3. **소스코드를 봐야 차이가 나는 토픽 5~8개** 제안
 4. 사용자가 선택
 5. 서브토픽 → 마이크로서브토픽 단위로 소스코드 기반 설명 + Q&A

@@ -4,7 +4,7 @@ import type { ResolvedContext } from "./types/contracts.js";
 
 export interface AppConfig {
   studyRoot: string;
-  docsDir: string;
+  notesDir: string;
   refDir: string;
   skillsDir: string;
   studyLogsDir: string;
@@ -25,7 +25,11 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): AppConfig {
   const studyRoot = expandHome(rawRoot);
   return {
     studyRoot,
-    docsDir: env.DOCS_DIR ? path.resolve(studyRoot, env.DOCS_DIR) : path.join(studyRoot, "study"),
+    notesDir: env.NOTES_DIR
+      ? path.resolve(studyRoot, env.NOTES_DIR)
+      : env.DOCS_DIR
+        ? path.resolve(studyRoot, env.DOCS_DIR)
+        : path.join(studyRoot, "study"),
     refDir: env.REF_DIR ? path.resolve(studyRoot, env.REF_DIR) : path.join(studyRoot, "ref"),
     skillsDir: expandHome(env.SKILLS_DIR ?? "~/.claude/skills"),
     studyLogsDir: expandHome(env.STUDY_LOGS_DIR ?? "~/.claude/study-logs"),
@@ -35,12 +39,12 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): AppConfig {
 export function withResolvedPaths(context: ResolvedContext): ResolvedContext {
   return {
     ...context,
-    docsDir: path.resolve(context.docsDir),
+    notesDir: path.resolve(context.notesDir),
     refDir: path.resolve(context.refDir),
     skillsDir: path.resolve(context.skillsDir),
     studyRoot: path.resolve(context.studyRoot),
     studyLogsDir: path.resolve(context.studyLogsDir),
-    skillDocsDir: context.skillDocsDir ? path.resolve(context.skillDocsDir) : undefined,
+    skillNotesDir: context.skillNotesDir ? path.resolve(context.skillNotesDir) : undefined,
     studyDir: context.studyDir ? path.resolve(context.studyDir) : undefined,
     sourceDir: context.sourceDir ? path.resolve(context.sourceDir) : undefined,
     projectPath: context.projectPath ? path.resolve(context.projectPath) : undefined,

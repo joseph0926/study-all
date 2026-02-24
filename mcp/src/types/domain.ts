@@ -133,6 +133,19 @@ export interface DashboardData {
   totalReviewPending: number;
 }
 
+export interface SourceDigestEntry {
+  path: string;
+  type: "file" | "dir";
+  size?: number;
+}
+
+export interface SourceDigest {
+  sourceDir: string;
+  tree: SourceDigestEntry[];
+  overview: string;
+  existingTopics: string[];
+}
+
 export interface RecommendationItem {
   type: "review" | "continue" | "new-topic";
   skill: string;

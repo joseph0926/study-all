@@ -5,11 +5,11 @@ import type { Envelope } from "../types/contracts.js";
 
 const configGetInputSchema = z.object({}).optional();
 
-export async function configGet(): Promise<Envelope<{ studyRoot: string; docsDir: string; refDir: string; skillsDir: string; studyLogsDir: string }>> {
+export async function configGet(): Promise<Envelope<{ studyRoot: string; notesDir: string; refDir: string; skillsDir: string; studyLogsDir: string }>> {
   const cfg = loadConfig();
   return makeEnvelope({
     studyRoot: cfg.studyRoot,
-    docsDir: cfg.docsDir,
+    notesDir: cfg.notesDir,
     refDir: cfg.refDir,
     skillsDir: cfg.skillsDir,
     studyLogsDir: cfg.studyLogsDir,

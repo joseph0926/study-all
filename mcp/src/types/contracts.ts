@@ -22,7 +22,7 @@ export const contextInputSchema = z.object({
   skill: z.string().min(1).optional(),
   topic: z.string().min(1).optional(),
   projectPath: z.string().min(1).optional(),
-  docsDir: z.string().min(1).optional(),
+  notesDir: z.string().min(1).optional(),
   studyDir: z.string().min(1).optional(),
 });
 
@@ -31,14 +31,14 @@ export type ContextInput = z.infer<typeof contextInputSchema>;
 export interface ResolvedContext {
   mode: ContextMode;
   studyRoot: string;
-  docsDir: string;
+  notesDir: string;
   refDir: string;
   skillsDir: string;
   studyLogsDir: string;
   skill?: string | undefined;
   topic?: string | undefined;
   projectPath?: string | undefined;
-  skillDocsDir?: string | undefined;
+  skillNotesDir?: string | undefined;
   studyDir?: string | undefined;
   sourceDir?: string | undefined;
 }

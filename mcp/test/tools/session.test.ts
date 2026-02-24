@@ -2,7 +2,7 @@ import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import os from "node:os";
 import path from "node:path";
 import { describe, expect, it } from "vitest";
-import { sessionAppendLog, sessionGetResumePoint, sessionGetSourcePaths } from "../../src/tools/session.js";
+import { sessionAppendLog, sessionGetResumePoint, sessionGetSourceDigest, sessionGetSourcePaths } from "../../src/tools/session.js";
 
 const ROOT = path.resolve(new URL("../../../", import.meta.url).pathname);
 
@@ -81,5 +81,32 @@ describe("session tools", () => {
 
     expect(result.data.sourceDir.length).toBeGreaterThan(0);
     expect(Array.isArray(result.data.files)).toBe(true);
+  });
+
+  it("session.getSourceDigest returns tree, overview, existingTopics", async () => {
+    process.env.STUDY_ROOT = ROOT;
+
+    const result = await sessionGetSourceDigest({
+      context: { mode: "skill", skill: "react" },
+    });
+
+    expect(result.data.sourceDir.length).toBeGreaterThan(0);
+    expect(Array.isArray(result.data.tree)).toBe(true);
+    expect(typeof result.data.overview).toBe("string");
+    expect(Array.isArray(result.data.existingTopics)).toBe(true);
+  });
+
+  it("session.getSourceDigest returns cache hit on second call", async () => {
+    process.env.STUDY_ROOT = ROOT;
+
+    await sessionGetSourceDigest({
+      context: { mode: "skill", skill: "react" },
+    });
+
+    const result2 = await sessionGetSourceDigest({
+      context: { mode: "skill", skill: "react" },
+    });
+
+    expect(result2.cache?.hit).toBe(true);
   });
 });

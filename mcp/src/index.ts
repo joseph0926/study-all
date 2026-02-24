@@ -11,7 +11,7 @@ import {
   progressSchemas,
   progressUpdateCheckbox,
 } from "./tools/progress.js";
-import { sessionAppendLog, sessionGetResumePoint, sessionGetSourcePaths, sessionSchemas } from "./tools/session.js";
+import { sessionAppendLog, sessionGetResumePoint, sessionGetSourceDigest, sessionGetSourcePaths, sessionSchemas } from "./tools/session.js";
 import { dailyFinalize, dailyGetStatus, dailyLogDone, dailyLogPlan, dailySchemas } from "./tools/daily.js";
 import { reviewAppendQnA, reviewGetMeta, reviewGetQueue, reviewRecordResult, reviewSaveMeta, reviewSchemas } from "./tools/review.js";
 import { statsGetDashboard, statsGetRecommendation, statsSchemas } from "./tools/stats.js";
@@ -85,6 +85,12 @@ const tools: ToolDef[] = [
     description: "Discover source paths for current context.",
     schema: sessionSchemas.getSourcePaths,
     run: sessionGetSourcePaths,
+  },
+  {
+    name: "session.getSourceDigest",
+    description: "Get cached source tree digest with overview and existing topics.",
+    schema: sessionSchemas.getSourceDigest,
+    run: sessionGetSourceDigest,
   },
   {
     name: "review.getQueue",

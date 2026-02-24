@@ -13,7 +13,7 @@ const contextSchema = z.object({
   skill: z.string().optional(),
   topic: z.string().optional(),
   projectPath: z.string().optional(),
-  docsDir: z.string().optional(),
+  notesDir: z.string().optional(),
   studyDir: z.string().optional(),
 });
 

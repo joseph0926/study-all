@@ -97,10 +97,10 @@ export async function resolveContextData(input: ContextInput): Promise<ResolvedC
   }
 
   const skill = parsed.skill ? normalizeSkill(parsed.skill) : undefined;
-  const docsDir = parsed.docsDir ? path.resolve(cfg.studyRoot, parsed.docsDir) : cfg.docsDir;
+  const notesDir = parsed.notesDir ? path.resolve(cfg.studyRoot, parsed.notesDir) : cfg.notesDir;
   const refDir = cfg.refDir;
 
-  const skillDocsDir = skill ? path.join(docsDir, skill) : undefined;
+  const skillNotesDir = skill ? path.join(notesDir, skill) : undefined;
   const projectPath = parsed.projectPath ? path.resolve(parsed.projectPath) : undefined;
   const studyDir =
     parsed.mode === "project"
@@ -114,14 +114,14 @@ export async function resolveContextData(input: ContextInput): Promise<ResolvedC
   return withResolvedPaths({
     mode: parsed.mode,
     studyRoot: cfg.studyRoot,
-    docsDir,
+    notesDir,
     refDir,
     skillsDir: cfg.skillsDir,
     studyLogsDir: cfg.studyLogsDir,
     skill,
     topic: parsed.topic,
     projectPath,
-    skillDocsDir,
+    skillNotesDir,
     studyDir,
     sourceDir,
   });

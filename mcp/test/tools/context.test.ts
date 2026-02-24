@@ -12,7 +12,7 @@ function makeTmpDir(): string {
 
 function makeRefDir(base: string, name: string): void {
   mkdirSync(path.join(base, "ref", name), { recursive: true });
-  mkdirSync(path.join(base, "docs"), { recursive: true });
+  mkdirSync(path.join(base, "study"), { recursive: true });
 }
 
 describe("detectSourceDir dynamic scanning", () => {
