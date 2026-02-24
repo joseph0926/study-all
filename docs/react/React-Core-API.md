@@ -18,16 +18,32 @@
 
 ---
 
+## 통합 학습 로드맵
+
+- [x] Step 1: ReactElement & $$typeof — JSX 엘리먼트 구조, Symbol 보안 (2026-02-11)
+- [x] Step 2: SharedInternals & Dispatcher 패턴 — H/A/T/S/G 슬롯, 의존성 역전 (2026-02-11)
+- [x] Step 3: Hooks API 선언부 — resolveDispatcher 위임, 22개 Hook (2026-02-11)
+- [x] Step 4: Client vs Server API 분리 — Server Hook 5개 제한, TaintRegistry (2026-02-11)
+- [x] Step 5: HOC 유틸리티 — memo/forwardRef/lazy, $$typeof 2단계, 분기 최적화 (2026-02-11)
+- [x] Step 6: cache & Transitions — CacheNode Trie, T/S/G 슬롯, useTransition/useOptimistic/useActionState (2026-02-11 ⚠️ 큰 그림만, 심층 별도)
+- Step 7: ReactChildren — Children 순회 알고리즘
+  - [x] 7.1: mapIntoArray 재귀 순회 — DFS 평탄화 (2026-02-22)
+  - [x] 7.2: Key 생성과 이스케이프 — $접두사, 36진수, escape 규칙 (2026-02-22)
+  - [x] 7.3: Lazy/Thenable children 처리 — 동기적 해결, throw Suspense (2026-02-24)
+- [ ] Step 8: ReactContext — createContext, Provider/Consumer 순환 참조, dual renderer
+- Step 9: ReactBaseClasses — 클래스 컴포넌트 기반
+  - [ ] 9.1: Component/PureComponent — updater 주입 패턴, prototype 체인
+  - [ ] 9.2: Deprecated API 가드 — Object.defineProperty getter 경고
+- Step 10: ReactAct — 테스트 인프라
+  - [ ] 10.1: act() scope와 actQueue — 렌더러 작업 큐
+  - [ ] 10.2: flushActQueue — microtask/macrotask 재귀 플러시
+- Step 11: Taint API & 유틸리티
+  - [ ] 11.1: taintUniqueValue/taintObjectReference — RSC 직렬화 보안
+  - [ ] 11.2: createRef, CompilerRuntime, OwnerStack — 소형 유틸리티
+
+---
+
 ## 2026-02-11
-
-### 학습 로드맵
-
-- [x] Step 1: ReactElement & $$typeof
-- [x] Step 2: SharedInternals & Dispatcher 패턴
-- [x] Step 3: Hooks API 선언부
-- [x] Step 4: Client vs Server API 분리
-- [x] Step 5: HOC 유틸리티
-- [x] Step 6: cache & Transitions
 
 ### 학습 요약
 
@@ -399,14 +415,6 @@ Shared Component의 동작 원리(RSC 프로토콜, 직렬화 경계 등)는 Ser
 
 ## 2026-02-11 (재개 — Step 5부터)
 
-### 학습 로드맵
-- [x] Step 1: ReactElement & $$typeof
-- [x] Step 2: SharedInternals & Dispatcher 패턴
-- [x] Step 3: Hooks API 선언부
-- [x] Step 4: Client vs Server API 분리
-- [x] Step 5: HOC 유틸리티
-- [ ] Step 6: cache & Transitions
-
 ### 학습 요약
 memo, forwardRef, lazy는 컴포넌트가 아니라 "타입 래퍼 객체"를 반환한다. 각 래퍼가 고유한 $$typeof(REACT_MEMO_TYPE, REACT_FORWARD_REF_TYPE, REACT_LAZY_TYPE)를 가지며, Reconciler가 이를 보고 특별한 처리 분기를 실행한다.
 $$typeof는 2단계로 존재: Element 레벨(REACT_ELEMENT_TYPE, 보안용)과 Type 레벨(REACT_MEMO_TYPE 등, Reconciler 분기용).
@@ -556,14 +564,6 @@ A: 처음에 "함수에 $$typeof 프로퍼티를 붙이고 함수 분기에서 �
 
 > **⚠️ 심층 학습 필요**: Step 6(cache & Transitions)은 큰 그림 + 비유 수준까지만 진행. CacheNode Trie 탐색 세부, S/G 슬롯의 렌더러 측 구현, useActionState/useOptimistic의 Reconciler 처리 경로, ViewTransition CSS 연동 등은 별도 심층 세션 필요.
 
-### 학습 로드맵
-- [x] Step 1: ReactElement & $$typeof
-- [x] Step 2: SharedInternals & Dispatcher 패턴
-- [x] Step 3: Hooks API 선언부
-- [x] Step 4: Client vs Server API 분리
-- [x] Step 5: HOC 유틸리티
-- [x] Step 6: cache & Transitions (큰 그림 + 비유 — 심층 학습 필요 ⚠️)
-
 ### 학습 요약
 `cache()`는 서버에서 CacheNode Trie(인자 조합별 WeakMap/Map 분기)로 per-request 메모이제이션을 구현하고, 클라이언트에서는 noopCache(래퍼만 반환, 캐싱 없음)로 Shared Component 호환성을 유지한다. A 슬롯(AsyncDispatcher)의 `getCacheForType()`을 통해 렌더러가 관리하는 요청별 캐시 저장소에 접근한다.
 `startTransition()`은 T 슬롯에 Transition 객체를 설정하여 "이 안의 setState는 low-priority"라는 신호를 만들고, scope 실행 후 S 슬롯 콜백으로 렌더러에 통보하며, finally에서 이전 T 값을 복원하는 save/restore 패턴이다.
@@ -670,23 +670,6 @@ React 패키지 ─┤
 ---
 
 ## 2026-02-22
-
-### 학습 로드맵
-- Step 1: ReactChildren — Children 순회 알고리즘
-  - [x] 1.1: mapIntoArray 재귀 순회 — 중첩 배열/iterable children을 평탄화하는 핵심 알고리즘
-  - [x] 1.2: Key 생성과 이스케이프 — children의 고유 키를 자동으로 결정하는 규칙
-  - [ ] 1.3: Lazy/Thenable children 처리 — children이 Promise/lazy일 때의 동기적 해결
-- Step 2: ReactContext — Context 생성 구조
-  - [ ] 2.1: createContext 내부 — Provider === context 순환 참조와 dual renderer(_currentValue/_currentValue2)
-- Step 3: ReactBaseClasses — 클래스 컴포넌트 기반
-  - [ ] 3.1: Component/PureComponent — updater 주입 패턴과 prototype 체인
-  - [ ] 3.2: Deprecated API 가드 — Object.defineProperty getter를 통한 경고
-- Step 4: ReactAct — 테스트 인프라
-  - [ ] 4.1: act() scope와 actQueue — 렌더러 작업을 큐로 모으는 메커니즘
-  - [ ] 4.2: flushActQueue — microtask/macrotask 재귀 플러시와 Suspense 처리
-- Step 5: Taint API & 유틸리티
-  - [ ] 5.1: taintUniqueValue/taintObjectReference — RSC 직렬화 보안과 FinalizationRegistry
-  - [ ] 5.2: createRef, CompilerRuntime, OwnerStack — 소형 유틸리티 일괄 학습
 
 ### 학습 요약
 `React.Children.map()`의 핵심인 `mapIntoArray()`는 DFS(깊이 우선) 재귀로 중첩된 children 구조를 1차원 배열로 평탄화한다. 리프 노드(null, string, number, Element, Portal)에는 콜백을 적용하고, 컨테이너(배열, iterable)는 안으로 들어가서 재귀한다. 콜백 결과가 배열이면 `c => c` 항등 콜백으로 다시 재귀 평탄화하여 항상 1차원 배열을 보장한다. Lazy children은 즉시 `init(payload)`로 해결하고, Thenable은 `resolveThenable()`으로 동기적 해결을 시도한다.

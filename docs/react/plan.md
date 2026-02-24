@@ -120,13 +120,25 @@ useState/useEffect를 시작점으로 삼아 React 렌더링의 핵심 메커니
 | `src/ReactLazy.js`            | lazy()                             |
 | `src/ReactStartTransition.js` | startTransition                    |
 | `jsx/ReactJSXElement.js`      | JSX 엘리먼트 생성                  |
+| `src/ReactForwardRef.js`      | forwardRef()                       |
+| `src/ReactBaseClasses.js`     | Component, PureComponent           |
+| `src/ReactCacheImpl.js`       | cache() 서버 구현                  |
+| `src/ReactAct.js`             | act() 테스트 유틸리티              |
+| `src/ReactTaint.js`           | Taint API (RSC 보안)               |
 
-**Study Points** (소스 구조에서 도출):
+**Study Steps** (학습 진행):
 
-- Entrypoint exports: Component, Fragment, Profiler, StrictMode, Suspense, Activity, createElement, cloneElement, isValidElement, createContext, forwardRef, lazy, memo, use, cache, cacheSignal, startTransition, useId, useState, useReducer, useEffect, useLayoutEffect, useInsertionEffect, useCallback, useMemo, useRef, useContext, useImperativeHandle, useDebugValue, useTransition, useDeferredValue, useActionState, useOptimistic
-- Hook dispatcher 패턴: `ReactSharedInternals.H`를 통한 간접 호출
-- Client vs Server API surface 차이 (ReactClient.js vs ReactServer.js)
-- 의존 모듈: react-shared (ReactSymbols, ReactTypes)
+- [x] ReactElement & $$typeof — JSX, createElement, Symbol 보안
+- [x] SharedInternals & Dispatcher 패턴 — H/A/T/S/G 슬롯, 의존성 역전
+- [x] Hooks API 선언부 — resolveDispatcher, 22개 Hook 위임 패턴
+- [x] Client vs Server API 분리 — Server Hook 5개, TaintRegistry
+- [x] HOC 유틸리티 — memo/forwardRef/lazy, $$typeof 2단계
+- [x] cache & Transitions — CacheNode Trie, startTransition, useTransition (⚠️ 심층 별도)
+- [x] ReactChildren — mapIntoArray DFS, Key 이스케이프, Lazy/Thenable
+- [ ] ReactContext — createContext, Provider/Consumer, dual renderer
+- [ ] ReactBaseClasses — Component/PureComponent, updater 주입, Deprecated 가드
+- [ ] ReactAct — act() scope, actQueue, flushActQueue
+- [ ] Taint API & 유틸리티 — taintUniqueValue, createRef, CompilerRuntime, OwnerStack
 
 **Docs** (`ref/react.dev/src/content/`):
 
