@@ -21,3 +21,4 @@ allowed-tools: Read, Grep, Glob, WebSearch, WebFetch, mcp__study__context_resolv
 규칙:
 - 재개점 계산과 체크박스 갱신은 반드시 MCP로 수행한다.
 - 파일 직접 파싱으로 상태 계산하지 않는다.
+- `session.appendLog` 기록은 Q&A 원문을 그대로 남긴다 (오타만 수정). 요약/축약 금지.

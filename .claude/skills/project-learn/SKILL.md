@@ -27,3 +27,4 @@ allowed-tools: Read, Grep, Glob, WebSearch, WebFetch, mcp__study__context_resolv
 금지:
 - 프로젝트 소스 파일 직접 수정 금지
 - 상태 계산/체크 갱신은 MCP로만 수행
+- `session.appendLog` 기록을 요약/축약하지 않는다. Q&A 원문을 그대로 남긴다 (오타만 수정).
