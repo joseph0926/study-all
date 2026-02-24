@@ -5,7 +5,7 @@
 ## Topics
 
 ### 1. Lane Model & Priority
-- [ ] Lane 비트마스크 구조와 31개 Lane 상수 정의
+- [x] Lane 비트마스크 구조와 31개 Lane 상수 정의
 - [ ] markRootUpdated / markStarvedLanesAsExpired — 업데이트 등록과 기아 방지
 - [ ] getNextLanes / getHighestPriorityLane — 다음 작업 선택 알고리즘
 - [ ] entangleLanes / entangleTransitions — Lane 얽힘과 Transition 배칭
@@ -52,3 +52,4 @@
 - [ ] propagateContextChange — 깊이 우선 탐색으로 소비자 찾기
 - [ ] readContext / useContext — 의존성 등록과 변경 감지
 - [ ] 최적화 — eager bailout과 context 변경 시 bailout 무효화
+
