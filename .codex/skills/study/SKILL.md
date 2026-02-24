@@ -9,16 +9,25 @@ description: 소스코드 기반 딥 학습 — plan.md 기반 로드맵 → 설
 
 실행 순서:
 
-0. `study/<주제>/plan.md` 존재 여부 확인
-1. `mcp__study__context_resolve(mode=skill, skill=$ARGUMENTS)`로 컨텍스트 확인
-2. `mcp__study__session_getSourceDigest(context, skill)`로 소스 트리 요약 + 기존 토픽 목록을 캐시에서 조회 (캐시 미스 시 자동 빌드)
-3. **소스코드를 봐야 차이가 나는 토픽 5~8개** 제안
-4. [plan.md 분기]
-   - **plan.md 없음** → `study/<주제>/plan.md` 생성 (제안 토픽 목록 + 학습 로드맵 체크리스트)
-   - **plan.md 있음** → plan.md 업데이트 및 개선 검토 (새 토픽 추가, 완료 체크, 순서 조정 등을 사용자와 논의)
-5. plan.md의 다음 미완료 토픽부터 서브토픽 → 마이크로서브토픽 단위로 아래 3개 프로토콜을 적용한다.
+0. `mcp__study__context_resolve(mode=skill, skill=$ARGUMENTS)`로 컨텍스트 확인
+1. `study/<주제>/plan.md` 존재 여부 확인 → 분기
 
-   **5-A. EXPLAIN 프로토콜** — 하나의 마이크로서브토픽에 대해 5관점을 순서대로 충족 후 다음으로 넘어간다.
+   **[첫 세션] plan.md 없음:**
+   1-A. `mcp__study__session_getSourceDigest(context, skill)`로 소스 트리 요약 + 기존 토픽 목록 조회
+   1-B. **소스코드를 봐야 차이가 나는 토픽 5~8개** 제안
+   1-C. 사용자 확인 후 `study/<주제>/plan.md` 생성 (제안 토픽 목록 + 학습 로드맵 체크리스트)
+   1-D. → Step 2로 진행
+
+   **[복귀 세션] plan.md 있음:**
+   1-A. `mcp__study__session_getResumePoint(context, topic)`로 마지막 진행 위치 조회
+   1-B. `mcp__study__progress_getPlan(context)`으로 plan.md 로드 → 진행률 요약 (완료/미완료 토픽 수)
+   1-C. 사용자에게 보고: "Topic X > 서브토픽 Y까지 진행했습니다. 이어서 할까요?"
+   1-D. plan.md에 없는 추가 토픽 후보가 있으면 간략히 제안 (기존 plan.md의 소스 다이제스트 대비 새로 발견된 것만)
+   1-E. → Step 2로 진행
+
+2. plan.md의 다음 미완료 토픽부터 서브토픽 → 마이크로서브토픽 단위로 아래 3개 프로토콜을 적용한다.
+
+   **2-A. EXPLAIN 프로토콜** — 하나의 마이크로서브토픽에 대해 5관점을 순서대로 충족 후 다음으로 넘어간다.
 
    | 관점 | 내용 | 생략 가능 조건 |
    |------|------|--------------|
@@ -30,7 +39,7 @@ description: 소스코드 기반 딥 학습 — plan.md 기반 로드맵 → 설
 
    넘어가기 기준: 5관점 충족 + Q&A 1회 이상 + 사용자 `>>다음` 신호. AI가 자체 판단으로 넘어가지 않는다.
 
-   **5-B. QUESTION 프로토콜** — Scope Fence 원칙에 따라 Q&A를 출제한다.
+   **2-B. QUESTION 프로토콜** — Scope Fence 원칙에 따라 Q&A를 출제한다.
 
    - **Scope Fence**: 질문 정답이 "현재까지 EXPLAIN 완료된 범위" 내 정보만으로 도출 가능해야 한다.
    - **자기 검증**: 질문 생성 후 "답에 아직 미설명 개념이 필요한가?" 확인 → 필요하면 폐기.
@@ -41,13 +50,13 @@ description: 소스코드 기반 딥 학습 — plan.md 기반 로드맵 → 설
      - L3 (적용): "이 지식으로 상황 Z를 설명하면?" — CONNECT 확인
    - 1~2문제 출제. L1 정답 → L2, L2 정답 → L3 에스컬레이션. 오답 시 보충 설명 후 재질문.
 
-   **5-C. DISCOVERY 프로토콜** — 설명 중 발견된 연관 개념을 추적한다.
+   **2-C. DISCOVERY 프로토콜** — 설명 중 발견된 연관 개념을 추적한다.
 
    - **즉시 경계 선언**: 미래 토픽 개념 등장 시 "X는 별도 토픽에서 다룸" 명시.
    - **발견 목록 축적**: `[발견] <개념> → <제안 토픽> (출처: file:line)` 형식으로 세션 내 추적.
-   - **종료 시 일괄 반영**: Step 6에서 축적된 발견 목록을 사용자에게 제시 → 승인 시 plan.md에 토픽 추가.
+   - **종료 시 일괄 반영**: Step 3에서 축적된 발견 목록을 사용자에게 제시 → 승인 시 plan.md에 토픽 추가.
 
-6. 종료(`>>정리` 또는 `>>끝`) 시:
+3. 종료(`>>정리` 또는 `>>끝`) 시:
    - `mcp__study__session_appendLog` → `study/<주제>/<토픽명>.md`에 대화 원문 기록 (오타 수정만)
    - `mcp__study__review_saveMeta` → `study/<주제>/<토픽명>-meta.md` 생성/갱신
    - `mcp__study__progress_updateCheckbox` → plan.md 내 완료 토픽 체크
@@ -55,7 +64,7 @@ description: 소스코드 기반 딥 학습 — plan.md 기반 로드맵 → 설
 
 사용자 신호 규칙:
 - `>>다음` — 다음 마이크로서브토픽으로 전환
-- `>>정리` 또는 `>>끝` — 세션 종료 + Step 6 실행
+- `>>정리` 또는 `>>끝` — 세션 종료 + Step 3 실행
 - 일반 대화 속 "다음", "정리", "끝"은 신호로 인식하지 않는다 (`>>` 접두사 필수).
 
 토픽 제안 기준:
