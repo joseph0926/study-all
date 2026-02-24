@@ -6,7 +6,7 @@ describe("config tools", () => {
     vi.stubEnv("STUDY_ROOT", "/tmp/study-root");
     const result = await configGet();
     expect(result.data.studyRoot).toBe("/tmp/study-root");
-    expect(result.data.docsDir).toContain("docs");
+    expect(result.data.docsDir).toContain("study");
     vi.unstubAllEnvs();
   });
 

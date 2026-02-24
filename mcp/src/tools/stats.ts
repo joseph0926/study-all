@@ -28,11 +28,12 @@ const recommendationInputSchema = z.object({
 });
 
 async function discoverSkillDirs(docsDir: string): Promise<string[]> {
-  const files = await listFiles(docsDir, { extension: "plan.md", maxDepth: 2 });
+  const files = await listFiles(docsDir, { extension: ".md", maxDepth: 2 });
   const dirs = new Set<string>();
   for (const file of files) {
-    if (path.basename(file) === "plan.md" && path.dirname(file) !== docsDir) {
-      dirs.add(path.dirname(file));
+    const dir = path.dirname(file);
+    if (dir !== docsDir) {
+      dirs.add(dir);
     }
   }
   return [...dirs].sort();
@@ -64,7 +65,7 @@ async function buildDashboardData(contextInput: ContextInput): Promise<Dashboard
     skillDirs.map(async (skillDir) => {
       const skill = path.basename(skillDir);
       const [planText, queue, lastActivity] = await Promise.all([
-        readText(path.join(skillDir, "plan.md")),
+        readText(path.join(skillDir, "plan.md")).catch(() => ""),
         reviewGetQueue({
           context: {
             mode: "skill",
@@ -75,7 +76,7 @@ async function buildDashboardData(contextInput: ContextInput): Promise<Dashboard
         getLastActivityDate(skillDir),
       ]);
 
-      const plan = parsePlan(planText, skill);
+      const plan = planText ? parsePlan(planText, skill) : { phases: [], coverage: { total: 0, covered: 0, rate: 0 } };
       const topics = plan.phases.flatMap((phase) => phase.topics);
       const completedTopics = topics.filter((topic) => topic.status === "covered").length;
 
@@ -108,12 +109,15 @@ async function buildDashboardData(contextInput: ContextInput): Promise<Dashboard
     .sort((a, b) => b.date.localeCompare(a.date))
     .slice(0, 10);
 
-  const dailyStatus = await dailyGetStatus({
-    context: {
-      mode: "skill",
-      skill: skills[0]?.name,
-    },
-  });
+  const firstSkill = skills[0]?.name;
+  const dailyStatus = firstSkill
+    ? await dailyGetStatus({
+        context: {
+          mode: "skill",
+          skill: firstSkill,
+        },
+      })
+    : { data: { streak: 0 } };
 
   const totalReviewPending = skills.reduce((acc, cur) => acc + cur.reviewPending, 0);
 

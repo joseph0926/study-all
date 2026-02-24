@@ -25,7 +25,7 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): AppConfig {
   const studyRoot = expandHome(rawRoot);
   return {
     studyRoot,
-    docsDir: env.DOCS_DIR ? path.resolve(studyRoot, env.DOCS_DIR) : path.join(studyRoot, "docs"),
+    docsDir: env.DOCS_DIR ? path.resolve(studyRoot, env.DOCS_DIR) : path.join(studyRoot, "study"),
     refDir: env.REF_DIR ? path.resolve(studyRoot, env.REF_DIR) : path.join(studyRoot, "ref"),
     skillsDir: expandHome(env.SKILLS_DIR ?? "~/.claude/skills"),
     studyLogsDir: expandHome(env.STUDY_LOGS_DIR ?? "~/.claude/study-logs"),

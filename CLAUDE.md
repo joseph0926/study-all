@@ -16,35 +16,17 @@ study-all/
 │   │   ├── core.md
 │   │   ├── skills.md
 │   │   └── docs.md
-│   ├── skills/
-│   │   ├── dashboard/SKILL.md
-│   │   ├── next/SKILL.md
-│   │   ├── plan/SKILL.md
-│   │   ├── learn/SKILL.md
-│   │   ├── gen-plan/SKILL.md
-│   │   ├── review/SKILL.md
-│   │   ├── study/SKILL.md
-│   │   ├── project-gen-plan/SKILL.md
-│   │   ├── project-learn/SKILL.md
-│   │   └── project-review/SKILL.md
-│   └── commands/
-│       ├── legacy-dashboard.md
-│       ├── legacy-next.md
-│       ├── legacy-plan.md
-│       ├── legacy-learn.md
-│       ├── legacy-gen-plan.md
-│       ├── legacy-review.md
-│       ├── legacy-study.md
-│       ├── legacy-project-gen-plan.md
-│       ├── legacy-project-learn.md
-│       └── legacy-project-review.md
-├── docs/
+│   └── skills/
+│       ├── study/SKILL.md
+│       ├── review/SKILL.md
+│       └── dashboard/SKILL.md
+├── study/
 ├── ref/
 ├── scripts/check-docs.sh
 └── mcp/
 ```
 
 ## 운영 메모
-- 기본 실행 경로는 skill이다.
-- `legacy-*` command는 호환용이며 신규 플로우 기준은 아니다.
+- 기본 실행 경로는 `/study`, `/review`, `/dashboard` 3개 스킬이다.
+- 학습 기록은 `study/` 디렉토리에 저장된다.
 - 검증 명령은 `.claude/rules/docs.md`를 따른다.

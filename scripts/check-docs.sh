@@ -18,7 +18,6 @@ header() { printf '\n\033[1m[%s]\033[0m\n' "$1"; }
 
 SKILLS_DIR="$ROOT/.claude/skills"
 CODEX_SKILLS_DIR="$ROOT/.codex/skills"
-COMMANDS_DIR="$ROOT/.claude/commands"
 README="$ROOT/README.md"
 CLAUDE_MD="$ROOT/CLAUDE.md"
 
@@ -86,13 +85,11 @@ if [[ -d "$SKILLS_DIR" && -d "$CODEX_SKILLS_DIR" ]]; then
   done < <(find "$CODEX_SKILLS_DIR" -mindepth 2 -maxdepth 2 -name 'SKILL.md' -type f | sort)
 fi
 
-header "2. docs/ filename conventions"
+header "2. study/ filename conventions"
 
-if [[ -d "$ROOT/docs" ]]; then
+if [[ -d "$ROOT/study" ]]; then
   while IFS= read -r f; do
     fname="$(basename "$f")"
-
-    [[ "$fname" == "plan.md" ]] && continue
 
     if ! echo "$fname" | grep -qE '^[A-Za-z0-9][A-Za-z0-9._-]*\.md$'; then
       err "$fname — 허용 문자(A-Z a-z 0-9 . _ -)외 문자 포함"
@@ -109,10 +106,10 @@ if [[ -d "$ROOT/docs" ]]; then
         break
       fi
     done
-  done < <(find "$ROOT/docs" -name '*.md' -type f)
+  done < <(find "$ROOT/study" -name '*.md' -type f)
 fi
 
-header "3. Phantom references — scripts referenced by skills/commands"
+header "3. Phantom references — scripts referenced by skills"
 
 check_shell_refs() {
   local md_file="$1"
@@ -144,27 +141,16 @@ if [[ -d "$CODEX_SKILLS_DIR" ]]; then
   done < <(find "$CODEX_SKILLS_DIR" -mindepth 2 -maxdepth 2 -name 'SKILL.md' -type f | sort)
 fi
 
-if [[ -d "$COMMANDS_DIR" ]]; then
-  while IFS= read -r cmd_file; do
-    cmd_name="$(basename "$cmd_file" .md)"
-    check_shell_refs "$cmd_file" "command:$cmd_name"
-  done < <(find "$COMMANDS_DIR" -maxdepth 1 -name '*.md' -type f | sort)
-fi
-
 header "4. CLAUDE.md structure tree vs reality"
 
 if [[ -f "$CLAUDE_MD" ]]; then
-  for d in ".claude/skills" "docs" "ref"; do
+  for d in ".claude/skills" "study" "ref"; do
     if [[ -d "$ROOT/$d" ]]; then
       ok "$d/ — 존재"
     else
       err "CLAUDE.md 구조 트리의 $d/ — 실제로 없음"
     fi
   done
-
-  if [[ -d "$COMMANDS_DIR" ]]; then
-    warn ".claude/commands/는 legacy shim으로 유지 중"
-  fi
 
   while IFS= read -r skill_file; do
     skill_name="$(basename "$(dirname "$skill_file")")"
@@ -175,35 +161,6 @@ if [[ -f "$CLAUDE_MD" ]]; then
     fi
   done < <(find "$SKILLS_DIR" -mindepth 2 -maxdepth 2 -name 'SKILL.md' -type f | sort)
 fi
-
-header "5. plan.md checklist vs session files"
-
-for plan_file in "$ROOT"/docs/*/plan.md; do
-  [[ ! -f "$plan_file" ]] && continue
-  skill_dir="$(dirname "$plan_file")"
-  skill_name="$(basename "$skill_dir")"
-
-  while IFS= read -r f; do
-    fname="$(basename "$f" .md)"
-    [[ "$fname" == "plan" ]] && continue
-    [[ "$fname" =~ -quiz$ ]] && continue
-    [[ "$fname" =~ -meta$ ]] && continue
-
-    search_term="${fname//-/ }"
-
-    if grep -qi "$search_term" "$plan_file" 2>/dev/null; then
-      checklist_line=$(grep -i "$search_term" "$plan_file" | head -1)
-      if echo "$checklist_line" | grep -q '\[x\]'; then
-        ok "$skill_name/$fname — plan.md 완료 표시"
-      else
-        line_count=$(wc -l < "$f" | tr -d ' ')
-        if [[ "$line_count" -gt 20 ]]; then
-          warn "$skill_name/$fname — 세션 파일(${line_count}줄) 존재하지만 plan.md 체크리스트 미완료"
-        fi
-      fi
-    fi
-  done < <(find "$skill_dir" -maxdepth 1 -name '*.md' -type f)
-done
 
 header "Summary"
 

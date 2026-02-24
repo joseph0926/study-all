@@ -15,4 +15,4 @@ allowed-tools: mcp__study__stats_getDashboard, mcp__study__config_get
 
 규칙:
 - MCP 응답을 단일 진실 원천으로 사용한다.
-- `docs/` 직접 스캔/집계는 하지 않는다.
+- `study/` 직접 스캔/집계는 하지 않는다.

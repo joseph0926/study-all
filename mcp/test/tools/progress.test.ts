@@ -14,7 +14,14 @@ const ROOT = path.resolve(new URL("../../../", import.meta.url).pathname);
 
 describe("progress tools", () => {
   it("progress.getPlan returns structured data", async () => {
-    process.env.STUDY_ROOT = ROOT;
+    const base = path.join(os.tmpdir(), `mcp-plan-${Date.now()}`);
+    mkdirSync(path.join(base, "study", "react"), { recursive: true });
+    writeFileSync(
+      path.join(base, "study", "react", "plan.md"),
+      `# react Study Plan\n\n## Coverage Analysis\n\n| Status | Module | Target |\n|--------|--------|--------|\n| ✅ | core | Core.md |\n| ⬜ | utils | Utils.md |\n\n**커버율**: 1/2 (50.0%)\n\n## Phase 1: Core\n\n### Topic 1: core\n- [x] Step 1: basics\n- [ ] Step 2: advanced\n`,
+      "utf8",
+    );
+    process.env.STUDY_ROOT = base;
 
     const result = await progressGetPlan({
       context: { mode: "skill", skill: "react" },
@@ -22,12 +29,20 @@ describe("progress tools", () => {
     });
 
     expect(result.data.skill).toBe("react");
-    expect(result.data.coverage.total).toBe(46);
+    expect(result.data.coverage.total).toBe(2);
     expect(result.data.phases.length).toBeGreaterThanOrEqual(1);
   });
 
   it("progress.getNextTopic returns next actionable step", async () => {
-    process.env.STUDY_ROOT = ROOT;
+    const base = path.join(os.tmpdir(), `mcp-next-${Date.now()}`);
+    mkdirSync(path.join(base, "study", "react"), { recursive: true });
+    writeFileSync(
+      path.join(base, "study", "react", "plan.md"),
+      `# react Study Plan\n\n## Phase 1: Core\n\n### Topic 1: core\n- [ ] Step 1: basics\n`,
+      "utf8",
+    );
+    process.env.STUDY_ROOT = base;
+
     const result = await progressGetNextTopic({
       context: { mode: "skill", skill: "react" },
       skill: "react",

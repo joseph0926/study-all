@@ -79,10 +79,7 @@ if [[ ! -d "$SRC_CLAUDE/skills" ]]; then
   exit 1
 fi
 
-if [[ ! -d "$SRC_CLAUDE/commands" ]]; then
-  echo "Source commands dir not found: $SRC_CLAUDE/commands" >&2
-  exit 1
-fi
+# commands dir check removed — legacy commands deleted
 
 TMP_DIR="$(mktemp -d)"
 trap 'rm -rf "$TMP_DIR"' EXIT
@@ -128,10 +125,7 @@ while IFS= read -r f; do
   append_unique "$rel" "$CURRENT_MANAGED"
 done < <(find "$SRC_CLAUDE/skills" -type f | sort)
 
-while IFS= read -r f; do
-  rel="${f#"$SRC_CLAUDE"/}"
-  append_unique "$rel" "$CURRENT_MANAGED"
-done < <(find "$SRC_CLAUDE/commands" -maxdepth 1 -type f -name 'legacy-*.md' | sort)
+# legacy commands scan removed — commands deleted
 
 if [[ "$RULES_MODE" == "copy" ]]; then
   if [[ -d "$SRC_CLAUDE/rules" ]]; then
