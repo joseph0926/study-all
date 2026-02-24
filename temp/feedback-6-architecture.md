@@ -54,7 +54,7 @@
 | 17 | /dashboard: MCP 활용 축소 | **완료** | `## MCP Execution Mode (필수)` 섹션 추가. `stats.getDashboard` 우선 호출 |
 | 18 | /next: MCP 활용 축소 | **완료** | `stats.getRecommendation` + `review.getQueue` + `progress.getNextTopic` |
 | 19 | /learn: MCP 활용 축소 | **완료** | `session.getResumePoint` + `session.getSourcePaths` + `progress.getPlan` + 쓰기 |
-| 20 | /study-skill: MCP 활용 축소 | **완료** | `progress.getModuleMap` + `progress.getCoverageMap` + `progress.getPlan` |
+| 20 | /gen-plan: MCP 활용 축소 | **완료** | `progress.getModuleMap` + `progress.getCoverageMap` + `progress.getPlan` |
 | 21 | /review: MCP 활용 축소 | **완료** | `review.getQueue` + `review.getMeta` + 쓰기 |
 | 22 | /study: MCP 활용 축소 | **완료** | `daily.getStatus` + `progress.getNextTopic` + 쓰기 |
 | 23 | /project-*: MCP 활용 축소 | **완료** | 3개 커맨드 모두 `context.resolve(mode=project)` + 대응 도구 |
@@ -86,7 +86,7 @@
 
 | 게이트 조건 | 충족 여부 | 근거 |
 |------------|----------|------|
-| **1. 동등성 통과**: Layer 4 시나리오 전부 통과 (커맨드별 수치/재개점/대기열 일치) | **미충족** | Layer 4 시나리오 테스트 자체가 없음. test/expected/ 골든 데이터도 미작성. 6개 시나리오(dashboard 수치, learn 재개점, review 대기열, next 추천, study-skill MODULE_MAP, session append) 중 0개 자동화 |
+| **1. 동등성 통과**: Layer 4 시나리오 전부 통과 (커맨드별 수치/재개점/대기열 일치) | **미충족** | Layer 4 시나리오 테스트 자체가 없음. test/expected/ 골든 데이터도 미작성. 6개 시나리오(dashboard 수치, learn 재개점, review 대기열, next 추천, gen-plan MODULE_MAP, session append) 중 0개 자동화 |
 | **2. 회귀 통과**: parser/tool 테스트 100% 통과 + scripts/check-docs.sh 통과 | **부분 충족** | parser 테스트 14개 + tool 테스트 16개 + 계약/clock 테스트 4개 = 34개 케이스 존재. Bash 실행 불가로 실제 통과율 미확인. check-docs.sh 호환성 미검증 |
 | **3. 성능 조건**: 핵심 읽기 도구의 p95 응답 시간이 기존 대비 20% 이내 | **미충족** | 벤치마크 테스트/측정 인프라 전무 |
 | **4. 운영 검증**: 실제 학습 데이터(docs/react, docs/nextjs)로 E2E 1회 이상 성공 | **미충족** | MCP 서버 빌드/등록 미수행으로 E2E 불가 |
@@ -119,7 +119,7 @@
   - `/learn react "Fiber"` 세션 재개: `session.getResumePoint` vs 기존 파일 직접 읽기 -- 미구현
   - `/review react` 복습 대기열: `review.getQueue` vs 수동 -meta.md 확인 -- 미구현
   - `/next` 추천 근거: `stats.getRecommendation` 데이터 검증 -- 미구현
-  - `/study-skill react` MODULE_MAP: `progress.getModuleMap` vs plan.md 46개 모듈 -- 미구현
+  - `/gen-plan react` MODULE_MAP: `progress.getModuleMap` vs plan.md 46개 모듈 -- 미구현
   - 세션 기록 append: `session.appendLog` 후 파일 구조 보존 -- 미구현
 - **영향**: 컷오버 게이트 1번 불충족
 - **우선순위**: P1

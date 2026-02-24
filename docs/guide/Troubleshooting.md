@@ -70,8 +70,8 @@ codex mcp list
 ## 5) command/skill 동작이 혼동됨
 
 원칙:
-- Claude 기본은 skills-first (`/learn`, `/review`, `/study-skill` ...)
-- Codex 기본은 `$` skills (`$learn`, `$review`, `$study-skill` ...)
+- Claude 기본은 skills-first (`/learn`, `/review`, `/gen-plan` ...)
+- Codex 기본은 `$` skills (`$learn`, `$review`, `$gen-plan` ...)
 - `.claude/commands/legacy-*.md`는 Claude 호환용
 
 ## 6) 문서 정합성 체크 warning

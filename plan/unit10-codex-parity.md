@@ -13,7 +13,7 @@
 - Unit 9에서 적용한 사용성/동기화 자동화를 Codex 경로에도 동일 수준으로 확장한다.
 
 ### 범위 (In Scope)
-- Codex 스킬 10종 동등화 (`dashboard`, `next`, `plan`, `learn`, `study-skill`, `review`, `study`, `project-study`, `project-learn`, `project-review`)
+- Codex 스킬 10종 동등화 (`dashboard`, `next`, `plan`, `learn`, `gen-plan`, `review`, `study`, `project-gen-plan`, `project-learn`, `project-review`)
 - Codex 스킬 경로는 **`.codex/skills`만 사용** (정책 고정)
 - Codex용 가이드 문서/트러블슈팅/운영 자동화(Unit 9 parity)
 - Codex MCP 연결/도구 호출 정책을 Claude와 동일하게 정렬
@@ -93,10 +93,10 @@
 | `/next` | `$next` |
 | `/plan [goal]` | `$plan [goal]` |
 | `/learn <skill> <topic>` | `$learn <skill> <topic>` |
-| `/study-skill <skill>` | `$study-skill <skill>` |
+| `/gen-plan <skill>` | `$gen-plan <skill>` |
 | `/review <skill> [topic]` | `$review <skill> [topic]` |
 | `/study [args]` | `$study [args]` |
-| `/project-study <path>` | `$project-study <path>` |
+| `/project-gen-plan <path>` | `$project-gen-plan <path>` |
 | `/project-learn <path> <topic>` | `$project-learn <path> <topic>` |
 | `/project-review <path> [topic]` | `$project-review <path> [topic]` |
 

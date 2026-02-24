@@ -3,15 +3,15 @@
 ## 기본 인터페이스
 - `/dashboard`, `/next`, `/plan`, `/study`
 - `/learn <skill> <topic>`
-- `/study-skill <skill>`
+- `/gen-plan <skill>`
 - `/review <skill> [topic]`
-- `/project-study <path>`
+- `/project-gen-plan <path>`
 - `/project-learn <path> <topic>`
 - `/project-review <path> [topic]`
 
 ## 실행 규칙
 - 각 skill의 `allowed-tools` 범위를 넘어서는 도구 호출을 추가하지 않는다.
-- 쓰기형 skill(`learn`, `review`, `study`, `plan`, `study-skill`, project 계열)은 `disable-model-invocation: true`를 유지한다.
+- 쓰기형 skill(`learn`, `review`, `study`, `plan`, `gen-plan`, project 계열)은 `disable-model-invocation: true`를 유지한다.
 - 읽기형 skill(`dashboard`, `next`)은 집계/추천을 MCP 결과로만 출력한다.
 
 ## 레거시 호환

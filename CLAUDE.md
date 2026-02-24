@@ -21,10 +21,10 @@ study-all/
 │   │   ├── next/SKILL.md
 │   │   ├── plan/SKILL.md
 │   │   ├── learn/SKILL.md
-│   │   ├── study-skill/SKILL.md
+│   │   ├── gen-plan/SKILL.md
 │   │   ├── review/SKILL.md
 │   │   ├── study/SKILL.md
-│   │   ├── project-study/SKILL.md
+│   │   ├── project-gen-plan/SKILL.md
 │   │   ├── project-learn/SKILL.md
 │   │   └── project-review/SKILL.md
 │   └── commands/
@@ -32,10 +32,10 @@ study-all/
 │       ├── legacy-next.md
 │       ├── legacy-plan.md
 │       ├── legacy-learn.md
-│       ├── legacy-study-skill.md
+│       ├── legacy-gen-plan.md
 │       ├── legacy-review.md
 │       ├── legacy-study.md
-│       ├── legacy-project-study.md
+│       ├── legacy-project-gen-plan.md
 │       ├── legacy-project-learn.md
 │       └── legacy-project-review.md
 ├── docs/

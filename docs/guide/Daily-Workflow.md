@@ -38,8 +38,8 @@
   - Claude: `/plan [goal]`
   - Codex: `$plan [goal]`
 - 필요 시 스킬 커버리지 보정
-  - Claude: `/study-skill <skill>`
-  - Codex: `$study-skill <skill>`
+  - Claude: `/gen-plan <skill>`
+  - Codex: `$gen-plan <skill>`
 
 ## 운영 팁
 

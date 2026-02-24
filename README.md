@@ -31,10 +31,10 @@ bash scripts/setup-githooks.sh
 | 다음 추천 | `/next` | `$next` |
 | 마스터 플랜 | `/plan [goal]` | `$plan [goal]` |
 | 학습 세션 | `/learn <skill> <topic>` | `$learn <skill> <topic>` |
-| 스킬 검증 | `/study-skill <skill>` | `$study-skill <skill>` |
+| 스킬 검증 | `/gen-plan <skill>` | `$gen-plan <skill>` |
 | 복습 세션 | `/review <skill> [topic]` | `$review <skill> [topic]` |
 | 일일 상태 | `/study [args]` | `$study [args]` |
-| 프로젝트 플랜 | `/project-study <path>` | `$project-study <path>` |
+| 프로젝트 플랜 | `/project-gen-plan <path>` | `$project-gen-plan <path>` |
 | 프로젝트 학습 | `/project-learn <path> <topic>` | `$project-learn <path> <topic>` |
 | 프로젝트 복습 | `/project-review <path> [topic]` | `$project-review <path> [topic]` |
 
@@ -88,8 +88,8 @@ bash scripts/setup-githooks.sh
 동명이인 충돌을 피하기 위해 Claude command는 `legacy-*`만 유지합니다.
 
 - `/legacy-dashboard`, `/legacy-next`, `/legacy-plan`
-- `/legacy-learn`, `/legacy-study-skill`, `/legacy-review`, `/legacy-study`
-- `/legacy-project-study`, `/legacy-project-learn`, `/legacy-project-review`
+- `/legacy-learn`, `/legacy-gen-plan`, `/legacy-review`, `/legacy-study`
+- `/legacy-project-gen-plan`, `/legacy-project-learn`, `/legacy-project-review`
 
 신규 워크플로우는 skills-first를 사용하세요.
 

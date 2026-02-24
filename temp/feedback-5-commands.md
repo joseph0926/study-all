@@ -49,7 +49,7 @@
   - Topic-Docs Mapping 등록 전용 도구 (`progress.registerTopicMapping`) 없음
   - meta.md stub 초기 생성 — `review.saveMeta`가 빈 파일 생성을 지원하면 커버 가능하지만 현재 미확인
 
-### study-skill.md
+### gen-plan.md
 - **MCP Execution Mode 섹션**: 있음 (8-12줄)
 - **참조 MCP 도구**: `progress.getModuleMap`, `progress.getCoverageMap`, `progress.getPlan`, `progress.updateCheckbox`
 - **도구 존재 여부**: ✅ 전부 존재
@@ -80,14 +80,14 @@
 - **잔존 수동 로직**: 1단계(25-31줄) study-logs 수동 스캔/streak 계산, plan 서브커맨드(62-111줄) 로그 파일 수동 생성, done 서브커맨드(167-215줄) 달성률 수동 계산, log 서브커맨드(219-275줄) 최종 로그 수동 정리
 - **누락된 연결**: `/learn`과 `/review` 세션 결과를 `/study done`으로 자동 연결하는 브리지 도구 없음 (오케스트레이션 미구현)
 
-### project-study.md
+### project-gen-plan.md
 - **MCP Execution Mode 섹션**: 있음 (8-12줄)
 - **참조 MCP 도구**: `context.resolve(mode=project)`, `progress.getModuleMap`, `progress.getCoverageMap`, `progress.getNextTopic`, `progress.updateCheckbox`
 - **도구 존재 여부**: ✅ 전부 존재
 - **스키마 매칭**: ✅ `context.resolve`의 `contextResolveInputSchema`가 `mode` 필드를 포함하므로 `mode=project` 호출 가능
 - **프롬프트 축소 상태**: 현재 481줄 → 목표 미명시(추정 ~80줄) — **미달** (6.0배 초과)
 - **잔존 수동 로직**: Phase 2-4(92-109줄) MODULE_MAP 수동 생성, Phase 2-5(112-122줄) COVERAGE_MAP 수동 교차 대조, Phase 3(172-287줄) plan.md 생성 전체 수동 로직
-- **누락된 연결**: plan.md 생성(쓰기) 전용 도구 없음 (`/study-skill`과 동일 이슈)
+- **누락된 연결**: plan.md 생성(쓰기) 전용 도구 없음 (`/gen-plan`과 동일 이슈)
 
 ### project-learn.md
 - **MCP Execution Mode 섹션**: 있음 (8-12줄)
@@ -117,10 +117,10 @@
 | next.md | 255줄 (목표 ~40) | ✅ | ✅ 4/4 도구 일치 | ❌ 6.4x 초과 | 선언만 완료 |
 | plan.md | 254줄 (목표 ~50) | ✅ | ✅ 3/3 도구 일치 | ❌ 5.1x 초과 | 선언만 완료 |
 | learn.md | 639줄 (목표 ~100) | ✅ | ⚠️ 5/5 일치, context.resolve 미명시 | ❌ 6.4x 초과 | 선언만 완료 |
-| study-skill.md | 546줄 (목표 ~80) | ✅ | ⚠️ 4/4 일치, context.resolve 미명시 | ❌ 6.8x 초과 | 선언만 완료 |
+| gen-plan.md | 546줄 (목표 ~80) | ✅ | ⚠️ 4/4 일치, context.resolve 미명시 | ❌ 6.8x 초과 | 선언만 완료 |
 | review.md | 614줄 (목표 ~80) | ✅ | ⚠️ 4/4 일치, context.resolve 미명시 | ❌ 7.7x 초과 | 선언만 완료 |
 | study.md | 363줄 (목표 ~50) | ✅ | ✅ 7/7 도구 일치 | ❌ 7.3x 초과 | 선언만 완료 |
-| project-study.md | 481줄 (목표 ~80) | ✅ | ✅ 5/5 도구 일치 | ❌ 6.0x 초과 | 선언만 완료 |
+| project-gen-plan.md | 481줄 (목표 ~80) | ✅ | ✅ 5/5 도구 일치 | ❌ 6.0x 초과 | 선언만 완료 |
 | project-learn.md | 497줄 (목표 ~100) | ✅ | ✅ 5/5 도구 일치 | ❌ 5.0x 초과 | 선언만 완료 |
 | project-review.md | 632줄 (목표 ~80) | ✅ | ✅ 5/5 도구 일치 | ❌ 7.9x 초과 | 선언만 완료 |
 | **합계** | **4,438줄 (목표 ~690)** | **10/10** | **10/10 일치** | **0/10 축소** | **~15% (선언만)** |
@@ -150,8 +150,8 @@
 - **근거**: 10개 커맨드 전부 해당. 특히 `/dashboard`가 가장 명확한 예시 — MCP 섹션은 `stats.getDashboard`를 단일 진실로 지정하면서 Phase 1에서 30줄+ 수동 데이터 수집을 지시.
 - **수정 방향**: 두 가지 중 하나 선택 필수 — (A) 즉시 축소하여 수동 로직 제거, (B) MCP Execution Mode를 "계획(planned)" 표기로 변경하여 현재는 수동 경로가 정상임을 명시.
 
-### [S5-003] context.resolve 참조 불일치 (learn, study-skill, review) — 심각도: LOW
-- **문제**: plan/mcp.md 부록 B에서는 `/learn`, `/study-skill`, `/review`에 `context.resolve`를 포함하지만, 커맨드 파일의 MCP Execution Mode 섹션에는 미명시.
+### [S5-003] context.resolve 참조 불일치 (learn, gen-plan, review) — 심각도: LOW
+- **문제**: plan/mcp.md 부록 B에서는 `/learn`, `/gen-plan`, `/review`에 `context.resolve`를 포함하지만, 커맨드 파일의 MCP Execution Mode 섹션에는 미명시.
 - **근거**: learn.md 8-12줄에 `session.getResumePoint` 등은 있으나 `context.resolve` 없음. plan/mcp.md 945줄에서는 `/learn`에 `context.resolve` 포함.
 - **수정 방향**: (A) 3개 커맨드의 MCP 섹션 보조 호출에 `context.resolve` 추가, 또는 (B) 각 도구 호출 시 context를 인라인 전달하여 선행 resolve가 불필요하다면 부록 B에서 제거. 어느 쪽이든 동기화 필요.
 
@@ -166,8 +166,8 @@
 - **수정 방향**: `progress.updateCheckbox`의 기능을 확장하여 Mapping 등록도 포함하거나, `progress.registerTopicMapping` 별도 도구 추가.
 
 ### [S5-006] plan.md 생성(쓰기) 도구 부재 — 심각도: MEDIUM
-- **문제**: `/study-skill`과 `/project-study`에서 MODULE_MAP + COVERAGE_MAP 기반으로 plan.md 전체를 생성하는 로직(각 약 200줄)이 프롬프트에 있으나, MCP에는 plan 파싱(읽기)만 있고 생성(쓰기) 도구가 없다.
-- **근거**: study-skill.md Phase 4(222-420줄), project-study.md Phase 3(172-287줄). index.ts의 `progress.getPlan`은 읽기 전용.
+- **문제**: `/gen-plan`과 `/project-gen-plan`에서 MODULE_MAP + COVERAGE_MAP 기반으로 plan.md 전체를 생성하는 로직(각 약 200줄)이 프롬프트에 있으나, MCP에는 plan 파싱(읽기)만 있고 생성(쓰기) 도구가 없다.
+- **근거**: gen-plan.md Phase 4(222-420줄), project-gen-plan.md Phase 3(172-287줄). index.ts의 `progress.getPlan`은 읽기 전용.
 - **수정 방향**: plan.md 생성에는 LLM의 토픽 설명/순서 판단이 개입하므로 완전 자동화는 어렵다. (1) MCP가 MODULE_MAP/COVERAGE_MAP JSON 제공, (2) LLM이 토픽 구성 판단, (3) 범용 파일 쓰기 도구(또는 `session.appendLog` 확장)로 저장하는 방안이 현실적.
 
 ### [S5-007] /study 오케스트레이션 미구현 — 심각도: MEDIUM
@@ -185,9 +185,9 @@
 | learn.md | 639 | ~100 | 539 | 84% |
 | project-review.md | 632 | ~80 | 552 | 87% |
 | review.md | 614 | ~80 | 534 | 87% |
-| study-skill.md | 546 | ~80 | 466 | 85% |
+| gen-plan.md | 546 | ~80 | 466 | 85% |
 | project-learn.md | 497 | ~100 | 397 | 80% |
-| project-study.md | 481 | ~80 | 401 | 83% |
+| project-gen-plan.md | 481 | ~80 | 401 | 83% |
 | study.md | 363 | ~50 | 313 | 86% |
 | next.md | 255 | ~40 | 215 | 84% |
 | plan.md | 254 | ~50 | 204 | 80% |
@@ -200,7 +200,7 @@
 
 1. **[S5-002] 즉시 — LLM 혼란 방지**: MCP Execution Mode 섹션에 `> NOTE: Phase 5 리팩터링 미적용. 아래 수동 로직은 MCP 전환 후 제거 예정` 마커를 10개 커맨드에 추가하거나, "MCP Execution Mode (필수)" 대신 "MCP Execution Mode (계획)" 등으로 표기 변경. 이것만으로도 LLM이 현재는 수동 경로를 따라야 함을 인지할 수 있다.
 2. **[S5-004, S5-005] MCP 도구 설계 보완**: `review.saveQuiz`와 `progress.registerTopicMapping` 도구를 추가 설계. Phase 5 리팩터링 전에 도구가 준비되어야 커맨드 축소 시 누락 없이 전환 가능.
-3. **[S5-003] context.resolve 동기화**: learn.md, study-skill.md, review.md의 MCP 섹션에 `context.resolve`를 보조 호출로 추가하거나, plan/mcp.md 부록 B에서 제거. 5분 이내 작업.
-4. **[S5-001, S5-008] Phase 5 실행 — 커맨드 리팩터링**: 프롬프트의 수동 데이터 수집/계산 Phase를 MCP 호출로 대체하고, 대화/판단/튜터링 로직만 남긴다. 축소 우선순위: dashboard(가장 단순) -> next -> plan -> study -> learn -> study-skill -> review -> project-* 순서.
+3. **[S5-003] context.resolve 동기화**: learn.md, gen-plan.md, review.md의 MCP 섹션에 `context.resolve`를 보조 호출로 추가하거나, plan/mcp.md 부록 B에서 제거. 5분 이내 작업.
+4. **[S5-001, S5-008] Phase 5 실행 — 커맨드 리팩터링**: 프롬프트의 수동 데이터 수집/계산 Phase를 MCP 호출로 대체하고, 대화/판단/튜터링 로직만 남긴다. 축소 우선순위: dashboard(가장 단순) -> next -> plan -> study -> learn -> gen-plan -> review -> project-* 순서.
 5. **[S5-006] plan.md 생성 전략 확정**: MCP가 JSON으로 MODULE_MAP/COVERAGE_MAP를 제공하고 LLM이 템플릿을 채우는 방식 vs `progress.createPlan` 도구 추가 방식 중 선택.
 6. **[S5-007] 오케스트레이션**: Phase 5 리팩터링과 함께 `/study` 커맨드에 MCP 데이터 기반 반자동 연결 구현. `daily.syncFromSession` 도구는 실제 운영 후 필요성이 확인되면 추가.

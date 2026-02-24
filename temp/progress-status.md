@@ -234,7 +234,7 @@
 - [x] `.codex/skills`를 canonical 경로로 고정 (`.agents/skills` 미사용)
 - [x] Codex 스킬 10종 동등화
   - 신규 추가: `dashboard`, `next`, `plan`, `study`
-  - 기존 6개(`learn`, `study-skill`, `review`, `project-study`, `project-learn`, `project-review`)를 MCP-only 규칙으로 교체
+  - 기존 6개(`learn`, `gen-plan`, `review`, `project-gen-plan`, `project-learn`, `project-review`)를 MCP-only 규칙으로 교체
 - [x] Unit 9 parity를 Codex에도 확장
   - `scripts/sync-codex-home.sh` 추가 (`--dry-run`, `--apply`, `--prune-managed`, manifest)
   - `.githooks/post-checkout`, `.githooks/post-merge`에 Codex sync 병행

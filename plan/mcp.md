@@ -27,9 +27,9 @@ study-all/
 | `/next` | — | 다음 학습 추천 + 주간 스케줄 | 읽기 전용 |
 | `/plan` | — | 크로스-스킬 마스터 로드맵 | `docs/master-plan.md` 쓰기 |
 | `/learn` | 633줄 | 소스 기반 Q&A 튜터링 | `docs/{skill}/{Topic}.md` 쓰기 |
-| `/study-skill` | 540줄 | 스킬 레퍼런스 검증/개선 | `docs/{skill}/plan.md` 쓰기, references/ 수정 |
+| `/gen-plan` | 540줄 | 스킬 레퍼런스 검증/개선 | `docs/{skill}/plan.md` 쓰기, references/ 수정 |
 | `/review` | 608줄 | 적응형 복습 | `-quiz.md`, `-meta.md` 쓰기 ("정리" 시) |
-| `/project-study` | 475줄 | 프로젝트 소스 분석 → 학습 플랜 | `.study/plan.md` 쓰기 |
+| `/project-gen-plan` | 475줄 | 프로젝트 소스 분석 → 학습 플랜 | `.study/plan.md` 쓰기 |
 | `/project-learn` | 491줄 | 프로젝트 소스 Q&A 튜터링 | `.study/{Topic}.md` 쓰기 |
 | `/project-review` | 626줄 | 프로젝트 학습 복습 | `.study/-quiz.md`, `-meta.md` 쓰기 |
 
@@ -51,8 +51,8 @@ study-all/
 | 작업 | 발생 커맨드 | 본질 |
 |------|-----------|------|
 | plan.md 체크박스 카운팅 | `/dashboard`, `/next` | 정규식 매칭 + 산술 |
-| MODULE_MAP 생성 | `/study-skill` | 디렉토리 스캔 |
-| COVERAGE_MAP 생성 | `/study-skill` | 문자열 매칭 |
+| MODULE_MAP 생성 | `/gen-plan` | 디렉토리 스캔 |
+| COVERAGE_MAP 생성 | `/gen-plan` | 문자열 매칭 |
 | 복습 주기 계산 | `/review`, `/next` | 날짜 산술 |
 | 세션 재개점 파악 | `/learn` | 마크다운 파싱 |
 | streak 계산 | `/dashboard` | 날짜 연산 |
@@ -242,11 +242,11 @@ study-all/
 
 | 도구 | 입력 | 출력 | 용도 |
 |------|------|------|------|
-| `progress.getPlan` | `{ context, skill? }` | plan.md 구조화 파싱 결과 (아래 스키마) | `/learn`, `/study-skill`, `/dashboard`, `/next`, `/plan` |
-| `progress.getNextTopic` | `{ context, skill? }` | `{ topic, step, phase, estimatedTime, sourceFiles }` | `/study`, `/next`, `/project-study` |
-| `progress.updateCheckbox` | `{ context, skill?, topic, step, done }` | `{ ok }` | `/learn`, `/study-skill`, `/project-*` |
-| `progress.getModuleMap` | `{ context, skill?, sourceDir? }` | MODULE_MAP JSON (캐시) | `/study-skill`, `/project-study` |
-| `progress.getCoverageMap` | `{ context, skill?, sourceDir?, refsDir? }` | COVERAGE_MAP JSON (캐시) | `/study-skill`, `/project-study` |
+| `progress.getPlan` | `{ context, skill? }` | plan.md 구조화 파싱 결과 (아래 스키마) | `/learn`, `/gen-plan`, `/dashboard`, `/next`, `/plan` |
+| `progress.getNextTopic` | `{ context, skill? }` | `{ topic, step, phase, estimatedTime, sourceFiles }` | `/study`, `/next`, `/project-gen-plan` |
+| `progress.updateCheckbox` | `{ context, skill?, topic, step, done }` | `{ ok }` | `/learn`, `/gen-plan`, `/project-*` |
+| `progress.getModuleMap` | `{ context, skill?, sourceDir? }` | MODULE_MAP JSON (캐시) | `/gen-plan`, `/project-gen-plan` |
+| `progress.getCoverageMap` | `{ context, skill?, sourceDir?, refsDir? }` | COVERAGE_MAP JSON (캐시) | `/gen-plan`, `/project-gen-plan` |
 
 **`progress.getPlan` 출력 스키마:**
 
@@ -294,7 +294,7 @@ study-all/
 |------|------|------|------|
 | `session.getResumePoint` | `{ context, skill?, topic }` | `{ exists, lastStep, lastDate, completedSteps, totalSteps, summary }` | `/learn`, `/project-learn` |
 | `session.appendLog` | `{ context, skill?, topic, content }` | `{ ok, filePath }` | `/learn`, `/project-learn` |
-| `session.getSourcePaths` | `{ context, skill? }` | `{ sourceDir, docsDir, files[] }` (캐시) | `/learn`, `/study-skill`, `/project-learn` |
+| `session.getSourcePaths` | `{ context, skill? }` | `{ sourceDir, docsDir, files[] }` (캐시) | `/learn`, `/gen-plan`, `/project-learn` |
 
 **`session.getResumePoint` 출력 스키마:**
 
@@ -502,7 +502,7 @@ React 패키지의 Core API Surface...         ← 요약 텍스트
 
 ### 6.2 Unit 7 전환 게이트 (skills 적용 전 필수)
 
-1. 쓰기형 커맨드 대응 skill(`learn`, `review`, `study`, `study-skill`, `project-*`, `plan`)에 `disable-model-invocation: true` 적용
+1. 쓰기형 커맨드 대응 skill(`learn`, `review`, `study`, `gen-plan`, `project-*`, `plan`)에 `disable-model-invocation: true` 적용
 2. 동명 충돌 0건 확인 (project/personal/enterprise 범위 포함)
 3. `dashboard/next/plan/study`의 레거시 수동 파싱 지시 제거
 4. command→skill 전환 커밋마다 동등성 시나리오 1회(`stats/review/session/progress`) 재실행
@@ -524,7 +524,7 @@ React 패키지의 Core API Surface...         ← 요약 텍스트
 - 스킬 레퍼런스 보강 제안 — LLM 판단 필요
 - 소스 코드 Read — 실제 코드 읽기는 여전히 LLM이 수행
 
-#### `/study-skill` (540줄 → ~80줄)
+#### `/gen-plan` (540줄 → ~80줄)
 
 **제거되는 것:**
 - MODULE_MAP 생성 → `progress.getModuleMap`
@@ -832,7 +832,7 @@ it("review.getQueue는 고정 날짜 기준으로 계산", async () => {
 | `/learn react "Fiber"` 세션 재개 | `session.getResumePoint` vs 기존 파일 직접 읽기 | 동일한 재개점, 완료/미완료 스텝 |
 | `/review react` 복습 대기열 | `review.getQueue` vs 수동 -meta.md 확인 | 동일한 대기 항목, 난이도 |
 | `/next` 추천 | `stats.getRecommendation` 근거 데이터 vs 수동 확인 | 동일한 데이터 기반 (판단은 LLM이므로 완전 동일 불필요) |
-| `/study-skill react` MODULE_MAP | `progress.getModuleMap` vs 기존 plan.md의 모듈 목록 | 46개 모듈 동일 |
+| `/gen-plan react` MODULE_MAP | `progress.getModuleMap` vs 기존 plan.md의 모듈 목록 | 46개 모듈 동일 |
 | 세션 기록 append | `session.appendLog` 후 파일 구조 | 기존 섹션 손상 없음, `---` 구분선 후 새 세션 |
 
 ---
@@ -937,7 +937,7 @@ Phase 5: 커맨드 리팩터링
   17. /dashboard — MCP 도구 활용으로 축소
   18. /next — MCP 도구 활용으로 축소
   19. /learn — MCP 도구 활용으로 축소
-  20. /study-skill — MCP 도구 활용으로 축소
+  20. /gen-plan — MCP 도구 활용으로 축소
   21. /review — MCP 도구 활용으로 축소
   22. /study — MCP 도구 활용으로 축소
   23. /project-* — MCP 도구 활용으로 축소
@@ -982,7 +982,7 @@ Phase 6: 검증
 | `/next` | `stats.getRecommendation`, `review.getQueue` |
 | `/plan` | `context.resolve`, `progress.getPlan` (여러 스킬), `config.get` |
 | `/learn` | `context.resolve`, `session.getResumePoint`, `session.getSourcePaths`, `session.appendLog`, `progress.getPlan`, `progress.updateCheckbox` |
-| `/study-skill` | `context.resolve`, `progress.getModuleMap`, `progress.getCoverageMap`, `progress.getPlan`, `progress.updateCheckbox` |
+| `/gen-plan` | `context.resolve`, `progress.getModuleMap`, `progress.getCoverageMap`, `progress.getPlan`, `progress.updateCheckbox` |
 | `/review` | `context.resolve`, `review.getQueue`, `review.getMeta`, `review.recordResult`, `review.saveMeta` |
 | `/study` | `context.resolve`, `daily.*`, `progress.getNextTopic`, `config.get` |
 | `/project-*` | `context.resolve(mode=project)` + `session.*`/`review.*`/`progress.*` 공통 도구 |
