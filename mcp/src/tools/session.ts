@@ -34,6 +34,7 @@ const appendInputSchema = z.object({
   skill: z.string().optional(),
   topic: z.string(),
   content: z.string(),
+  via: z.string().optional(),
 });
 
 const sourcePathInputSchema = z.object({
@@ -115,7 +116,8 @@ export async function sessionAppendLog(
   const dir = resolveSessionDir(context, parsed.skill);
   const file = await resolveTopicFile(dir, parsed.topic);
   const today = clock.now().toISOString().slice(0, 10);
-  const marker = context.mode === "project" ? "via /project-learn" : "via /learn";
+  const defaultMarker = context.mode === "project" ? "via /project-learn" : "via /learn";
+  const marker = parsed.via ?? defaultMarker;
 
   const payload = `\n\n---\n\n## ${today} (${marker})\n\n${parsed.content.trim()}\n`;
   await appendText(file, payload);

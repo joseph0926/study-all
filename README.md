@@ -34,9 +34,7 @@ bash scripts/setup-githooks.sh
 | 스킬 검증 | `/gen-plan <skill>` | `$gen-plan <skill>` |
 | 복습 세션 | `/review <skill> [topic]` | `$review <skill> [topic]` |
 | 일일 상태 | `/study [args]` | `$study [args]` |
-| 프로젝트 플랜 | `/project-gen-plan <path>` | `$project-gen-plan <path>` |
-| 프로젝트 학습 | `/project-learn <path> <topic>` | `$project-learn <path> <topic>` |
-| 프로젝트 복습 | `/project-review <path> [topic]` | `$project-review <path> [topic]` |
+| 프로젝트 분석 | `/project <path> [area]` | `$project <path> [area]` |
 
 ## 3) 사용자 가이드
 

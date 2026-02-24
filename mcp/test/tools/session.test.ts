@@ -36,6 +36,42 @@ describe("session tools", () => {
     expect(next).toContain("via /project-learn");
   });
 
+  it("session.appendLog uses custom via marker when provided", async () => {
+    const base = path.join(os.tmpdir(), `mcp-session-via-${Date.now()}`);
+    mkdirSync(path.join(base, ".study"), { recursive: true });
+    const filePath = path.join(base, ".study", "Demo.md");
+    writeFileSync(filePath, "# Demo\n", "utf8");
+
+    const result = await sessionAppendLog({
+      context: { mode: "project", projectPath: base },
+      topic: "Demo",
+      content: "### 분석 결과\n- P1: 개선점",
+      via: "via /project",
+    });
+
+    expect(result.data.ok).toBe(true);
+    const text = readFileSync(filePath, "utf8");
+    expect(text).toContain("via /project");
+    expect(text).not.toContain("via /project-learn");
+  });
+
+  it("session.appendLog uses default marker when via is omitted", async () => {
+    const base = path.join(os.tmpdir(), `mcp-session-default-${Date.now()}`);
+    mkdirSync(path.join(base, ".study"), { recursive: true });
+    const filePath = path.join(base, ".study", "Demo.md");
+    writeFileSync(filePath, "# Demo\n", "utf8");
+
+    const result = await sessionAppendLog({
+      context: { mode: "project", projectPath: base },
+      topic: "Demo",
+      content: "### 학습 내용\n- Step 1: demo",
+    });
+
+    expect(result.data.ok).toBe(true);
+    const text = readFileSync(filePath, "utf8");
+    expect(text).toContain("via /project-learn");
+  });
+
   it("session.getSourcePaths returns files", async () => {
     process.env.STUDY_ROOT = ROOT;
 
