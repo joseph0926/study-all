@@ -91,8 +91,8 @@ if [[ -d "$ROOT/study" ]]; then
   while IFS= read -r f; do
     fname="$(basename "$f")"
 
-    if ! echo "$fname" | grep -qE '^[A-Za-z0-9][A-Za-z0-9._-]*\.md$'; then
-      err "$fname — 허용 문자(A-Z a-z 0-9 . _ -)외 문자 포함"
+    if ! echo "$fname" | grep -qE '^[A-Za-z0-9가-힣][A-Za-z0-9가-힣._-]*\.md$'; then
+      err "$fname — 허용 문자(A-Z a-z 0-9 가-힣 . _ -)외 문자 포함"
     fi
 
     base="${fname%.md}"

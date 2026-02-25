@@ -8,7 +8,7 @@ import { resolveContextData } from "./context.js";
 import { dailyGetStatus } from "./daily.js";
 import { reviewGetQueue } from "./review.js";
 import type { ContextInput, Envelope } from "../types/contracts.js";
-import type { DashboardData, DashboardSkill, RecommendationItem } from "../types/domain.js";
+import type { DashboardData, DashboardSkill } from "../types/domain.js";
 
 const contextSchema = z.object({
   mode: z.enum(["skill", "project"]),
@@ -20,10 +20,6 @@ const contextSchema = z.object({
 });
 
 const dashboardInputSchema = z.object({
-  context: contextSchema,
-});
-
-const recommendationInputSchema = z.object({
   context: contextSchema,
 });
 
@@ -138,49 +134,6 @@ export async function statsGetDashboard(
   return makeEnvelope(data);
 }
 
-export async function statsGetRecommendation(
-  input: z.input<typeof recommendationInputSchema>,
-): Promise<Envelope<{ items: RecommendationItem[] }>> {
-  const parsed = recommendationInputSchema.parse(input);
-  const dashboard = await buildDashboardData(parsed.context as ContextInput);
-
-  const items: RecommendationItem[] = [];
-  for (const skill of dashboard.skills) {
-    if (skill.reviewPending > 0) {
-      items.push({
-        type: "review",
-        skill: skill.name,
-        topic: "복습 대기",
-        reason: `복습 대기 ${skill.reviewPending}건`,
-        priority: 1,
-      });
-      continue;
-    }
-
-    if (skill.progressRate < 1) {
-      items.push({
-        type: "continue",
-        skill: skill.name,
-        topic: "다음 토픽",
-        reason: `진행률 ${(skill.progressRate * 100).toFixed(1)}%`,
-        priority: 2,
-      });
-    } else {
-      items.push({
-        type: "new-topic",
-        skill: skill.name,
-        topic: "신규 주제",
-        reason: "현재 토픽 완료, 확장 학습 권장",
-        priority: 3,
-      });
-    }
-  }
-
-  items.sort((a, b) => a.priority - b.priority || a.skill.localeCompare(b.skill));
-  return makeEnvelope({ items: items.slice(0, 3) });
-}
-
 export const statsSchemas = {
   getDashboard: dashboardInputSchema,
-  getRecommendation: recommendationInputSchema,
 };

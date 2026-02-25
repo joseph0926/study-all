@@ -4,17 +4,14 @@ import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js"
 import { contextResolve, contextResolveInputSchema } from "./tools/context.js";
 import { configGet, configSchemas } from "./tools/config.js";
 import {
-  progressGetCoverageMap,
   progressGetModuleMap,
-  progressGetNextTopic,
   progressGetPlan,
   progressSchemas,
   progressUpdateCheckbox,
 } from "./tools/progress.js";
 import { sessionAppendLog, sessionGetResumePoint, sessionGetSourceDigest, sessionGetSourcePaths, sessionSchemas } from "./tools/session.js";
-import { dailyFinalize, dailyGetStatus, dailyLogDone, dailyLogPlan, dailySchemas } from "./tools/daily.js";
 import { reviewAppendQnA, reviewGetMeta, reviewGetQueue, reviewRecordResult, reviewSaveMeta, reviewSchemas } from "./tools/review.js";
-import { statsGetDashboard, statsGetRecommendation, statsSchemas } from "./tools/stats.js";
+import { statsGetDashboard, statsSchemas } from "./tools/stats.js";
 import { makeEnvelope } from "./lib/envelope.js";
 
 interface ToolDef {
@@ -45,12 +42,6 @@ const tools: ToolDef[] = [
     run: progressGetPlan,
   },
   {
-    name: "progress.getNextTopic",
-    description: "Compute next topic/step from plan.",
-    schema: progressSchemas.getNextTopic,
-    run: progressGetNextTopic,
-  },
-  {
     name: "progress.updateCheckbox",
     description: "Update a checkbox line in plan.md.",
     schema: progressSchemas.updateCheckbox,
@@ -61,12 +52,6 @@ const tools: ToolDef[] = [
     description: "Build MODULE_MAP from source tree.",
     schema: progressSchemas.getModuleMap,
     run: progressGetModuleMap,
-  },
-  {
-    name: "progress.getCoverageMap",
-    description: "Build COVERAGE_MAP from module map vs refs.",
-    schema: progressSchemas.getCoverageMap,
-    run: progressGetCoverageMap,
   },
   {
     name: "session.getResumePoint",
@@ -123,40 +108,10 @@ const tools: ToolDef[] = [
     run: reviewAppendQnA,
   },
   {
-    name: "daily.getStatus",
-    description: "Get daily study status from study logs.",
-    schema: dailySchemas.getStatus,
-    run: dailyGetStatus,
-  },
-  {
-    name: "daily.logPlan",
-    description: "Write/replace today's plan in study logs.",
-    schema: dailySchemas.logPlan,
-    run: dailyLogPlan,
-  },
-  {
-    name: "daily.logDone",
-    description: "Write today's done report + feedback status.",
-    schema: dailySchemas.logDone,
-    run: dailyLogDone,
-  },
-  {
-    name: "daily.finalize",
-    description: "Finalize today's study log.",
-    schema: dailySchemas.finalize,
-    run: dailyFinalize,
-  },
-  {
     name: "stats.getDashboard",
     description: "Get aggregated skill dashboard stats.",
     schema: statsSchemas.getDashboard,
     run: statsGetDashboard,
-  },
-  {
-    name: "stats.getRecommendation",
-    description: "Get next recommendations.",
-    schema: statsSchemas.getRecommendation,
-    run: statsGetRecommendation,
   },
 ];
 

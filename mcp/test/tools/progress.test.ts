@@ -2,13 +2,7 @@ import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import os from "node:os";
 import path from "node:path";
 import { describe, expect, it } from "vitest";
-import {
-  progressGetCoverageMap,
-  progressGetModuleMap,
-  progressGetNextTopic,
-  progressGetPlan,
-  progressUpdateCheckbox,
-} from "../../src/tools/progress.js";
+import { progressGetModuleMap, progressGetPlan, progressUpdateCheckbox } from "../../src/tools/progress.js";
 
 const ROOT = path.resolve(new URL("../../../", import.meta.url).pathname);
 
@@ -33,24 +27,6 @@ describe("progress tools", () => {
     expect(result.data.phases.length).toBeGreaterThanOrEqual(1);
   });
 
-  it("progress.getNextTopic returns next actionable step", async () => {
-    const base = path.join(os.tmpdir(), `mcp-next-${Date.now()}`);
-    mkdirSync(path.join(base, "study", "react"), { recursive: true });
-    writeFileSync(
-      path.join(base, "study", "react", "plan.md"),
-      `# react Study Plan\n\n## Phase 1: Core\n\n### Topic 1: core\n- [ ] Step 1: basics\n`,
-      "utf8",
-    );
-    process.env.STUDY_ROOT = base;
-
-    const result = await progressGetNextTopic({
-      context: { mode: "skill", skill: "react" },
-      skill: "react",
-    });
-
-    expect(result.data.topic.length).toBeGreaterThan(0);
-    expect(result.data.phase.length).toBeGreaterThan(0);
-  });
 
   it("progress.updateCheckbox updates checkbox in plan", async () => {
     const base = path.join(os.tmpdir(), `mcp-progress-${Date.now()}`);
@@ -106,41 +82,5 @@ describe("progress tools", () => {
     });
 
     expect(result.data.modules.length).toBeGreaterThan(0);
-  });
-
-  it("progress.getCoverageMap compares module vs refs", async () => {
-    const base = path.join(os.tmpdir(), `mcp-coverage-${Date.now()}`);
-    const refs = path.join(base, "refs");
-    mkdirSync(path.join(base, "src", "api"), { recursive: true });
-    mkdirSync(refs, { recursive: true });
-    writeFileSync(path.join(base, "src", "api", "index.ts"), "export {}\n", "utf8");
-    writeFileSync(path.join(refs, "api.md"), "api module", "utf8");
-
-    const result = await progressGetCoverageMap({
-      context: { mode: "project", projectPath: base },
-      sourceDir: base,
-      refsDir: refs,
-    });
-
-    expect(result.data.covered).toContain("api");
-  });
-
-  it("progress.getCoverageMap keeps filename hits out of orphanRefs", async () => {
-    const base = path.join(os.tmpdir(), `mcp-coverage-filename-${Date.now()}`);
-    const refs = path.join(base, "refs");
-    mkdirSync(path.join(base, "src", "foo"), { recursive: true });
-    mkdirSync(refs, { recursive: true });
-    writeFileSync(path.join(base, "src", "foo", "index.ts"), "export {}\n", "utf8");
-    writeFileSync(path.join(refs, "foo.md"), "reference without explicit module text", "utf8");
-    process.env.STUDY_ROOT = base;
-
-    const result = await progressGetCoverageMap({
-      context: { mode: "project", projectPath: base },
-      sourceDir: base,
-      refsDir: refs,
-    });
-
-    expect(result.data.covered).toContain("foo");
-    expect(result.data.orphanRefs).not.toContain("foo.md");
   });
 });

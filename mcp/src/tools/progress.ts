@@ -2,11 +2,11 @@ import path from "node:path";
 import { z } from "zod";
 import { MemoryCache, buildCacheKey } from "../lib/cache.js";
 import { makeEnvelope } from "../lib/envelope.js";
-import { getDirSnapshot, listFiles, readText, writeText } from "../lib/fs.js";
+import { getDirSnapshot, readText, writeText } from "../lib/fs.js";
 import { buildModuleMap } from "../parsers/module-map.js";
 import { parsePlan } from "../parsers/plan-parser.js";
 import { resolveContextData } from "./context.js";
-import type { CoverageMapResult, ModuleMapResult, PlanData, PlanTopic } from "../types/domain.js";
+import type { ModuleMapResult, PlanData } from "../types/domain.js";
 import type { CacheMeta, Envelope, ContextInput } from "../types/contracts.js";
 
 const cache = new MemoryCache();
@@ -27,11 +27,6 @@ const planInputSchema = z.object({
   skill: z.string().optional(),
 });
 
-const nextTopicInputSchema = z.object({
-  context: contextSchema,
-  skill: z.string().optional(),
-});
-
 const updateCheckboxInputSchema = z.object({
   context: contextSchema,
   skill: z.string().optional(),
@@ -46,55 +41,12 @@ const moduleMapInputSchema = z.object({
   sourceDir: z.string().optional(),
 });
 
-const coverageMapInputSchema = z.object({
-  context: contextSchema,
-  skill: z.string().optional(),
-  sourceDir: z.string().optional(),
-  refsDir: z.string().optional(),
-});
-
 function resolvePlanPath(context: Awaited<ReturnType<typeof resolveContextData>>, skillOverride?: string): string {
   if (context.mode === "project") {
     return path.join(context.studyDir!, "plan.md");
   }
   const skill = (skillOverride ?? context.skill)!;
   return path.join(context.notesDir, skill, "plan.md");
-}
-
-function flattenTopics(plan: PlanData): PlanTopic[] {
-  return plan.phases.flatMap((phase) => phase.topics);
-}
-
-function pickNextTopic(plan: PlanData): {
-  topic: string;
-  step: string;
-  phase: string;
-  estimatedTime: string;
-  sourceFiles: number;
-} {
-  for (const phase of plan.phases) {
-    for (const topic of phase.topics) {
-      const pending = topic.steps.find((step) => !step.done);
-      if (pending) {
-        return {
-          topic: topic.name,
-          step: pending.name,
-          phase: phase.name,
-          estimatedTime: "40-60min",
-          sourceFiles: topic.sourceFiles,
-        };
-      }
-    }
-  }
-
-  const fallback = flattenTopics(plan)[0];
-  return {
-    topic: fallback?.name ?? "",
-    step: fallback?.steps[0]?.name ?? "",
-    phase: plan.phases[0]?.name ?? "",
-    estimatedTime: "40-60min",
-    sourceFiles: fallback?.sourceFiles ?? 0,
-  };
 }
 
 function replaceCheckboxInRange(lines: string[], start: number, end: number, step: string, done: boolean): boolean {
@@ -112,11 +64,6 @@ function replaceCheckboxInRange(lines: string[], start: number, end: number, ste
     return true;
   }
   return false;
-}
-
-function matchesModuleRef(moduleName: string, fileNameLower: string, refTextLower: string): boolean {
-  const moduleLower = moduleName.toLowerCase();
-  return fileNameLower.includes(moduleLower) || refTextLower.includes(moduleLower);
 }
 
 async function getCachedModuleMap(sourceDir: string): Promise<{ value: ModuleMapResult; cacheMeta: CacheMeta }> {
@@ -161,13 +108,6 @@ export async function progressGetPlan(input: z.input<typeof planInputSchema>): P
   const markdown = await readText(planPath);
   const plan = parsePlan(markdown, skill);
   return makeEnvelope(plan);
-}
-
-export async function progressGetNextTopic(
-  input: z.input<typeof nextTopicInputSchema>,
-): Promise<Envelope<{ topic: string; step: string; phase: string; estimatedTime: string; sourceFiles: number }>> {
-  const plan = (await progressGetPlan(input)).data;
-  return makeEnvelope(pickNextTopic(plan));
 }
 
 export async function progressUpdateCheckbox(
@@ -230,70 +170,8 @@ export async function progressGetModuleMap(
   return makeEnvelope(value, undefined, cacheMeta);
 }
 
-export async function progressGetCoverageMap(
-  input: z.input<typeof coverageMapInputSchema>,
-): Promise<Envelope<CoverageMapResult>> {
-  const parsed = coverageMapInputSchema.parse(input);
-  const context = await resolveContextData(parsed.context as ContextInput);
-  const sourceDir = parsed.sourceDir ?? context.sourceDir ?? context.projectPath;
-  if (!sourceDir) {
-    throw new Error("sourceDir not found");
-  }
-
-  const refsDir =
-    parsed.refsDir ??
-    (context.mode === "skill" && context.skillNotesDir
-      ? context.skillNotesDir
-      : path.join(context.studyDir ?? context.projectPath ?? sourceDir, "references"));
-
-  const { value: moduleMap, cacheMeta } = await getCachedModuleMap(sourceDir);
-  const refFiles = await listFiles(refsDir, { extension: ".md", maxDepth: 5 });
-
-  const refTexts = await Promise.all(refFiles.map((file) => readText(file)));
-  const refEntries = refFiles.map((file, index) => ({
-    fileNameLower: path.basename(file).toLowerCase(),
-    fileName: path.basename(file),
-    refTextLower: refTexts[index]!.toLowerCase(),
-  }));
-  const covered = new Set<string>();
-  const uncovered = new Set<string>();
-
-  for (const mod of moduleMap.modules) {
-    let hit = false;
-    for (const entry of refEntries) {
-      if (matchesModuleRef(mod.name, entry.fileNameLower, entry.refTextLower)) {
-        hit = true;
-        break;
-      }
-    }
-
-    if (hit) covered.add(mod.name);
-    else uncovered.add(mod.name);
-  }
-
-  const orphanRefs: string[] = [];
-  for (const entry of refEntries) {
-    const hasAny = moduleMap.modules.some((mod) => matchesModuleRef(mod.name, entry.fileNameLower, entry.refTextLower));
-    if (!hasAny) {
-      orphanRefs.push(entry.fileName);
-    }
-  }
-
-  return makeEnvelope(
-    {
-      covered: [...covered].sort(),
-      uncovered: [...uncovered].sort(),
-      orphanRefs: orphanRefs.sort(),
-    },
-    undefined,
-    cacheMeta,
-  );
-}
-
 export const progressSchemas = {
   getPlan: planInputSchema,
-  getNextTopic: nextTopicInputSchema,
   updateCheckbox: updateCheckboxInputSchema,
   getModuleMap: moduleMapInputSchema,
-  getCoverageMap: coverageMapInputSchema,
 };

@@ -2,7 +2,7 @@ import { mkdirSync, writeFileSync } from "node:fs";
 import os from "node:os";
 import path from "node:path";
 import { describe, expect, it } from "vitest";
-import { statsGetDashboard, statsGetRecommendation } from "../../src/tools/stats.js";
+import { statsGetDashboard } from "../../src/tools/stats.js";
 
 function makeFixture(): string {
   const base = path.join(os.tmpdir(), `mcp-stats-${Date.now()}`);
@@ -65,16 +65,5 @@ describe("stats tools", () => {
     expect(names).toContain("nextjs");
     expect(names).not.toContain("legacy");
     expect(new Set(names).size).toBe(names.length);
-  });
-
-  it("stats.getRecommendation returns top items", async () => {
-    const base = makeFixture();
-    process.env.STUDY_ROOT = base;
-
-    const result = await statsGetRecommendation({
-      context: { mode: "skill", skill: "react" },
-    });
-
-    expect(result.data.items.length).toBeLessThanOrEqual(3);
   });
 });

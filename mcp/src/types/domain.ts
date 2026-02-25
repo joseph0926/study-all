@@ -145,11 +145,3 @@ export interface SourceDigest {
   overview: string;
   existingTopics: string[];
 }
-
-export interface RecommendationItem {
-  type: "review" | "continue" | "new-topic";
-  skill: string;
-  topic: string;
-  reason: string;
-  priority: number;
-}
