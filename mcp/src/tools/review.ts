@@ -262,17 +262,10 @@ export async function reviewGetQueue(
 
   if (context.mode === "project") {
     dirs.push({ skill: path.basename(context.projectPath ?? "project"), dir: context.studyDir! });
-  } else if (parsed.skill ?? context.skill) {
-    const skill = parsed.skill ?? context.skill!;
-    dirs.push({ skill, dir: path.join(context.notesDir, skill) });
   } else {
-    const skillDirs = await listFiles(context.notesDir, { maxDepth: 1 });
-    const names = [...new Set(skillDirs.map((file) => path.basename(path.dirname(file))))];
-    for (const name of names) {
-      if (name) {
-        dirs.push({ skill: name, dir: path.join(context.notesDir, name) });
-      }
-    }
+    // mode=skill is validated at context resolution and always has context.skill.
+    const skill = context.skill!;
+    dirs.push({ skill, dir: path.join(context.notesDir, skill) });
   }
 
   const items: ReviewQueueItem[] = [];

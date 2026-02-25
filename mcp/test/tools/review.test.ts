@@ -5,6 +5,71 @@ import { describe, expect, it } from "vitest";
 import { reviewAppendQnA, reviewGetMeta, reviewGetQueue, reviewRecordResult, reviewSaveMeta } from "../../src/tools/review.js";
 
 describe("review tools", () => {
+  it("review.getQueue in skill mode requires skill", async () => {
+    const base = path.join(os.tmpdir(), `mcp-review-skill-required-${Date.now()}`);
+    process.env.STUDY_ROOT = base;
+    await expect(
+      reviewGetQueue({
+        context: { mode: "skill" },
+      }),
+    ).rejects.toThrow("mode=skill requires skill");
+  });
+
+  it("review.getQueue in skill mode scopes to one skill", async () => {
+    const base = path.join(os.tmpdir(), `mcp-review-skill-queue-${Date.now()}`);
+    process.env.STUDY_ROOT = base;
+    mkdirSync(path.join(base, "study", "react"), { recursive: true });
+    mkdirSync(path.join(base, "study", "nextjs"), { recursive: true });
+
+    await reviewSaveMeta({
+      context: { mode: "skill", skill: "react" },
+      skill: "react",
+      topic: "React-Queue",
+      meta: {
+        concepts: [
+          {
+            name: "dispatcher",
+            level: "L2",
+            streak: 1,
+            nextReview: "2026-01-01",
+            graduated: false,
+            attempts: 1,
+          },
+        ],
+        sessionCount: 1,
+      },
+    });
+
+    await reviewSaveMeta({
+      context: { mode: "skill", skill: "nextjs" },
+      skill: "nextjs",
+      topic: "Nextjs-Queue",
+      meta: {
+        concepts: [
+          {
+            name: "router",
+            level: "L2",
+            streak: 1,
+            nextReview: "2026-01-01",
+            graduated: false,
+            attempts: 1,
+          },
+        ],
+        sessionCount: 1,
+      },
+    });
+
+    const result = await reviewGetQueue({
+      context: { mode: "skill", skill: "react" },
+      skill: "react",
+    });
+
+    expect(result.data.items.length).toBeGreaterThan(0);
+    expect(result.data.items.every((item) => item.skill === "react")).toBe(true);
+    expect(result.data.items.some((item) => item.topic === "React-Queue")).toBe(true);
+    expect(result.data.items.some((item) => item.topic === "Nextjs-Queue")).toBe(false);
+  });
+
   it("review.saveMeta and review.getMeta round-trip", async () => {
     const base = path.join(os.tmpdir(), `mcp-review-${Date.now()}`);
     process.env.STUDY_ROOT = base;

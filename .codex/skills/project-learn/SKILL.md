@@ -1,17 +1,16 @@
 ---
 name: project-learn
-description: 프로젝트 코드베이스 자유 Q&A — 질문 → 근거 탐색(소스/문서/git/웹/추론) → 답변 → 반복 → 문서화
-argument-hint: "<project-path> <질문>"
-disable-model-invocation: true
-allowed-tools: Read, Grep, Glob, Bash, WebSearch, WebFetch, Write, mcp__study__context_resolve, mcp__study__session_appendLog
+description: 프로젝트 코드베이스 자유 Q&A — 질문 → 근거 탐색(소스/문서/git/웹/추론) → 답변 → 반복 → 문서화. Codex에서는 `$project-learn <path> <질문>`으로 호출한다.
 ---
 
-입력: `$ARGUMENTS` (예: `/path/to/project 인증 흐름이 어떻게 구현되어있나요?`)
+# project-learn
+
+입력: `$project-learn <project-path> <질문>` (예: `$project-learn /path/to/project 인증 흐름이 어떻게 구현되어있나요?`)
 
 실행 순서:
 
 1. `$ARGUMENTS`에서 `<project-path>` + `<질문>` 파싱
-2. `context.resolve(mode=project, projectPath=<project-path>)` 호출
+2. `mcp__study__context_resolve(mode=project, projectPath=<project-path>)` 호출
 3. 사용자 질문에서 주제명 추출 (간결한 kebab-case, 예: `인증-흐름`)
 4. 근거 탐색 — 아래 우선순위를 순서대로 시도한다.
 
@@ -65,7 +64,7 @@ allowed-tools: Read, Grep, Glob, Bash, WebSearch, WebFetch, Write, mcp__study__c
 1. 전체 Q&A를 `{project}/.study/learn/<주제명>.md`에 Write한다.
    - 포맷: 아래 템플릿을 따른다.
    - 원문 그대로 기록한다. 오탈자만 수정.
-2. `session.appendLog(context, topic=<주제명>, content=<요약>, via="via /project-learn")`로 세션 기록.
+2. `mcp__study__session_appendLog(context, topic=<주제명>, content=<요약>, via="via /project-learn")`로 세션 기록.
 
 문서 템플릿:
 
