@@ -1,6 +1,9 @@
 import { promises as fs } from "node:fs";
 import path from "node:path";
 
+const DIR_SNAPSHOT_CACHE_TTL_MS = 2000;
+const dirSnapshotCache = new Map<string, { snapshot: DirSnapshot; expiresAt: number }>();
+
 export async function exists(filePath: string): Promise<boolean> {
   try {
     await fs.access(filePath);
@@ -134,17 +137,42 @@ export interface DirSnapshot {
   maxMtime: number;
 }
 
+function buildDirSnapshotCacheKey(dirPath: string, maxDepth: number, ignoreDirs: string[]): string {
+  return JSON.stringify({
+    dirPath: path.resolve(dirPath),
+    maxDepth,
+    ignoreDirs: [...ignoreDirs].sort(),
+  });
+}
+
 export async function getDirSnapshot(
   dirPath: string,
   opts: { maxDepth?: number; ignoreDirs?: string[] } = {},
 ): Promise<DirSnapshot> {
+  const maxDepth = opts.maxDepth ?? 3;
+  const ignoreDirs = opts.ignoreDirs ?? ["node_modules", ".git", "dist", "build"];
+  const cacheKey = buildDirSnapshotCacheKey(dirPath, maxDepth, ignoreDirs);
+  const now = Date.now();
+
+  const cached = dirSnapshotCache.get(cacheKey);
+  if (cached && now < cached.expiresAt) {
+    return cached.snapshot;
+  }
+
   const files = await listFiles(dirPath, {
-    maxDepth: opts.maxDepth ?? 3,
-    ignoreDirs: opts.ignoreDirs ?? ["node_modules", ".git", "dist", "build"],
+    maxDepth,
+    ignoreDirs,
   });
-  return {
+  const snapshot: DirSnapshot = {
     gitHead: await readGitHead(dirPath),
     fileCount: files.length,
     maxMtime: await getNewestMtime(files),
   };
+
+  dirSnapshotCache.set(cacheKey, {
+    snapshot,
+    expiresAt: now + DIR_SNAPSHOT_CACHE_TTL_MS,
+  });
+
+  return snapshot;
 }

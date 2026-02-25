@@ -41,6 +41,7 @@ const appendInputSchema = z.object({
 const sourcePathInputSchema = z.object({
   context: contextSchema,
   skill: z.string().optional(),
+  sourceDir: z.string().optional(),
 });
 
 async function resolveTopicFile(baseDir: string, topic: string): Promise<string> {
@@ -135,7 +136,7 @@ export async function sessionGetSourcePaths(
   const parsed = sourcePathInputSchema.parse(input);
   const context = await resolveContextData(parsed.context as ContextInput);
 
-  const sourceDir = context.sourceDir ?? context.projectPath;
+  const sourceDir = parsed.sourceDir ? path.resolve(parsed.sourceDir) : context.sourceDir ?? context.projectPath;
   if (!sourceDir) {
     throw new Error("sourceDir not found");
   }
@@ -156,6 +157,7 @@ export async function sessionGetSourcePaths(
 const sourceDigestInputSchema = z.object({
   context: contextSchema,
   skill: z.string().optional(),
+  sourceDir: z.string().optional(),
 });
 
 const IGNORE_DIRS = ["node_modules", ".git", "dist", "build", ".next"];
@@ -221,7 +223,7 @@ export async function sessionGetSourceDigest(
   const parsed = sourceDigestInputSchema.parse(input);
   const context = await resolveContextData(parsed.context as ContextInput);
 
-  const sourceDir = context.sourceDir ?? context.projectPath;
+  const sourceDir = parsed.sourceDir ? path.resolve(parsed.sourceDir) : context.sourceDir ?? context.projectPath;
   if (!sourceDir) {
     throw new Error("sourceDir not found");
   }

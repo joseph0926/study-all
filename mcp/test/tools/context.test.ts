@@ -75,4 +75,10 @@ describe("detectSourceDir dynamic scanning", () => {
     const result = await contextResolve({ mode: "skill", skill: "react" });
     expect(result.data.context.sourceDir).toBe(path.join(base, "ref", "react.dev"));
   });
+
+  it("prefers code source over docs when multiple suffix matches exist", async () => {
+    const base = setup(["react-docs", "react-fork"]);
+    const result = await contextResolve({ mode: "skill", skill: "react" });
+    expect(result.data.context.sourceDir).toBe(path.join(base, "ref", "react-fork"));
+  });
 });

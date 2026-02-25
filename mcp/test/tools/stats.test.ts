@@ -21,6 +21,23 @@ function makeFixture(): string {
   return base;
 }
 
+function makeNestedFixture(): string {
+  const base = path.join(os.tmpdir(), `mcp-stats-nested-${Date.now()}`);
+  mkdirSync(path.join(base, "study", "react", "legacy"), { recursive: true });
+  mkdirSync(path.join(base, "study", "nextjs", "legacy"), { recursive: true });
+  writeFileSync(
+    path.join(base, "study", "react", "legacy", "Fiber-Structure.md"),
+    `# Fiber Structure\n\n## 2026-02-24\n\nSession content.\n`,
+    "utf8",
+  );
+  writeFileSync(
+    path.join(base, "study", "nextjs", "legacy", "Next-Src-Api.md"),
+    `# Next Src Api\n\n## 2026-02-20\n\nSession content.\n`,
+    "utf8",
+  );
+  return base;
+}
+
 describe("stats tools", () => {
   it("stats.getDashboard aggregates skills", async () => {
     const base = makeFixture();
@@ -33,6 +50,21 @@ describe("stats tools", () => {
     const names = result.data.skills.map((skill) => skill.name);
     expect(names).toContain("react");
     expect(names).toContain("nextjs");
+  });
+
+  it("stats.getDashboard groups nested legacy docs by top-level skill", async () => {
+    const base = makeNestedFixture();
+    process.env.STUDY_ROOT = base;
+
+    const result = await statsGetDashboard({
+      context: { mode: "skill", skill: "react" },
+    });
+
+    const names = result.data.skills.map((skill) => skill.name);
+    expect(names).toContain("react");
+    expect(names).toContain("nextjs");
+    expect(names).not.toContain("legacy");
+    expect(new Set(names).size).toBe(names.length);
   });
 
   it("stats.getRecommendation returns top items", async () => {

@@ -28,12 +28,13 @@ const recommendationInputSchema = z.object({
 });
 
 async function discoverSkillDirs(notesDir: string): Promise<string[]> {
-  const files = await listFiles(notesDir, { extension: ".md", maxDepth: 2 });
+  const files = await listFiles(notesDir, { extension: ".md", maxDepth: 3 });
   const dirs = new Set<string>();
   for (const file of files) {
-    const dir = path.dirname(file);
-    if (dir !== notesDir) {
-      dirs.add(dir);
+    const rel = path.relative(notesDir, file);
+    const [first] = rel.split(path.sep);
+    if (first && first !== path.basename(file)) {
+      dirs.add(path.join(notesDir, first));
     }
   }
   return [...dirs].sort();

@@ -35,6 +35,29 @@ function stripSuffix(name: string): string | undefined {
   return undefined;
 }
 
+function scoreCandidate(name: string, normalized: string): number {
+  const lower = name.toLowerCase();
+  let score = 0;
+
+  if (lower === normalized) score += 1000;
+  if (lower === `${normalized}-fork`) score += 600;
+  if (lower === `${normalized}-source`) score += 550;
+  if (lower.startsWith(`${normalized}-`)) score += 300;
+  if (lower === `${normalized}.js`) score += 250;
+
+  if (lower.includes("fork")) score += 50;
+  if (lower.includes("source")) score += 40;
+  if (lower.includes("docs")) score -= 120;
+  if (lower.endsWith(".dev")) score -= 80;
+
+  return score;
+}
+
+function pickBestCandidate(candidates: string[], normalized: string): string | undefined {
+  if (candidates.length === 0) return undefined;
+  return [...candidates].sort((a, b) => scoreCandidate(b, normalized) - scoreCandidate(a, normalized) || a.localeCompare(b))[0];
+}
+
 export async function scanRefDirs(refDir: string): Promise<string[]> {
   try {
     const entries = await fs.readdir(refDir, { withFileTypes: true });
@@ -61,25 +84,30 @@ async function detectSourceDir(refDir: string, skill?: string): Promise<string |
 
   // Priority 2: stripped-punctuation match ("nextjs" → "next.js")
   const normalizedStripped = stripPunctuation(normalized);
-  for (const dir of dirs) {
-    if (stripPunctuation(dir) === normalizedStripped) {
-      return path.join(refDir, dir);
-    }
+  const punctuationMatches = dirs.filter((dir) => stripPunctuation(dir) === normalizedStripped);
+  const punctuationMatch = pickBestCandidate(punctuationMatches, normalized);
+  if (punctuationMatch) {
+    return path.join(refDir, punctuationMatch);
   }
 
   // Priority 3: suffix-stripped match ("react" → "react-fork")
+  const suffixMatches: string[] = [];
   for (const dir of dirs) {
     const base = stripSuffix(dir);
     if (base && base === normalized) {
-      return path.join(refDir, dir);
+      suffixMatches.push(dir);
     }
+  }
+  const suffixMatch = pickBestCandidate(suffixMatches, normalized);
+  if (suffixMatch) {
+    return path.join(refDir, suffixMatch);
   }
 
   // Priority 4: prefix match ("react" → "react-anything")
-  for (const dir of dirs) {
-    if (dir.toLowerCase().startsWith(normalized)) {
-      return path.join(refDir, dir);
-    }
+  const prefixMatches = dirs.filter((dir) => dir.toLowerCase().startsWith(normalized));
+  const prefixMatch = pickBestCandidate(prefixMatches, normalized);
+  if (prefixMatch) {
+    return path.join(refDir, prefixMatch);
   }
 
   return undefined;

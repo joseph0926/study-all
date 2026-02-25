@@ -114,6 +114,11 @@ function replaceCheckboxInRange(lines: string[], start: number, end: number, ste
   return false;
 }
 
+function matchesModuleRef(moduleName: string, fileNameLower: string, refTextLower: string): boolean {
+  const moduleLower = moduleName.toLowerCase();
+  return fileNameLower.includes(moduleLower) || refTextLower.includes(moduleLower);
+}
+
 async function getCachedModuleMap(sourceDir: string): Promise<{ value: ModuleMapResult; cacheMeta: CacheMeta }> {
   const snapshot = await getDirSnapshot(sourceDir, {
     maxDepth: 3,
@@ -175,12 +180,14 @@ export async function progressUpdateCheckbox(
   const lines = markdown.split(/\r?\n/);
 
   let updated = false;
+  let topicFound = false;
   let sectionStart = 0;
   let sectionEnd = lines.length;
 
   for (let i = 0; i < lines.length; i += 1) {
     const currentLine = lines[i]!;
     if (currentLine.startsWith("### ") && currentLine.toLowerCase().includes(parsed.topic.toLowerCase())) {
+      topicFound = true;
       sectionStart = i;
       sectionEnd = lines.length;
       for (let j = i + 1; j < lines.length; j += 1) {
@@ -194,9 +201,8 @@ export async function progressUpdateCheckbox(
     }
   }
 
-  updated = replaceCheckboxInRange(lines, sectionStart, sectionEnd, parsed.step, parsed.done);
-  if (!updated) {
-    updated = replaceCheckboxInRange(lines, 0, lines.length, parsed.step, parsed.done);
+  if (topicFound) {
+    updated = replaceCheckboxInRange(lines, sectionStart, sectionEnd, parsed.step, parsed.done);
   }
 
   if (updated) {
@@ -244,21 +250,18 @@ export async function progressGetCoverageMap(
   const refFiles = await listFiles(refsDir, { extension: ".md", maxDepth: 5 });
 
   const refTexts = await Promise.all(refFiles.map((file) => readText(file)));
+  const refEntries = refFiles.map((file, index) => ({
+    fileNameLower: path.basename(file).toLowerCase(),
+    fileName: path.basename(file),
+    refTextLower: refTexts[index]!.toLowerCase(),
+  }));
   const covered = new Set<string>();
   const uncovered = new Set<string>();
 
   for (const mod of moduleMap.modules) {
-    const moduleName = mod.name.toLowerCase();
     let hit = false;
-    for (let i = 0; i < refFiles.length; i += 1) {
-      const refFile = refFiles[i]!;
-      const refText = refTexts[i]!;
-      const fileName = path.basename(refFile).toLowerCase();
-      if (fileName.includes(moduleName)) {
-        hit = true;
-        break;
-      }
-      if (refText.toLowerCase().includes(moduleName)) {
+    for (const entry of refEntries) {
+      if (matchesModuleRef(mod.name, entry.fileNameLower, entry.refTextLower)) {
         hit = true;
         break;
       }
@@ -269,13 +272,10 @@ export async function progressGetCoverageMap(
   }
 
   const orphanRefs: string[] = [];
-  for (let i = 0; i < refFiles.length; i += 1) {
-    const refFile = refFiles[i]!;
-    const refText = refTexts[i]!;
-    const fileName = path.basename(refFile);
-    const hasAny = moduleMap.modules.some((mod) => refText.toLowerCase().includes(mod.name.toLowerCase()));
+  for (const entry of refEntries) {
+    const hasAny = moduleMap.modules.some((mod) => matchesModuleRef(mod.name, entry.fileNameLower, entry.refTextLower));
     if (!hasAny) {
-      orphanRefs.push(fileName);
+      orphanRefs.push(entry.fileName);
     }
   }
 

@@ -83,6 +83,19 @@ describe("session tools", () => {
     expect(Array.isArray(result.data.files)).toBe(true);
   });
 
+  it("session.getSourcePaths supports sourceDir override when skill source is not auto-detected", async () => {
+    process.env.STUDY_ROOT = ROOT;
+    const sourceDir = path.join(ROOT, "ref", "react-fork");
+
+    const result = await sessionGetSourcePaths({
+      context: { mode: "skill", skill: "learn" },
+      sourceDir,
+    });
+
+    expect(result.data.sourceDir).toBe(sourceDir);
+    expect(result.data.files.length).toBeGreaterThan(0);
+  });
+
   it("session.getSourceDigest returns tree, overview, existingTopics", async () => {
     process.env.STUDY_ROOT = ROOT;
 
@@ -94,6 +107,19 @@ describe("session tools", () => {
     expect(Array.isArray(result.data.tree)).toBe(true);
     expect(typeof result.data.overview).toBe("string");
     expect(Array.isArray(result.data.existingTopics)).toBe(true);
+  });
+
+  it("session.getSourceDigest supports sourceDir override when skill source is not auto-detected", async () => {
+    process.env.STUDY_ROOT = ROOT;
+    const sourceDir = path.join(ROOT, "ref", "react-fork");
+
+    const result = await sessionGetSourceDigest({
+      context: { mode: "skill", skill: "learn" },
+      sourceDir,
+    });
+
+    expect(result.data.sourceDir).toBe(sourceDir);
+    expect(result.data.tree.length).toBeGreaterThan(0);
   });
 
   it("session.getSourceDigest returns cache hit on second call", async () => {
