@@ -1,50 +1,73 @@
 # study-all
 
-Claude Code/Codex 기반 학습 저장소입니다.
+Claude/Codex용 학습 스킬 + study MCP 서버를 함께 관리하는 저장소입니다.
 
-- Claude 기본 인터페이스: `.claude/skills/*/SKILL.md`
-- Codex 기본 인터페이스: `.codex/skills/*/SKILL.md`
-- Source of Truth: 이 레포의 `.claude`, `.codex`
+## Active Skills
 
-## 1) 빠른 시작
+현재 운영 스킬은 아래 5개입니다.
+
+| 목적 | Claude | Codex |
+| --- | --- | --- |
+| 학습 대시보드 조회 | `/dashboard` | `$dashboard` |
+| 자유 Q&A 학습 | `/learn <질문>` | `$learn <질문>` |
+| 프로젝트 분석/개선 | `/project <path> [area]` | `$project <path> [area]` |
+| 복습 큐 기반 문제 풀이 | `/review <skill> [topic]` | `$review <skill> [topic]` |
+| plan 기반 딥 학습 | `/study <주제>` | `$study <주제>` |
+
+소스 오브 트루스는 이 저장소의 `.claude/skills`, `.codex/skills`입니다.
+
+## Repository Layout
+
+```text
+study-all/
+├── .claude/skills/*/SKILL.md
+├── .codex/skills/*/SKILL.md
+├── .claude/rules/*.md
+├── mcp/                         # study MCP 서버
+├── scripts/
+│   ├── sync-claude-home.sh
+│   ├── sync-codex-home.sh
+│   ├── setup-githooks.sh
+│   ├── check-docs.sh
+│   └── start-mcp.sh
+├── study/                       # 학습 기록/메타
+└── ref/                         # 학습 소스 레퍼런스
+```
+
+## Quick Start
 
 ```bash
-cd <this-repo-root>  # clone한 경로로 이동
+cd <repo-root>
 
-# 홈 디렉토리 동기화 (권장)
+# 1) home sync(기본 dry-run)
 bash scripts/sync-claude-home.sh --dry-run
-bash scripts/sync-claude-home.sh --apply
 bash scripts/sync-codex-home.sh --dry-run
+
+# 2) 반영
+bash scripts/sync-claude-home.sh --apply
 bash scripts/sync-codex-home.sh --apply
 
-# Git hook 자동화
+# 3) git hook 연결(선택)
 bash scripts/setup-githooks.sh
 ```
 
-실행 가이드는 `docs/guide/Quickstart.md` 참고.
+## MCP Server
 
-## 2) 명령 매핑 (`/` ↔ `$`)
+`.mcp.json`은 `scripts/start-mcp.sh`를 통해 로컬 MCP 서버를 실행합니다.
 
-| 기능 | Claude | Codex |
-| --- | --- | --- |
-| 대시보드 | `/dashboard` | `$dashboard` |
-| 다음 추천 | `/next` | `$next` |
-| 마스터 플랜 | `/plan [goal]` | `$plan [goal]` |
-| 학습 세션 | `/learn <skill> <topic>` | `$learn <skill> <topic>` |
-| 스킬 검증 | `/gen-plan <skill>` | `$gen-plan <skill>` |
-| 복습 세션 | `/review <skill> [topic]` | `$review <skill> [topic]` |
-| 일일 상태 | `/study [args]` | `$study [args]` |
-| 프로젝트 분석 | `/project <path> [area]` | `$project <path> [area]` |
+- 엔트리: `mcp/dist/src/index.js`
+- 필요 조건: MCP 빌드 산출물 존재 (`mcp` 디렉토리에서 build 수행)
 
-## 3) 사용자 가이드
+실행/검증:
 
-- Quickstart: `docs/guide/Quickstart.md`
-- Daily Workflow: `docs/guide/Daily-Workflow.md`
-- Troubleshooting: `docs/guide/Troubleshooting.md`
+```bash
+/Users/younghoonkim/Library/pnpm/pnpm -C mcp typecheck
+/Users/younghoonkim/Library/pnpm/pnpm -C mcp test
+```
 
-## 4) 홈 디렉토리 동기화 자동화
+## Home Sync Details
 
-### 4-1) Claude (`~/.claude`)
+Claude:
 
 ```bash
 bash scripts/sync-claude-home.sh --dry-run
@@ -52,10 +75,10 @@ bash scripts/sync-claude-home.sh --apply
 bash scripts/sync-claude-home.sh --apply --prune-managed
 ```
 
-- 대상: `.claude/skills`, `.claude/commands/legacy-*`, `.claude/rules`
+- 동기화 대상: `.claude/skills`, `.claude/rules`
 - manifest: `~/.claude/.study-all-sync-manifest`
 
-### 4-2) Codex (`~/.codex`)
+Codex:
 
 ```bash
 bash scripts/sync-codex-home.sh --dry-run
@@ -63,38 +86,28 @@ bash scripts/sync-codex-home.sh --apply
 bash scripts/sync-codex-home.sh --apply --prune-managed
 ```
 
-- 대상: `.codex/skills`
+- 동기화 대상: `.codex/skills`
 - manifest: `~/.codex/.study-all-sync-manifest`
 
-안전 기본값:
-- unmanaged 기존 파일은 덮어쓰지 않고 skip
-- sync 스크립트는 기본이 dry-run
+공통 안전 규칙:
+- unmanaged 파일은 덮어쓰지 않음
+- 기본 모드는 dry-run
 
-## 5) Git hook 자동 동기화
+## Git Hook Auto Sync
 
 ```bash
 bash scripts/setup-githooks.sh
 ```
 
-- 설정: `core.hooksPath=.githooks`
-- 트리거: `post-checkout`, `post-merge`
-- `.claude`/`.codex` 변경 감지 시 각각 sync apply 실행
+- `core.hooksPath=.githooks` 설정
+- `post-checkout`, `post-merge`에서 `.claude`/`.codex` 변경 감지 시 자동 sync
 - 임시 비활성화: `export STUDY_ALL_SYNC_DISABLE=1`
 
-## 6) Legacy Commands (Claude 호환용)
-
-동명이인 충돌을 피하기 위해 Claude command는 `legacy-*`만 유지합니다.
-
-- `/legacy-dashboard`, `/legacy-next`, `/legacy-plan`
-- `/legacy-learn`, `/legacy-gen-plan`, `/legacy-review`, `/legacy-study`
-- `/legacy-project-gen-plan`, `/legacy-project-learn`, `/legacy-project-review`
-
-신규 워크플로우는 skills-first를 사용하세요.
-
-## 7) 검증 명령
+## Validation Commands
 
 ```bash
 bash scripts/check-docs.sh
+bash scripts/sync-claude-home.sh --dry-run
 bash scripts/sync-codex-home.sh --dry-run
 /Users/younghoonkim/Library/pnpm/pnpm -C mcp typecheck
 /Users/younghoonkim/Library/pnpm/pnpm -C mcp test
