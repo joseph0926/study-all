@@ -19,6 +19,7 @@ study-all/
 │   └── skills/
 │       ├── study/SKILL.md
 │       ├── learn/SKILL.md
+│       ├── forge/SKILL.md
 │       ├── review/SKILL.md
 │       ├── dashboard/SKILL.md
 │       ├── project/SKILL.md
@@ -30,6 +31,6 @@ study-all/
 ```
 
 ## 운영 메모
-- 기본 실행 경로는 `/study`, `/learn`, `/review`, `/dashboard`, `/project`, `/project-learn` 6개 스킬이다.
+- 기본 실행 경로는 `/study`, `/learn`, `/forge`, `/review`, `/dashboard`, `/project`, `/project-learn` 7개 스킬이다.
 - 학습 기록은 `study/` 디렉토리에 저장된다.
 - 검증 명령은 `.claude/rules/docs.md`를 따른다.
