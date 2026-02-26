@@ -12,4 +12,4 @@
 
 ## 검증 규칙
 - 정적 검증: `bash scripts/check-docs.sh`
-- 타입/테스트: `/Users/younghoonkim/Library/pnpm/pnpm -C mcp typecheck`, `/Users/younghoonkim/Library/pnpm/pnpm -C mcp test`
+- 타입/테스트: `pnpm -C mcp typecheck`, `pnpm -C mcp test`

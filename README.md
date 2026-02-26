@@ -64,8 +64,8 @@ bash scripts/setup-githooks.sh
 실행/검증:
 
 ```bash
-/Users/younghoonkim/Library/pnpm/pnpm -C mcp typecheck
-/Users/younghoonkim/Library/pnpm/pnpm -C mcp test
+pnpm -C mcp typecheck
+pnpm -C mcp test
 ```
 
 ## Home Sync Details
@@ -112,6 +112,6 @@ bash scripts/setup-githooks.sh
 bash scripts/check-docs.sh
 bash scripts/sync-claude-home.sh --dry-run
 bash scripts/sync-codex-home.sh --dry-run
-/Users/younghoonkim/Library/pnpm/pnpm -C mcp typecheck
-/Users/younghoonkim/Library/pnpm/pnpm -C mcp test
+pnpm -C mcp typecheck
+pnpm -C mcp test
 ```
