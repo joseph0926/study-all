@@ -56,8 +56,7 @@ description: learn → study → checkpoint → forge 파이프라인을 하나�
 
 1. `study/.routine/state.md` Read — streak, nextSeed 확인
 2. `study/.routine/history.md` Read — 최근 5행 로드
-3. `mcp__study__stats_getDashboard(context={mode: "skill"})`로 전체 학습 상태 확인
-4. `mcp__study__review_getQueue(context={mode: "skill"})`로 복습 대기 확인
+3. `mcp__study__stats_getDashboard(context={mode: "skill"})`로 전체 학습 상태 + 복습 대기 확인 (totalReviewPending, 스킬별 reviewPending 포함)
 
 5. 시작 시각 기록 (내부 추적용, `startTime: HH:MM` 메모)
 

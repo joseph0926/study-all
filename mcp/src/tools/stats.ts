@@ -4,7 +4,7 @@ import { makeEnvelope } from "../lib/envelope.js";
 import { listFiles, readText } from "../lib/fs.js";
 import { parsePlan } from "../parsers/plan-parser.js";
 import { getResumePoint } from "../parsers/session-parser.js";
-import { resolveContextData } from "./context.js";
+import { loadConfig } from "../config.js";
 import { reviewGetQueue } from "./review.js";
 import type { ContextInput, Envelope } from "../types/contracts.js";
 import type { DashboardData, DashboardSkill } from "../types/domain.js";
@@ -80,8 +80,14 @@ async function getLastActivityDate(skillDir: string): Promise<string | undefined
 }
 
 async function buildDashboardData(contextInput: ContextInput): Promise<DashboardData> {
-  const context = await resolveContextData(contextInput);
-  const skillDirs = await discoverSkillDirs(context.notesDir);
+  // Dashboard aggregates all skills, so it doesn't need a specific skill.
+  // Resolve base paths from config directly to avoid the "mode=skill requires skill" check.
+  const cfg = loadConfig();
+  const notesDir = path.resolve(
+    contextInput.notesDir ? path.resolve(cfg.studyRoot, contextInput.notesDir) : cfg.notesDir,
+  );
+  const studyLogsDir = path.resolve(cfg.studyLogsDir);
+  const skillDirs = await discoverSkillDirs(notesDir);
 
   const aggregated = await Promise.all(
     skillDirs.map(async (skillDir) => {
@@ -132,7 +138,7 @@ async function buildDashboardData(contextInput: ContextInput): Promise<Dashboard
     .slice(0, 10);
 
   const totalReviewPending = skills.reduce((acc, cur) => acc + cur.reviewPending, 0);
-  const streak = await computeStreak(context.studyLogsDir);
+  const streak = await computeStreak(studyLogsDir);
 
   return {
     skills,

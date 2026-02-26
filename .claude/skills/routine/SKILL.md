@@ -3,7 +3,7 @@ name: routine
 description: learn → study → checkpoint → forge 파이프라인을 하나의 세션에서 오케스트레이션 — 매 세션이 판단 프레임워크 또는 다음 질문으로 끝남
 argument-hint: "[주제]"
 disable-model-invocation: true
-allowed-tools: Read, Grep, Glob, Write, WebSearch, WebFetch, mcp__study__routine_appendEntry, mcp__study__routine_readLog, mcp__study__routine_resetLog, mcp__study__stats_getDashboard, mcp__study__review_getQueue
+allowed-tools: Read, Grep, Glob, Write, WebSearch, WebFetch, mcp__study__routine_appendEntry, mcp__study__routine_readLog, mcp__study__routine_resetLog, mcp__study__stats_getDashboard
 ---
 
 입력: `$ARGUMENTS` (선택. 예: `Suspense 타이밍`, 비어있으면 이전 seed 또는 대시보드 기반 제안)
@@ -57,8 +57,7 @@ allowed-tools: Read, Grep, Glob, Write, WebSearch, WebFetch, mcp__study__routine
 
 1. `study/.routine/state.md` Read — streak, nextSeed 확인
 2. `study/.routine/history.md` Read — 최근 5행 로드
-3. `stats.getDashboard(context={mode: "skill"})`로 전체 학습 상태 확인
-4. `review.getQueue(context={mode: "skill"})`로 복습 대기 확인
+3. `stats.getDashboard(context={mode: "skill"})`로 전체 학습 상태 + 복습 대기 확인 (totalReviewPending, 스킬별 reviewPending 포함)
 
 5. 시작 시각 기록 (내부 추적용, `startTime: HH:MM` 메모)
 

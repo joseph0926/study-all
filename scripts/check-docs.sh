@@ -86,6 +86,45 @@ if [[ -d "$SKILLS_DIR" && -d "$CODEX_SKILLS_DIR" ]]; then
   done < <(find "$CODEX_SKILLS_DIR" -mindepth 2 -maxdepth 2 -name 'SKILL.md' -type f | sort)
 fi
 
+header "1-F. Skill body content drift — .claude/skills vs .codex/skills"
+
+# Normalize a SKILL.md body for comparison:
+#   1. Strip YAML frontmatter
+#   2. Strip "# skillname" heading
+#   3. Strip "입력:" line (format differs per platform)
+#   4. Normalize MCP tool names: mcp__study__X_Y → X.Y
+#   5. Normalize platform-specific patterns: Claude→AI, /cmd→$cmd
+#   6. Remove blank lines
+normalize_skill_body() {
+  local file="$1"
+  awk 'BEGIN{c=0} /^---$/{c++;next} c>=2{print}' "$file" \
+    | sed \
+      -e '/^# [a-z_-]*$/d' \
+      -e '/^입력:/d' \
+      -e 's/mcp__study__\([a-zA-Z]*\)_\([a-zA-Z]*\)/\1.\2/g' \
+      -e 's/Claude가/AI가/g' \
+      -e 's/`\/\([a-z_-]*\)`/`$\1`/g' \
+    | grep -v '^\s*$' || true
+}
+
+if [[ -d "$SKILLS_DIR" && -d "$CODEX_SKILLS_DIR" ]]; then
+  while IFS= read -r claude_skill_file; do
+    skill_name="$(basename "$(dirname "$claude_skill_file")")"
+    codex_skill_file="$CODEX_SKILLS_DIR/$skill_name/SKILL.md"
+    [[ -f "$codex_skill_file" ]] || continue
+
+    claude_body="$(normalize_skill_body "$claude_skill_file")"
+    codex_body="$(normalize_skill_body "$codex_skill_file")"
+
+    if [[ "$claude_body" == "$codex_body" ]]; then
+      ok "body sync: $skill_name"
+    else
+      diff_count=$(diff <(echo "$claude_body") <(echo "$codex_body") | grep -c '^[<>]' || true)
+      warn "$skill_name — body content drift ($diff_count differing lines). Run: diff <(bash -c 'normalize fn') to inspect."
+    fi
+  done < <(find "$SKILLS_DIR" -mindepth 2 -maxdepth 2 -name 'SKILL.md' -type f | sort)
+fi
+
 header "1-D. Codex repo-local path parity — .codex/skills vs .agents/skills"
 
 if [[ -d "$CODEX_SKILLS_DIR" ]]; then
@@ -105,7 +144,7 @@ fi
 
 header "1-E. Codex metadata — agents/openai.yaml"
 
-for skill_name in routine study project; do
+for skill_name in routine study project project-routine; do
   if [[ -f "$CODEX_SKILLS_DIR/$skill_name/agents/openai.yaml" ]]; then
     ok "metadata: $skill_name/agents/openai.yaml"
   else

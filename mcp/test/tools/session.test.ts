@@ -85,7 +85,7 @@ describe("session tools", () => {
 
   it("session.getSourcePaths supports sourceDir override when skill source is not auto-detected", async () => {
     process.env.STUDY_ROOT = ROOT;
-    const sourceDir = path.join(ROOT, "ref", "react-fork");
+    const sourceDir = path.join(ROOT, "ref", "react");
 
     const result = await sessionGetSourcePaths({
       context: { mode: "skill", skill: "learn" },
@@ -111,7 +111,7 @@ describe("session tools", () => {
 
   it("session.getSourceDigest supports sourceDir override when skill source is not auto-detected", async () => {
     process.env.STUDY_ROOT = ROOT;
-    const sourceDir = path.join(ROOT, "ref", "react-fork");
+    const sourceDir = path.join(ROOT, "ref", "react");
 
     const result = await sessionGetSourceDigest({
       context: { mode: "skill", skill: "learn" },

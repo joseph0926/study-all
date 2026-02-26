@@ -66,4 +66,19 @@ describe("stats tools", () => {
     expect(names).not.toContain("legacy");
     expect(new Set(names).size).toBe(names.length);
   });
+
+  it("stats.getDashboard works without skill param (aggregation mode)", async () => {
+    const base = makeFixture();
+    process.env.STUDY_ROOT = base;
+
+    const result = await statsGetDashboard({
+      context: { mode: "skill" },
+    });
+
+    const names = result.data.skills.map((skill) => skill.name);
+    expect(names).toContain("react");
+    expect(names).toContain("nextjs");
+    expect(typeof result.data.totalReviewPending).toBe("number");
+    expect(typeof result.data.streak).toBe("number");
+  });
 });

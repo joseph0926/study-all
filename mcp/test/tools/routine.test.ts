@@ -12,6 +12,12 @@ function setupTmpRoot(): string {
   return tmp;
 }
 
+function setupTmpProject(root: string): string {
+  const projectPath = path.join(root, "project-a");
+  mkdirSync(projectPath, { recursive: true });
+  return projectPath;
+}
+
 const clock = new FixedClock("2026-02-26T14:00:00.000Z");
 
 describe("routine tools", () => {
@@ -137,5 +143,60 @@ describe("routine tools", () => {
     setupTmpRoot();
     const result = await routineResetLog({}, clock);
     expect(result.data.ok).toBe(true);
+  });
+
+  it("appendEntry uses project-scoped log path when context.mode=project", async () => {
+    const root = setupTmpRoot();
+    const projectPath = setupTmpProject(root);
+
+    const result = await routineAppendEntry(
+      {
+        context: { mode: "project", projectPath },
+        entry: { phase: 0, type: "init", topic: "Project Topic" },
+      },
+      clock,
+    );
+
+    const projectLogPath = path.join(projectPath, ".study", ".routine", ".session-log.jsonl");
+    const skillLogPath = path.join(root, "study", ".routine", ".session-log.jsonl");
+
+    expect(result.data.logPath).toBe(projectLogPath);
+    expect(existsSync(projectLogPath)).toBe(true);
+    expect(existsSync(skillLogPath)).toBe(false);
+  });
+
+  it("readLog and resetLog work with project context", async () => {
+    const root = setupTmpRoot();
+    const projectPath = setupTmpProject(root);
+
+    await routineAppendEntry(
+      {
+        context: { mode: "project", projectPath },
+        entry: { phase: 0, type: "init", topic: "Project Topic" },
+      },
+      clock,
+    );
+    await routineAppendEntry(
+      {
+        context: { mode: "project", projectPath },
+        entry: { phase: 1, type: "qa", question: "Q1" },
+      },
+      clock,
+    );
+
+    const readResult = await routineReadLog({ context: { mode: "project", projectPath } }, clock);
+    expect(readResult.data.exists).toBe(true);
+    expect(readResult.data.topic).toBe("Project Topic");
+    expect(readResult.data.qaCount).toBe(1);
+
+    const resetResult = await routineResetLog(
+      { context: { mode: "project", projectPath }, archive: true },
+      clock,
+    );
+    expect(resetResult.data.ok).toBe(true);
+    expect(resetResult.data.archived).toContain(path.join(projectPath, ".study", ".routine"));
+
+    const afterReset = await routineReadLog({ context: { mode: "project", projectPath } }, clock);
+    expect(afterReset.data.exists).toBe(false);
   });
 });

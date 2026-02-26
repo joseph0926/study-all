@@ -4,7 +4,7 @@ Claude/Codex용 학습 스킬 + study MCP 서버를 함께 관리하는 저장�
 
 ## Active Skills
 
-현재 운영 스킬은 아래 8개입니다.
+현재 운영 스킬은 아래 9개입니다.
 
 | 목적 | Claude | Codex |
 | --- | --- | --- |
@@ -13,6 +13,7 @@ Claude/Codex용 학습 스킬 + study MCP 서버를 함께 관리하는 저장�
 | 자유 Q&A 학습 | `/learn <질문>` | `$learn <질문>` |
 | 프로젝트 분석/개선 | `/project <path> [area]` | `$project <path> [area]` |
 | 프로젝트 코드베이스 Q&A | `/project-learn <path> <질문>` | `$project-learn <path> <질문>` |
+| 프로젝트 학습 루틴 오케스트레이션 | `/project-routine <path> [주제]` | `$project-routine <path> [주제]` |
 | 복습 큐 기반 문제 풀이 | `/review <skill> [topic]` | `$review <skill> [topic]` |
 | 학습 파이프라인 오케스트레이션 | `/routine [주제]` | `$routine [주제]` |
 | plan 기반 딥 학습 | `/study <주제>` | `$study <주제>` |

@@ -6,15 +6,22 @@ import { appendText, exists, readText, writeText } from "../lib/fs.js";
 import { makeEnvelope } from "../lib/envelope.js";
 import type { Clock } from "../lib/clock.js";
 import { systemClock } from "../lib/clock.js";
-import type { Envelope } from "../types/contracts.js";
+import { contextInputSchema, type ContextInput, type Envelope } from "../types/contracts.js";
 import type { RoutineLogSummary } from "../types/domain.js";
+import { resolveContextData } from "./context.js";
 
-function getLogPath(): string {
+async function getLogPath(context?: ContextInput): Promise<string> {
+  if (context?.mode === "project") {
+    const resolved = await resolveContextData(context);
+    return path.join(resolved.studyDir!, ".routine", ".session-log.jsonl");
+  }
+
   const config = loadConfig();
   return path.join(config.notesDir, ".routine", ".session-log.jsonl");
 }
 
 const appendEntryInputSchema = z.object({
+  context: contextInputSchema.optional(),
   entry: z
     .object({
       phase: z.number().int().min(0).max(5),
@@ -23,9 +30,12 @@ const appendEntryInputSchema = z.object({
     .passthrough(),
 });
 
-const readLogInputSchema = z.object({});
+const readLogInputSchema = z.object({
+  context: contextInputSchema.optional(),
+});
 
 const resetLogInputSchema = z.object({
+  context: contextInputSchema.optional(),
   archive: z.boolean().optional(),
 });
 
@@ -34,7 +44,7 @@ export async function routineAppendEntry(
   clock: Clock = systemClock,
 ): Promise<Envelope<{ ok: boolean; logPath: string; entryCount: number }>> {
   const parsed = appendEntryInputSchema.parse(input);
-  const logPath = getLogPath();
+  const logPath = await getLogPath(parsed.context);
 
   const entry = {
     ...parsed.entry,
@@ -50,10 +60,11 @@ export async function routineAppendEntry(
 }
 
 export async function routineReadLog(
-  _input: z.input<typeof readLogInputSchema>,
+  input: z.input<typeof readLogInputSchema>,
   clock: Clock = systemClock,
 ): Promise<Envelope<RoutineLogSummary>> {
-  const logPath = getLogPath();
+  const parsed = readLogInputSchema.parse(input);
+  const logPath = await getLogPath(parsed.context);
   const fileExists = await exists(logPath);
 
   if (!fileExists) {
@@ -147,7 +158,7 @@ export async function routineResetLog(
   clock: Clock = systemClock,
 ): Promise<Envelope<{ ok: boolean; archived?: string }>> {
   const parsed = resetLogInputSchema.parse(input);
-  const logPath = getLogPath();
+  const logPath = await getLogPath(parsed.context);
   const fileExists = await exists(logPath);
 
   if (!fileExists) {
