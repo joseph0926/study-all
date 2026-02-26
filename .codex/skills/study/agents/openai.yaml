@@ -1,0 +1,10 @@
+interface:
+  display_name: "Study"
+  short_description: "plan.md 기반 소스코드 딥 학습"
+policy:
+  allow_implicit_invocation: false
+dependencies:
+  tools:
+    - type: "mcp"
+      value: "study"
+      description: "study MCP server"

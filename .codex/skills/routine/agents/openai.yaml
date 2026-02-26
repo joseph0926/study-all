@@ -1,0 +1,10 @@
+interface:
+  display_name: "Routine"
+  short_description: "learn → study → checkpoint → forge 오케스트레이션"
+policy:
+  allow_implicit_invocation: false
+dependencies:
+  tools:
+    - type: "mcp"
+      value: "study"
+      description: "study MCP server"

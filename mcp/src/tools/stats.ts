@@ -5,7 +5,6 @@ import { listFiles, readText } from "../lib/fs.js";
 import { parsePlan } from "../parsers/plan-parser.js";
 import { getResumePoint } from "../parsers/session-parser.js";
 import { resolveContextData } from "./context.js";
-import { dailyGetStatus } from "./daily.js";
 import { reviewGetQueue } from "./review.js";
 import type { ContextInput, Envelope } from "../types/contracts.js";
 import type { DashboardData, DashboardSkill } from "../types/domain.js";
@@ -22,6 +21,32 @@ const contextSchema = z.object({
 const dashboardInputSchema = z.object({
   context: contextSchema,
 });
+
+function dateOnly(date: Date): string {
+  return date.toISOString().slice(0, 10);
+}
+
+async function computeStreak(logDir: string): Promise<number> {
+  const files = await listFiles(logDir, { extension: ".md", maxDepth: 1 });
+  const dateFiles = files
+    .map((file) => path.basename(file, ".md"))
+    .filter((name) => /^\d{4}-\d{2}-\d{2}$/.test(name))
+    .sort();
+
+  let streak = 0;
+  const today = new Date(`${dateOnly(new Date())}T00:00:00.000Z`);
+  for (let i = 0; i < 366; i += 1) {
+    const target = new Date(today);
+    target.setUTCDate(today.getUTCDate() - i);
+    const key = target.toISOString().slice(0, 10);
+    if (dateFiles.includes(key)) {
+      streak += 1;
+    } else {
+      break;
+    }
+  }
+  return streak;
+}
 
 async function discoverSkillDirs(notesDir: string): Promise<string[]> {
   const files = await listFiles(notesDir, { extension: ".md", maxDepth: 3 });
@@ -106,22 +131,13 @@ async function buildDashboardData(contextInput: ContextInput): Promise<Dashboard
     .sort((a, b) => b.date.localeCompare(a.date))
     .slice(0, 10);
 
-  const firstSkill = skills[0]?.name;
-  const dailyStatus = firstSkill
-    ? await dailyGetStatus({
-        context: {
-          mode: "skill",
-          skill: firstSkill,
-        },
-      })
-    : { data: { streak: 0 } };
-
   const totalReviewPending = skills.reduce((acc, cur) => acc + cur.reviewPending, 0);
+  const streak = await computeStreak(context.studyLogsDir);
 
   return {
     skills,
     recentSessions,
-    streak: dailyStatus.data.streak,
+    streak,
     totalReviewPending,
   };
 }

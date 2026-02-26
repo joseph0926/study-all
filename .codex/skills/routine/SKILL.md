@@ -23,7 +23,7 @@ description: learn → study → checkpoint → forge 파이프라인을 하나�
 
 ### B. JSONL 세션 로그 (`routine.appendEntry` / `routine.readLog`)
 
-`.session-state.md` 대신 JSONL 기반 세션 로그를 사용한다.
+`session-state.md` 대신 JSONL 기반 세션 로그를 사용한다.
 
 **기록 시점:**
 - Phase 전환 시: `mcp__study__routine_appendEntry({ entry: { phase, type: "phase_end", summary } })`

@@ -18,13 +18,16 @@ Claude/Codex용 학습 스킬 + study MCP 서버를 함께 관리하는 저장�
 | plan 기반 딥 학습 | `/study <주제>` | `$study <주제>` |
 
 소스 오브 트루스는 이 저장소의 `.claude/skills`, `.codex/skills`입니다.
+Codex의 repo-local 스캔 경로 호환을 위해 `.agents/skills -> ../.codex/skills` 심볼릭 링크를 함께 유지합니다.
 
 ## Repository Layout
 
 ```text
 study-all/
+├── .agents/skills -> ../.codex/skills
 ├── .claude/skills/*/SKILL.md
 ├── .codex/skills/*/SKILL.md
+├── .codex/skills/*/agents/openai.yaml
 ├── .claude/rules/*.md
 ├── mcp/                         # study MCP 서버
 ├── scripts/
@@ -56,7 +59,19 @@ bash scripts/setup-githooks.sh
 
 ## MCP Server
 
-`.mcp.json`은 `scripts/start-mcp.sh`를 통해 로컬 MCP 서버를 실행합니다.
+공용 엔트리포인트는 `scripts/start-mcp.sh`입니다.
+
+- Claude Code: 저장소의 `.mcp.json`이 `scripts/start-mcp.sh`를 실행
+- Codex: `~/.codex/config.toml`에서 동일한 `study` 서버를 등록
+
+예시(`~/.codex/config.toml`):
+
+```toml
+[mcp_servers.study]
+command = "bash"
+args = ["<repo-root>/scripts/start-mcp.sh"]
+cwd = "<repo-root>"
+```
 
 - 엔트리: `mcp/dist/src/index.js`
 - 필요 조건: MCP 빌드 산출물 존재 (`mcp` 디렉토리에서 build 수행)
@@ -66,6 +81,7 @@ bash scripts/setup-githooks.sh
 ```bash
 pnpm -C mcp typecheck
 pnpm -C mcp test
+test -f ~/.codex/config.toml && rg -n "mcp_servers|study|start-mcp.sh" ~/.codex/config.toml
 ```
 
 ## Home Sync Details
@@ -90,6 +106,7 @@ bash scripts/sync-codex-home.sh --apply --prune-managed
 ```
 
 - 동기화 대상: `.codex/skills`
+- `agents/openai.yaml` 메타 파일도 동일 경로로 동기화
 - manifest: `~/.codex/.study-all-sync-manifest`
 
 공통 안전 규칙:

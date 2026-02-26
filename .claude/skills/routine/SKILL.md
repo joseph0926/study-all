@@ -24,7 +24,7 @@ allowed-tools: Read, Grep, Glob, Write, WebSearch, WebFetch, mcp__study__routine
 
 ### B. JSONL 세션 로그 (`routine.appendEntry` / `routine.readLog`)
 
-`.session-state.md` 대신 JSONL 기반 세션 로그를 사용한다.
+`session-state.md` 대신 JSONL 기반 세션 로그를 사용한다.
 
 **기록 시점:**
 - Phase 전환 시: `routine.appendEntry({ entry: { phase, type: "phase_end", summary } })`

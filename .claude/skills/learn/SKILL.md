@@ -14,7 +14,7 @@ allowed-tools: Read, Grep, Glob, WebSearch, WebFetch, Write, mcp__study__context
 2. 사용자 질문(`$ARGUMENTS`)에서 주제명 추출 (간결한 kebab-case, 예: `Suspense-동작원리`)
 3. 세션 복원/초기화
 
-   상태 파일: `study/learn/.session-state.md`
+   상태 파일: `study/learn/session-state.md`
 
    3-A. Read 시도:
      - 파일 없음 또는 `# COMPLETED` → 새 세션 → Step 3-C
@@ -82,7 +82,7 @@ allowed-tools: Read, Grep, Glob, WebSearch, WebFetch, Write, mcp__study__context
      - 판단 기준: 동일 개념의 다른 관점, 상위/하위 메커니즘, 인과 관계, 전제 지식.
      - 억지 연결 금지 (단순 동일 라이브러리 수준은 연결하지 않는다).
 6. 사용자의 추가 질문을 대기한다. → Step 4~5 반복.
-   - 매 Q&A 후 `study/learn/.session-state.md`를 Write 갱신한다 (qaCount++, analogyFrame, connections, nextDirection, QA History 추가).
+   - 매 Q&A 후 `study/learn/session-state.md`를 Write 갱신한다 (qaCount++, analogyFrame, connections, nextDirection, QA History 추가).
 
 종료(`>>정리`) 시:
 
@@ -90,7 +90,7 @@ allowed-tools: Read, Grep, Glob, WebSearch, WebFetch, Write, mcp__study__context
    - 포맷: 아래 템플릿을 따른다.
    - 원문 그대로 기록한다. 오탈자만 수정.
 2. `session.appendLog(context, topic=<주제명>, content=<요약>)`로 세션 기록.
-3. `study/learn/.session-state.md`를 `# COMPLETED\n` 마커로 Write한다.
+3. `study/learn/session-state.md`를 `# COMPLETED\n` 마커로 Write한다.
 
 문서 템플릿:
 
@@ -133,7 +133,7 @@ allowed-tools: Read, Grep, Glob, WebSearch, WebFetch, Write, mcp__study__context
 - 근거의 출처(ref 코드/웹/추론)를 항상 명시한다.
 - "외부 코드:" 접두사: 웹에서 가져온 코드 블록에는 반드시 "외부 코드:" 접두사 + 출처를 표기한다.
 - 웹 소스 인용 시 버전 또는 날짜를 반드시 병기한다.
-- 쓰기 동작은 `>>정리` 이후에만 수행한다. 예외: `.session-state.md`는 매 Q&A 후 갱신한다.
+- 쓰기 동작은 `>>정리` 이후에만 수행한다. 예외: `session-state.md`는 매 Q&A 후 갱신한다.
 - 답변 순서: 비유(프레임) → 코드/텍스트(근거+매칭) → 시각화(통합 정리). 이 순서를 지킨다.
 - 비유는 1:1 대응을 기본으로 한다. 억지 비유보다 "비유 한계:" 설명이 낫다.
 - 코드/텍스트 설명 시 비유 요소와의 매칭 이유를 반드시 서술한다.

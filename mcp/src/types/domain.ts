@@ -108,13 +108,6 @@ export interface ReviewQueueItem {
   overdueDays: number;
 }
 
-export interface DailyStatus {
-  streak: number;
-  todayState: "NONE" | "PLANNING" | "CONFIRMED" | "FEEDBACK" | "DONE";
-  achievementRate7d: number;
-  lastSession?: string | undefined;
-}
-
 export interface DashboardSkill {
   name: string;
   totalTopics: number;

@@ -14,7 +14,7 @@ description: 프로젝트 코드베이스 자유 Q&A — 질문 → 근거 탐�
 3. 사용자 질문에서 주제명 추출 (간결한 kebab-case, 예: `인증-흐름`)
 4. 세션 복원/초기화
 
-   상태 파일: `{project}/.study/learn/.session-state.md`
+   상태 파일: `{project}/.study/learn/session-state.md`
 
    4-A. Read 시도:
      - 파일 없음 또는 `# COMPLETED` → 새 세션 → Step 4-C
@@ -106,7 +106,7 @@ description: 프로젝트 코드베이스 자유 Q&A — 질문 → 근거 탐�
      - 판단 기준: 동일 개념의 다른 관점, 상위/하위 메커니즘, 인과 관계, 전제 지식.
      - 억지 연결 금지 (단순 동일 라이브러리 수준은 연결하지 않는다).
 8. 사용자의 추가 질문을 대기한다. → Step 6~7 반복.
-   - 매 Q&A 후 `{project}/.study/learn/.session-state.md`를 Write 갱신한다 (qaCount++, frameType, connections, nextDirection, QA History 추가).
+   - 매 Q&A 후 `{project}/.study/learn/session-state.md`를 Write 갱신한다 (qaCount++, frameType, connections, nextDirection, QA History 추가).
 
 종료(`>>정리`) 시:
 
@@ -114,7 +114,7 @@ description: 프로젝트 코드베이스 자유 Q&A — 질문 → 근거 탐�
    - 포맷: 아래 템플릿을 따른다.
    - 원문 그대로 기록한다. 오탈자만 수정.
 2. `mcp__study__session_appendLog(context, topic=<주제명>, content=<요약>, via="via /project-learn")`로 세션 기록.
-3. `{project}/.study/learn/.session-state.md`를 `# COMPLETED\n` 마커로 Write한다.
+3. `{project}/.study/learn/session-state.md`를 `# COMPLETED\n` 마커로 Write한다.
 
 문서 템플릿:
 
@@ -163,7 +163,7 @@ description: 프로젝트 코드베이스 자유 Q&A — 질문 → 근거 탐�
 규칙:
 - 프로젝트 소스코드를 반드시 먼저 탐색한다. 웹 검색만으로 대체하지 않는다.
 - 근거의 출처(소스코드/문서/git/웹/추론)를 항상 명시한다.
-- 쓰기 동작은 `>>정리` 이후에만 수행한다. 예외: `.session-state.md`는 매 Q&A 후 갱신한다.
+- 쓰기 동작은 `>>정리` 이후에만 수행한다. 예외: `session-state.md`는 매 Q&A 후 갱신한다.
 - 답변 순서: 패턴 매핑(프레임) → 코드 추적(근거+매칭) → 시각화(통합 정리) → 이중 연결. 이 순서를 지킨다.
 - 패턴 매핑은 알려진 패턴에 대응 가능할 때만. 억지 매핑보다 "커스텀 구조:" 설명이 낫다.
 - "커스텀 구조:" 시 비유 병행 (1:1 대응, 요소 3개 이상). 억지 비유보다 "비유 한계:" 설명이 낫다.

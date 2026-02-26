@@ -18,6 +18,7 @@ header() { printf '\n\033[1m[%s]\033[0m\n' "$1"; }
 
 SKILLS_DIR="$ROOT/.claude/skills"
 CODEX_SKILLS_DIR="$ROOT/.codex/skills"
+AGENTS_SKILLS_DIR="$ROOT/.agents/skills"
 README="$ROOT/README.md"
 CLAUDE_MD="$ROOT/CLAUDE.md"
 
@@ -84,6 +85,33 @@ if [[ -d "$SKILLS_DIR" && -d "$CODEX_SKILLS_DIR" ]]; then
     fi
   done < <(find "$CODEX_SKILLS_DIR" -mindepth 2 -maxdepth 2 -name 'SKILL.md' -type f | sort)
 fi
+
+header "1-D. Codex repo-local path parity — .codex/skills vs .agents/skills"
+
+if [[ -d "$CODEX_SKILLS_DIR" ]]; then
+  if [[ -d "$AGENTS_SKILLS_DIR" ]]; then
+    while IFS= read -r codex_skill_file; do
+      skill_name="$(basename "$(dirname "$codex_skill_file")")"
+      if [[ -f "$AGENTS_SKILLS_DIR/$skill_name/SKILL.md" ]]; then
+        ok ".agents parity: $skill_name"
+      else
+        err ".agents/skills/$skill_name/SKILL.md 없음"
+      fi
+    done < <(find "$CODEX_SKILLS_DIR" -mindepth 2 -maxdepth 2 -name 'SKILL.md' -type f | sort)
+  else
+    err ".agents/skills 디렉토리가 없음"
+  fi
+fi
+
+header "1-E. Codex metadata — agents/openai.yaml"
+
+for skill_name in routine study project; do
+  if [[ -f "$CODEX_SKILLS_DIR/$skill_name/agents/openai.yaml" ]]; then
+    ok "metadata: $skill_name/agents/openai.yaml"
+  else
+    warn "metadata 권장 누락: .codex/skills/$skill_name/agents/openai.yaml"
+  fi
+done
 
 header "2. study/ filename conventions"
 
