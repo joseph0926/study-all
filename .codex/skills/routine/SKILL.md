@@ -21,48 +21,38 @@ description: learn → study → checkpoint → forge 파이프라인을 하나�
 > [ROUTINE] Phase {N}/5 | {주제} | Q&A: {누적횟수} | 경과: {분}분
 ```
 
-### B. 세션 상태 파일 (`study/.routine/.session-state.md`)
+### B. JSONL 세션 로그 (`routine.appendEntry` / `routine.readLog`)
 
-아래 시점에 Write로 갱신한다:
-- Phase 전환 시 (0→1, 1→2, 2→3, 3→4 또는 3→5, 4→5)
-- Phase 1-2에서 매 Q&A 완료 후
-- Phase 3 체크포인트 Q1, Q2 답변 수신 후
+`.session-state.md` 대신 JSONL 기반 세션 로그를 사용한다.
 
-템플릿:
-```markdown
-# ROUTINE-SESSION-STATE
-updated: {YYYY-MM-DD HH:MM}
-topic: {주제명}
-currentPhase: {0-5}
-startTime: {HH:MM}
-qaCount: {누적 Q&A 수}
+**기록 시점:**
+- Phase 전환 시: `mcp__study__routine_appendEntry({ entry: { phase, type: "phase_end", summary } })`
+- Phase 1-2 매 Q&A 완료 후: `mcp__study__routine_appendEntry({ entry: { phase, type: "qa", question, keyInsight, refs, links } })`
+- Phase 3 체크포인트: `mcp__study__routine_appendEntry({ entry: { phase: 3, type: "checkpoint", q1, q1Answer, q2, q2Answer, result } })`
+- Phase 5 완료: `mcp__study__routine_appendEntry({ entry: { phase: 5, type: "complete" } })`
 
-## Key Insights
-- Phase 1: {핵심 인사이트 1줄 요약}
-- Phase 2: {핵심 인사이트 1줄 요약}
-
-## Checkpoint
-q1: {질문 텍스트 또는 "미완"}
-q1Answer: {사용자 답변 요약 또는 "미완"}
-q2: {질문 텍스트 또는 "미완"}
-q2Answer: {사용자 답변 요약 또는 "미완"}
-result: {PASS/FAIL/미결정}
-
-## Phase History
-- Phase 0: {HH:MM} — {시드 결정 내용}
-- Phase 1: {HH:MM}~{HH:MM} — Q&A {N}회
-- Phase 2: {HH:MM}~ — 진행 중
-```
+**복원:** `mcp__study__routine_readLog({})` → exists, topic, currentPhase, qaCount, entries 로 맥락 복원.
 
 ### C. Self-check 규칙
 
-- **Phase 전환 직후**: `.session-state.md`를 Read하여 상태 확인 후 진행.
-- **응답 생성 시 현재 Phase가 불확실하면**: 즉시 `.session-state.md`를 Read하고 해당 상태 기준으로 진행.
-- 파일과 대화 컨텍스트가 충돌하면 **파일을 신뢰**한다 (파일이 더 최신).
+- **Phase 전환 직후**: `mcp__study__routine_readLog({})` 호출하여 상태 확인 후 진행.
+- **응답 생성 시 현재 Phase가 불확실하면**: 즉시 `mcp__study__routine_readLog({})` 호출하고 해당 상태 기준으로 진행.
+- readLog 결과와 대화 컨텍스트가 충돌하면 **readLog를 신뢰**한다 (로그가 더 최신).
 
 ---
 
 ## Phase 0: 오리엔테이션 (5분)
+
+### 0-PRE. 이전 세션 이어하기 체크 (최우선)
+
+1. `mcp__study__routine_readLog({})` 호출
+2. `exists=true` + 마지막 entry의 type이 `"complete"`가 아님 → 이전 세션 발견:
+   - 사용자에게 보고: "이전 세션: {topic}, Phase {currentPhase}, Q&A {qaCount}회. 이어서 할까요?"
+   - **이어하기** → entries에서 맥락 복원, 해당 Phase 진입
+   - **새로 시작** → `mcp__study__routine_resetLog({ archive: true })` 후 아래 정상 흐름
+3. `exists=false` 또는 마지막 entry가 `"complete"` → 정상 흐름 (아래 계속)
+
+### 0-A. 상태 확인
 
 1. `study/.routine/state.md` Read — streak, nextSeed 확인
 2. `study/.routine/history.md` Read — 최근 5행 로드
@@ -71,52 +61,47 @@ result: {PASS/FAIL/미결정}
 
 5. 시작 시각 기록 (내부 추적용, `startTime: HH:MM` 메모)
 
-6. 오늘의 시드 결정 (우선순위):
-   - A) `$ARGUMENTS`가 있으면 → 그 주제
-   - B) state.md에 nextSeed가 있으면 → 제안 ("이전 세션에서 남긴 질문: {question}. 이어서 할까요?")
-   - C) 복습 대기가 있으면 → 제안 ("복습 대기 {N}개. 복습 기반으로 시작할까요?")
-   - D) 없으면 → "오늘 궁금한 게 뭔가요?"
+### 0-B. 오늘의 시드 결정 (우선순위)
 
-7. 사용자에게 오리엔테이션 보고:
+- A) `$ARGUMENTS`가 있으면 → 그 주제
+- B) state.md에 nextSeed가 있으면 → 제안 ("이전 세션에서 남긴 질문: {question}. 이어서 할까요?")
+- C) 복습 대기가 있으면 → 제안 ("복습 대기 {N}개. 복습 기반으로 시작할까요?")
+- D) 없으면 → "오늘 궁금한 게 뭔가요?"
 
-   ```
-   ## 루틴 시작
-   streak: {N}일 | 총 세션: {N} | 총 forge: {N}
+### 0-C. ref/ 소스 탐색
 
-   ### 최근 기록
-   {history 최근 5행 테이블}
+1. `Glob("ref/*/")` → ref/ 하위 디렉토리 목록
+2. AI가 주제명으로 관련 ref/ 디렉토리 선택 (복수 가능)
+3. 매칭 없으면: "ref/에 관련 소스 없음, 웹 검색 중심으로 진행합니다"
 
-   ### 오늘의 시드
-   {결정된 시드 또는 제안}
+### 0-D. 오리엔테이션 보고
 
-   {어제 루틴 없으면: "어제 루틴 없음 — 오늘 다시 시작!"}
-   {미해결 seed 있으면: "미해결 seed {N}개: {목록}"}
-   ```
+사용자에게 보고:
 
-8. 사용자가 주제를 확정하면 `.session-state.md` 초기화 Write:
-   ```
-   # ROUTINE-SESSION-STATE
-   updated: {YYYY-MM-DD HH:MM}
-   topic: {주제명}
-   currentPhase: 1
-   startTime: {HH:MM}
-   qaCount: 0
+```
+## 루틴 시작
+streak: {N}일 | 총 세션: {N} | 총 forge: {N}
 
-   ## Key Insights
-   (없음)
+### 최근 기록
+{history 최근 5행 테이블}
 
-   ## Checkpoint
-   q1: 미완
-   q1Answer: 미완
-   q2: 미완
-   q2Answer: 미완
-   result: 미결정
+### 오늘의 시드
+{결정된 시드 또는 제안}
 
-   ## Phase History
-   - Phase 0: {HH:MM} — 시드: {주제명}
-   ```
+### ref/ 소스
+{선택된 ref/ 디렉토리 또는 "관련 소스 없음"}
 
-9. Phase 1 진행.
+{어제 루틴 없으면: "어제 루틴 없음 — 오늘 다시 시작!"}
+{미해결 seed 있으면: "미해결 seed {N}개: {목록}"}
+```
+
+### 0-E. 세션 시작 기록
+
+사용자가 주제를 확정하면:
+
+`mcp__study__routine_appendEntry({ entry: { phase: 0, type: "init", topic: "{주제명}", refDirs: ["{선택된 ref 디렉토리}"] } })`
+
+Phase 1 진행.
 
 ---
 
@@ -150,9 +135,9 @@ ref/ 폴백 규칙:
 
 - 사용자의 추가 질문을 대기. 최소 Q&A 3회를 목표로 한다.
 - 매 Q&A에서 근거 소스를 명시한다.
-- **매 Q&A 완료 후** `.session-state.md` Write 갱신 (qaCount++, Key Insights 추가).
+- **매 Q&A 완료 후**: `mcp__study__routine_appendEntry({ entry: { phase: 1, type: "qa", question: "{질문}", keyInsight: "{핵심}", refs: ["{file:line}"], links: ["{url}"] } })`
 - `>>다음` 신호로 Phase 2 진행. 3회 미만이면 "아직 Q&A {N}회입니다. 더 탐색하시겠어요?" 확인.
-- `>>다음` 시: `.session-state.md`의 currentPhase를 2로 갱신, Phase History에 Phase 1 종료 기록.
+- `>>다음` 시: `mcp__study__routine_appendEntry({ entry: { phase: 1, type: "phase_end", summary: "{Phase 1 요약}" } })` → Phase 2 진행.
 
 ---
 
@@ -178,10 +163,10 @@ Phase 1에서 탐색한 주제를 소스코드 수준으로 심화한다.
   - "이 함수가 X를 하는 이유는?"
   - "Y 대신 Z를 쓴 이유는?"
 - 오답 시 보충 설명, 정답 시 진행.
-- **매 Q&A 완료 후** `.session-state.md` Write 갱신 (qaCount++, Key Insights Phase 2 추가).
+- **매 Q&A 완료 후**: `mcp__study__routine_appendEntry({ entry: { phase: 2, type: "qa", question: "{질문}", keyInsight: "{핵심}", refs: ["{file:line}"], links: ["{url}"] } })`
 
 `>>다음` 신호로 Phase 3 진행.
-- `>>다음` 시: `.session-state.md`의 currentPhase를 3으로 갱신, Phase History에 Phase 2 종료 기록.
+- `>>다음` 시: `mcp__study__routine_appendEntry({ entry: { phase: 2, type: "phase_end", summary: "{Phase 2 요약}" } })` → Phase 3 진행.
 
 ---
 
@@ -201,7 +186,6 @@ Phase 1에서 탐색한 주제를 소스코드 수준으로 심화한다.
 - 구체적인 질문으로 변환한다 (예: "Suspense가 Promise를 catch하는 흐름을 설명해주세요").
 
 사용자 답변을 받는다.
-→ `.session-state.md` Write: q1, q1Answer 갱신.
 
 ### Q2: "나라면 어떻게 만들었을까?"
 
@@ -209,7 +193,6 @@ Phase 1에서 탐색한 주제를 소스코드 수준으로 심화한다.
 - 트레이드오프를 함께 물어본다.
 
 사용자 답변을 받는다.
-→ `.session-state.md` Write: q2, q2Answer 갱신.
 
 ### 피드백
 
@@ -228,8 +211,8 @@ Phase 1에서 탐색한 주제를 소스코드 수준으로 심화한다.
 FAIL은 "나는 정확히 여기서 모른다"를 아는 것입니다. 부정적인 것이 아닙니다.
 ```
 
-- **PASS** → `.session-state.md` Write: result=PASS, currentPhase=4 → Phase 4 진행
-- **FAIL** → 사용자에게 "어디서 막혔나요?" 확인 → `.session-state.md` Write: result=FAIL, currentPhase=5 → Phase 5로 건너뜀
+- **PASS** → `mcp__study__routine_appendEntry({ entry: { phase: 3, type: "checkpoint", q1, q1Answer, q2, q2Answer, result: "PASS" } })` → Phase 4 진행
+- **FAIL** → 사용자에게 "어디서 막혔나요?" 확인 → `mcp__study__routine_appendEntry({ entry: { phase: 3, type: "checkpoint", q1, q1Answer, q2, q2Answer, result: "FAIL" } })` → Phase 5로 건너뜀
 
 규칙:
 - AI가 PASS/FAIL을 판정하지 않는다. 사용자 자기 평가.
@@ -275,11 +258,9 @@ mini-forge 결과를 보여주고 사용자 확인을 받는다.
 
 **PASS 경로** (Phase 4 완료):
 1. `study/.routine/forges/{YYYY-MM-DD}-{주제}.md`에 mini-forge Write.
-2. `mcp__study__session_appendLog(context={mode: "skill"}, topic="routine", content=<요약>)`.
 
 **FAIL 경로** (Phase 3에서 직행):
 1. state.md의 nextSeed에 막힌 지점 기록.
-2. `mcp__study__session_appendLog(context={mode: "skill"}, topic="routine", content=<요약>)`.
 
 ### 5-B. state.md 갱신
 
@@ -297,9 +278,10 @@ Write로 `study/.routine/history.md`에 행 추가:
 - 날짜 연속성 유지: lastCompleted ~ 오늘 사이 빈 날이 있으면 빈 행(`| MM-DD | — | — | — | 0 |`)으로 채움
 - 오늘 행: `| MM-DD | {주제} | {PASS/FAIL} | {forge: 파일명 / seed: 질문} | {streak} |`
 
-### 5-D. 세션 상태 정리
+### 5-D. 세션 로그 정리
 
-`.session-state.md`를 `# COMPLETED\n`으로 Write한다 (다음 세션에서 이전 세션 감지 방지).
+`mcp__study__routine_appendEntry({ entry: { phase: 5, type: "complete" } })`
+`mcp__study__routine_resetLog({ archive: true })`
 
 ### 5-E. 마무리 출력
 
@@ -371,8 +353,8 @@ Write로 `study/.routine/history.md`에 행 추가:
 ## 규칙
 
 - Phase 순서를 건너뛰지 않는다. 예외: FAIL 시 Phase 4 → Phase 5 직행.
-- 쓰기 동작은 Phase 5 (`>>정리`) 이후에만 수행한다. **예외: `.session-state.md`는 Phase 전환 및 Q&A마다 갱신한다.**
-- **컨텍스트 복원**: 현재 Phase나 진행 상태가 불확실하면, `.session-state.md`를 Read한 후 해당 상태 기준으로 진행한다.
+- 쓰기 동작은 Phase 5 (`>>정리`) 이후에만 수행한다. **예외: `routine.appendEntry`는 Phase 전환 및 Q&A마다 호출한다.**
+- **컨텍스트 복원**: 현재 Phase나 진행 상태가 불확실하면, `mcp__study__routine_readLog({})` 호출 후 해당 상태 기준으로 진행한다.
 - **Phase 배너**: 매 응답 첫 줄에 `> [ROUTINE] Phase {N}/5 | ...` 배너를 반드시 출력한다.
 - ref/ 코드가 있으면 반드시 먼저 탐색한다. 웹 검색만으로 대체하지 않는다.
 - ref/ 전환 알림 필수: ref/ 탐색 결과 없을 시 "ref/에 관련 소스 없음, 웹 검색으로 전환합니다" 알림 후 진행.

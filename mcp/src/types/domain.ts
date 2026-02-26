@@ -145,3 +145,14 @@ export interface SourceDigest {
   overview: string;
   existingTopics: string[];
 }
+
+export interface RoutineLogSummary {
+  exists: boolean;
+  topic: string | null;
+  currentPhase: number;
+  qaCount: number;
+  entryCount: number;
+  entries: Record<string, unknown>[];
+  lastTs: string | null;
+  checkpointResult: "PASS" | "FAIL" | "PENDING" | null;
+}

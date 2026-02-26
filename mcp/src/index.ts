@@ -12,6 +12,7 @@ import {
 import { sessionAppendLog, sessionGetResumePoint, sessionGetSourceDigest, sessionGetSourcePaths, sessionSchemas } from "./tools/session.js";
 import { reviewAppendQnA, reviewGetMeta, reviewGetQueue, reviewRecordResult, reviewSaveMeta, reviewSchemas } from "./tools/review.js";
 import { statsGetDashboard, statsSchemas } from "./tools/stats.js";
+import { routineAppendEntry, routineReadLog, routineResetLog, routineSchemas } from "./tools/routine.js";
 import { makeEnvelope } from "./lib/envelope.js";
 
 interface ToolDef {
@@ -112,6 +113,24 @@ const tools: ToolDef[] = [
     description: "Get aggregated skill dashboard stats.",
     schema: statsSchemas.getDashboard,
     run: statsGetDashboard,
+  },
+  {
+    name: "routine.appendEntry",
+    description: "Append a JSONL entry to routine session log.",
+    schema: routineSchemas.appendEntry,
+    run: routineAppendEntry,
+  },
+  {
+    name: "routine.readLog",
+    description: "Read and summarize routine session log.",
+    schema: routineSchemas.readLog,
+    run: routineReadLog,
+  },
+  {
+    name: "routine.resetLog",
+    description: "Reset routine session log (optionally archive).",
+    schema: routineSchemas.resetLog,
+    run: routineResetLog,
   },
 ];
 
