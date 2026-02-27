@@ -24,7 +24,7 @@ const appendEntryInputSchema = z.object({
   context: contextInputSchema.optional(),
   entry: z
     .object({
-      phase: z.number().int().min(0).max(5),
+      phase: z.number().int().min(0).max(6),
       type: z.string().min(1),
     })
     .passthrough(),

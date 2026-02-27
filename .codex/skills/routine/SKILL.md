@@ -11,14 +11,14 @@ description: learn → study → checkpoint → forge 파이프라인을 하나�
 
 ## 컨텍스트 보존 (필수)
 
-이 파이프라인은 90분+ 세션을 전제한다. 컨텍스트 컴팩션이 발생해도 오케스트레이션을 유지하기 위해 아래 3가지를 반드시 지킨다.
+이 파이프라인은 105분+ 세션을 전제한다. 컨텍스트 컴팩션이 발생해도 오케스트레이션을 유지하기 위해 아래 3가지를 반드시 지킨다.
 
 ### A. Phase 배너
 
 **매 응답의 첫 줄**에 아래 형식의 배너를 출력한다:
 
 ```
-> [ROUTINE] Phase {N}/5 | {주제} | Q&A: {누적횟수} | 경과: {분}분
+> [ROUTINE] Phase {N}/6 | {주제} | Q&A: {누적횟수} | 경과: {분}분
 ```
 
 ### B. JSONL 세션 로그 (`routine.appendEntry` / `routine.readLog`)
@@ -28,8 +28,9 @@ description: learn → study → checkpoint → forge 파이프라인을 하나�
 **기록 시점:**
 - Phase 전환 시: `mcp__study__routine_appendEntry({ entry: { phase, type: "phase_end", summary } })`
 - Phase 1-2 매 Q&A 완료 후: `mcp__study__routine_appendEntry({ entry: { phase, type: "qa", question, keyInsight, refs, links } })`
-- Phase 3 체크포인트: `mcp__study__routine_appendEntry({ entry: { phase: 3, type: "checkpoint", q1, q1Answer, q2, q2Answer, result } })`
-- Phase 5 완료: `mcp__study__routine_appendEntry({ entry: { phase: 5, type: "complete" } })`
+- Phase 3 코딩: `mcp__study__routine_appendEntry({ entry: { phase: 3, type: "coding", challengeType, challenge, userCode, review, result } })`
+- Phase 4 체크포인트: `mcp__study__routine_appendEntry({ entry: { phase: 4, type: "checkpoint", q1, q1Answer, q2, q2Answer, result } })`
+- Phase 6 완료: `mcp__study__routine_appendEntry({ entry: { phase: 6, type: "complete" } })`
 
 **복원:** `mcp__study__routine_readLog({})` → exists, topic, currentPhase, qaCount, entries 로 맥락 복원.
 
@@ -169,7 +170,42 @@ Phase 1에서 탐색한 주제를 소스코드 수준으로 심화한다.
 
 ---
 
-## Phase 3: 체크포인트 (10분)
+## Phase 3: 라이브 코딩 (15-20분)
+
+Phase 2에서 심화한 내용을 실제 코드로 작성하여 검증한다.
+
+### 3-A. 과제 출제
+
+AI가 오늘 학습 주제 기반으로 코딩 과제 1개를 출제한다.
+
+과제 유형 (주제에 따라 AI가 가장 적합한 것을 선택):
+
+| 유형 | 설명 | 적합한 경우 |
+|------|------|-----------|
+| 구현 | 학습한 메커니즘의 핵심 로직 직접 구현 | 새 개념을 배운 경우 |
+| 디버깅 | 버그가 있는 코드에서 문제를 찾고 수정 | 동작 원리를 깊게 다룬 경우 |
+| 리팩터링 | 안티패턴 코드를 올바른 패턴으로 수정 | 설계 원칙을 다룬 경우 |
+| 빈칸 채우기 | 핵심 부분이 빈칸인 코드를 완성 | 특정 API/패턴 숙달이 목표인 경우 |
+
+### 3-B. 코드 작성
+
+사용자가 실제 언어(TS/JS 등)로 코드를 작성한다. AI는 기다린다.
+
+### 3-C. 힌트 사다리 피드백
+
+1차 리뷰 (답 보류): 틀린 부분이 있으면 어디가 틀렸는지만 지적, 정답 미공개.
+재시도 기회 (1회): 사용자가 수정한 코드를 다시 제출. 수정을 원하지 않으면 바로 모범 답안.
+2차 리뷰 (모범 답안 공개): 최종 코드와 모범 답안 비교, 차이점 분석, 학습 포인트 정리.
+
+### 3-D. 기록
+
+`mcp__study__routine_appendEntry({ entry: { phase: 3, type: "coding", challengeType: "구현|디버깅|리팩터링|빈칸채우기", challenge: "{과제 설명}", userCode: "{사용자 코드 원문}", review: "{AI 리뷰 원문}", result: "pass|partial|retry" } })`
+
+`>>다음` 시: `mcp__study__routine_appendEntry({ entry: { phase: 3, type: "phase_end", summary: "{Phase 3 요약}" } })` → Phase 4 진행.
+
+---
+
+## Phase 4: 체크포인트 (10분)
 
 체크포인트 진입을 선언한다:
 
@@ -204,14 +240,14 @@ Phase 1에서 탐색한 주제를 소스코드 수준으로 심화한다.
 
 ```
 자기 평가를 해주세요:
-- **PASS** → mini-forge로 넘어갑니다 (Phase 4)
-- **FAIL** → 정확한 gap을 기록하고 다음 세션 seed로 남깁니다 (Phase 5)
+- **PASS** → mini-forge로 넘어갑니다 (Phase 5)
+- **FAIL** → 정확한 gap을 기록하고 다음 세션 seed로 남깁니다 (Phase 6)
 
 FAIL은 "나는 정확히 여기서 모른다"를 아는 것입니다. 부정적인 것이 아닙니다.
 ```
 
-- **PASS** → `mcp__study__routine_appendEntry({ entry: { phase: 3, type: "checkpoint", q1, q1Answer, q2, q2Answer, result: "PASS" } })` → Phase 4 진행
-- **FAIL** → 사용자에게 "어디서 막혔나요?" 확인 → `mcp__study__routine_appendEntry({ entry: { phase: 3, type: "checkpoint", q1, q1Answer, q2, q2Answer, result: "FAIL" } })` → Phase 5로 건너뜀
+- **PASS** → `mcp__study__routine_appendEntry({ entry: { phase: 4, type: "checkpoint", q1, q1Answer, q2, q2Answer, result: "PASS" } })` → Phase 5 진행
+- **FAIL** → 사용자에게 "어디서 막혔나요?" 확인 → `mcp__study__routine_appendEntry({ entry: { phase: 4, type: "checkpoint", q1, q1Answer, q2, q2Answer, result: "FAIL" } })` → Phase 6으로 건너뜀
 
 규칙:
 - AI가 PASS/FAIL을 판정하지 않는다. 사용자 자기 평가.
@@ -219,49 +255,49 @@ FAIL은 "나는 정확히 여기서 모른다"를 아는 것입니다. 부정적
 
 ---
 
-## Phase 4: 결정화 — mini-forge (20-30분)
+## Phase 5: 결정화 — mini-forge (20-30분)
 
 체크포인트 PASS 시에만 진입.
 
-### 4-A. 원칙 추출
+### 5-A. 원칙 추출
 
 이번 세션 학습 내용에서 핵심 원칙 1개를 추출한다:
 - **이름**: 2~5단어
 - **한 줄 요약**: 1문장
 - **근거**: `file:line` 또는 출처
-- **"나라면"**: Phase 3 Q2의 대안 설계 + 트레이드오프
+- **"나라면"**: Phase 4 Q2의 대안 설계 + 트레이드오프
 
-### 4-B. 판단 시나리오
+### 5-B. 판단 시나리오
 
 원칙을 기반으로 실전 시나리오 1~2개를 구성한다:
 - **상황**: 실제 코딩/설계 시 마주치는 상황
 - **떠올려**: 어떤 원칙을 떠올려야 하는지
 - **안티패턴**: 이렇게 하면 안 되는 이유
 
-### 4-C. 기억법
+### 5-C. 기억법
 
 한 줄 비유 또는 이미지로 원칙을 기억할 수 있게 정리한다.
 
-### 4-D. 사용자 확인
+### 5-D. 사용자 확인
 
 mini-forge 결과를 보여주고 사용자 확인을 받는다.
 수정 요청이 있으면 반영한다.
 
-`>>정리` 또는 `>>끝` 또는 사용자 확인으로 Phase 5 진행.
+`>>정리` 또는 `>>끝` 또는 사용자 확인으로 Phase 6 진행.
 
 ---
 
-## Phase 5: 정리 (5분)
+## Phase 6: 정리 (5분)
 
-### 5-A. 결과물 기록
+### 6-A. 결과물 기록
 
-**PASS 경로** (Phase 4 완료):
+**PASS 경로** (Phase 5 완료):
 1. `study/.routine/forges/{YYYY-MM-DD}-{주제}.md`에 mini-forge Write.
 
-**FAIL 경로** (Phase 3에서 직행):
+**FAIL 경로** (Phase 4에서 직행):
 1. state.md의 nextSeed에 막힌 지점 기록.
 
-### 5-B. state.md 갱신
+### 6-B. state.md 갱신
 
 Write로 `study/.routine/state.md` 갱신:
 - `lastCompleted`: 오늘 날짜
@@ -271,18 +307,18 @@ Write로 `study/.routine/state.md` 갱신:
 - streak 계산: lastCompleted가 어제면 streak+1, 아니면 1로 리셋
 - nextSeed: FAIL이면 막힌 지점, PASS면 비우기 (미해결 seed가 있으면 유지)
 
-### 5-C. history.md 갱신
+### 6-C. history.md 갱신
 
 Write로 `study/.routine/history.md`에 행 추가:
 - 날짜 연속성 유지: lastCompleted ~ 오늘 사이 빈 날이 있으면 빈 행(`| MM-DD | — | — | — | 0 |`)으로 채움
 - 오늘 행: `| MM-DD | {주제} | {PASS/FAIL} | {forge: 파일명 / seed: 질문} | {streak} |`
 
-### 5-D. 세션 로그 정리
+### 6-D. 세션 로그 정리
 
-`mcp__study__routine_appendEntry({ entry: { phase: 5, type: "complete" } })`
+`mcp__study__routine_appendEntry({ entry: { phase: 6, type: "complete" } })`
 `mcp__study__routine_resetLog({ archive: true })`
 
-### 5-E. 마무리 출력
+### 6-E. 마무리 출력
 
 ```
 ## 루틴 완료
@@ -304,8 +340,8 @@ Write로 `study/.routine/history.md`에 행 추가:
 ## 시간 가드레일
 
 - Phase 진입 시 시작 시각 대비 경과 시간을 체크한다.
-- 90분 초과 시: "90분이 경과했습니다. 현재 Phase를 마무리하고 정리로 넘어갈까요?" 확인.
-- 사용자가 계속을 원하면 진행, 아니면 현재 Phase 완료 후 Phase 5로 유도.
+- 105분 초과 시: "105분이 경과했습니다. 현재 Phase를 마무리하고 정리로 넘어갈까요?" 확인.
+- 사용자가 계속을 원하면 진행, 아니면 현재 Phase 완료 후 Phase 6으로 유도.
 
 ---
 
@@ -343,18 +379,18 @@ Write로 `study/.routine/history.md`에 행 추가:
 
 ## 사용자 신호 규칙
 
-- `>>다음` — Phase 전환 (Phase 1→2, Phase 2→3)
-- `>>정리` 또는 `>>끝` — 현재 Phase 완료 후 Phase 5 실행
+- `>>다음` — Phase 전환 (Phase 1→2, Phase 2→3, Phase 3→4)
+- `>>정리` 또는 `>>끝` — 현재 Phase 완료 후 Phase 6 실행
 - 일반 대화 속 "다음", "정리", "끝"은 신호로 인식하지 않는다 (`>>` 접두사 필수).
 
 ---
 
 ## 규칙
 
-- Phase 순서를 건너뛰지 않는다. 예외: FAIL 시 Phase 4 → Phase 5 직행.
-- 쓰기 동작은 Phase 5 (`>>정리`) 이후에만 수행한다. **예외: `routine.appendEntry`는 Phase 전환 및 Q&A마다 호출한다.**
+- Phase 순서를 건너뛰지 않는다. 예외: FAIL 시 Phase 5 → Phase 6 직행.
+- 쓰기 동작은 Phase 6 (`>>정리`) 이후에만 수행한다. **예외: `routine.appendEntry`는 Phase 전환 및 Q&A마다 호출한다.**
 - **컨텍스트 복원**: 현재 Phase나 진행 상태가 불확실하면, `mcp__study__routine_readLog({})` 호출 후 해당 상태 기준으로 진행한다.
-- **Phase 배너**: 매 응답 첫 줄에 `> [ROUTINE] Phase {N}/5 | ...` 배너를 반드시 출력한다.
+- **Phase 배너**: 매 응답 첫 줄에 `> [ROUTINE] Phase {N}/6 | ...` 배너를 반드시 출력한다.
 - ref/ 코드가 있으면 반드시 먼저 탐색한다. 웹 검색만으로 대체하지 않는다.
 - ref/ 전환 알림 필수: ref/ 탐색 결과 없을 시 "ref/에 관련 소스 없음, 웹 검색으로 전환합니다" 알림 후 진행.
 - 근거의 출처(ref 코드/웹/추론)를 항상 명시한다.

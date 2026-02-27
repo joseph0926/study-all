@@ -20,7 +20,7 @@ description: 커스텀 프로젝트 대상 learn → study → checkpoint → fo
 매 응답 첫 줄:
 
 ```
-> [PROJECT-ROUTINE] Phase {N}/5 | {주제} | Q&A: {누적횟수} | 경과: {분}분
+> [PROJECT-ROUTINE] Phase {N}/6 | {주제} | Q&A: {누적횟수} | 경과: {분}분
 ```
 
 ### B. JSONL 세션 로그 (`routine.*`, project context)
@@ -90,23 +90,58 @@ description: 커스텀 프로젝트 대상 learn → study → checkpoint → fo
 
 ---
 
-## Phase 3: 체크포인트
+## Phase 3: 라이브 코딩 (15-20분)
+
+Phase 2에서 심화한 내용을 실제 코드로 작성하여 검증한다.
+
+### 3-A. 과제 출제
+
+AI가 오늘 학습 주제 기반으로 코딩 과제 1개를 출제한다 (프로젝트 코드 컨텍스트 포함).
+
+과제 유형 (주제에 따라 AI가 가장 적합한 것을 선택):
+
+| 유형 | 설명 | 적합한 경우 |
+|------|------|-----------|
+| 구현 | 학습한 메커니즘의 핵심 로직 직접 구현 | 새 개념을 배운 경우 |
+| 디버깅 | 버그가 있는 코드에서 문제를 찾고 수정 | 동작 원리를 깊게 다룬 경우 |
+| 리팩터링 | 안티패턴 코드를 올바른 패턴으로 수정 | 설계 원칙을 다룬 경우 |
+| 빈칸 채우기 | 핵심 부분이 빈칸인 코드를 완성 | 특정 API/패턴 숙달이 목표인 경우 |
+
+### 3-B. 코드 작성
+
+사용자가 실제 언어(TS/JS 등)로 코드를 작성한다. AI는 기다린다.
+
+### 3-C. 힌트 사다리 피드백
+
+1차 리뷰 (답 보류): 틀린 부분이 있으면 어디가 틀렸는지만 지적, 정답 미공개.
+재시도 기회 (1회): 사용자가 수정한 코드를 다시 제출. 수정을 원하지 않으면 바로 모범 답안.
+2차 리뷰 (모범 답안 공개): 최종 코드와 모범 답안 비교, 차이점 분석, 학습 포인트 정리.
+
+### 3-D. 기록
+
+`mcp__study__routine_appendEntry({ context: { mode: "project", projectPath }, entry: { phase: 3, type: "coding", challengeType, challenge, userCode, review, result } })`
+
+`>>다음` 시: `mcp__study__routine_appendEntry({ context: { mode: "project", projectPath }, entry: { phase: 3, type: "phase_end", summary } })` → Phase 4 진행.
+
+---
+
+## Phase 4: 체크포인트
 
 질문:
 1. "이 동작이 왜 이렇게 설계됐는가?"
 2. "나라면 어떻게 바꾸고 어떤 비용을 감수할까?"
 
 사용자 자기평가:
-- PASS: Phase 4 진행
-- FAIL: gap을 nextSeed로 남기고 Phase 5 직행
+- PASS: Phase 5 진행
+- FAIL: gap을 nextSeed로 남기고 Phase 6 직행
 
 기록:
 
-`mcp__study__routine_appendEntry({ context: { mode: "project", projectPath }, entry: { phase: 3, type: "checkpoint", q1, q1Answer, q2, q2Answer, result } })`
+`mcp__study__routine_appendEntry({ context: { mode: "project", projectPath }, entry: { phase: 4, type: "checkpoint", q1, q1Answer, q2, q2Answer, result } })`
 
 ---
 
-## Phase 4: mini-forge
+## Phase 5: mini-forge
 
 체크포인트 PASS에서만 수행:
 
@@ -114,11 +149,11 @@ description: 커스텀 프로젝트 대상 learn → study → checkpoint → fo
 - 실전 시나리오 1~2개
 - 기억법 1줄
 
-사용자 확인 후 `>>정리` 또는 `>>끝` 시 Phase 5
+사용자 확인 후 `>>정리` 또는 `>>끝` 시 Phase 6
 
 ---
 
-## Phase 5: 정리
+## Phase 6: 정리
 
 기록 경로:
 - PASS: `<project>/.study/.routine/forges/{YYYY-MM-DD}-{주제}.md`
@@ -127,7 +162,7 @@ description: 커스텀 프로젝트 대상 learn → study → checkpoint → fo
 필수 갱신:
 - `<project>/.study/.routine/state.md`
 - `<project>/.study/.routine/history.md`
-- `routine.appendEntry({ phase: 5, type: "complete" })`
+- `routine.appendEntry({ phase: 6, type: "complete" })`
 - `routine.resetLog({})`
 
 ---
@@ -135,15 +170,15 @@ description: 커스텀 프로젝트 대상 learn → study → checkpoint → fo
 ## 사용자 신호 규칙
 
 - `>>다음` — Phase 전환
-- `>>정리` 또는 `>>끝` — 현재 Phase 마감 후 Phase 5
+- `>>정리` 또는 `>>끝` — 현재 Phase 마감 후 Phase 6
 - 일반 문장 속 "다음/정리/끝"은 신호로 인식하지 않음
 
 ---
 
 ## 규칙
 
-- Phase 순서를 건너뛰지 않는다 (FAIL만 Phase 4 생략)
-- 쓰기 동작은 Phase 5에서만 수행한다
+- Phase 순서를 건너뛰지 않는다 (FAIL만 Phase 5 생략)
+- 쓰기 동작은 Phase 6에서만 수행한다
 예외: `routine.appendEntry`는 Q&A/전환 시 즉시 기록
 - 프로젝트 코드/문서를 먼저 탐색하고, 웹 검색만으로 대체하지 않는다
 - 근거 출처(코드/문서/웹/추론)를 항상 명시한다

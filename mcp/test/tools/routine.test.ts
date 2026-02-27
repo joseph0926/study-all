@@ -118,13 +118,13 @@ describe("routine tools", () => {
       clock,
     );
     await routineAppendEntry(
-      { entry: { phase: 3, type: "checkpoint", q1: "Q1", q1Answer: "A1", q2: "Q2", q2Answer: "A2", result: "PASS" } },
+      { entry: { phase: 4, type: "checkpoint", q1: "Q1", q1Answer: "A1", q2: "Q2", q2Answer: "A2", result: "PASS" } },
       clock,
     );
 
     const result = await routineReadLog({}, clock);
     expect(result.data.checkpointResult).toBe("PASS");
-    expect(result.data.currentPhase).toBe(3);
+    expect(result.data.currentPhase).toBe(4);
   });
 
   it("readLog handles malformed JSON lines gracefully", async () => {
