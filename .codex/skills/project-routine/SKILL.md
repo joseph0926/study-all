@@ -29,7 +29,7 @@ description: 커스텀 프로젝트 대상 learn → study → checkpoint → fo
 
 - `mcp__study__routine_appendEntry({ context: { mode: "project", projectPath }, entry: ... })`
 - `mcp__study__routine_readLog({ context: { mode: "project", projectPath } })`
-- `mcp__study__routine_resetLog({ context: { mode: "project", projectPath }, archive: true })`
+- `mcp__study__routine_resetLog({ context: { mode: "project", projectPath } })`
 
 로그 경로: `<project>/.study/.routine/.session-log.jsonl`
 
@@ -128,7 +128,7 @@ description: 커스텀 프로젝트 대상 learn → study → checkpoint → fo
 - `<project>/.study/.routine/state.md`
 - `<project>/.study/.routine/history.md`
 - `routine.appendEntry({ phase: 5, type: "complete" })`
-- `routine.resetLog({ archive: true })`
+- `routine.resetLog({})`
 
 ---
 

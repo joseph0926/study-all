@@ -28,9 +28,14 @@ allowed-tools: Read, Grep, Glob, Write, WebSearch, WebFetch, mcp__study__routine
 
 **기록 시점:**
 - Phase 전환 시: `routine.appendEntry({ entry: { phase, type: "phase_end", summary } })`
-- Phase 1-2 매 Q&A 완료 후: `routine.appendEntry({ entry: { phase, type: "qa", question, keyInsight, refs, links } })`
-- Phase 3 체크포인트: `routine.appendEntry({ entry: { phase: 3, type: "checkpoint", q1, q1Answer, q2, q2Answer, result } })`
+- Phase 1-2 매 Q&A 완료 후: `routine.appendEntry({ entry: { phase, type: "qa", userQuestion: "{사용자 원문 그대로}", aiAnswer: "{AI 응답 원문 그대로}", refs: ["{file:line}"], links: ["{url}"] } })`
+- Phase 3 체크포인트: `routine.appendEntry({ entry: { phase: 3, type: "checkpoint", q1, q1Answer: "{사용자 원문}", q2, q2Answer: "{사용자 원문}", aiFeedback: "{AI 피드백 원문}", result } })`
 - Phase 5 완료: `routine.appendEntry({ entry: { phase: 5, type: "complete" } })`
+
+**원문 보존 원칙:**
+- `userQuestion`, `aiAnswer`, `q1Answer`, `q2Answer`, `aiFeedback`은 축약/요약 없이 **원문 그대로** 저장한다.
+- 오타 수정만 허용하며, 내용 변경/축약은 금지한다.
+- JSONL 한 줄이 길어지는 것은 허용한다 — 원문 보존이 축약보다 우선한다.
 
 **복원:** `routine.readLog({})` → exists, topic, currentPhase, qaCount, entries 로 맥락 복원.
 
@@ -50,8 +55,27 @@ allowed-tools: Read, Grep, Glob, Write, WebSearch, WebFetch, mcp__study__routine
 2. `exists=true` + 마지막 entry의 type이 `"complete"`가 아님 → 이전 세션 발견:
    - 사용자에게 보고: "이전 세션: {topic}, Phase {currentPhase}, Q&A {qaCount}회. 이어서 할까요?"
    - **이어하기** → entries에서 맥락 복원, 해당 Phase 진입
-   - **새로 시작** → `routine.resetLog({ archive: true })` 후 아래 정상 흐름
+   - **새로 시작** → `routine.resetLog({})` 후 아래 정상 흐름
 3. `exists=false` 또는 마지막 entry가 `"complete"` → 정상 흐름 (아래 계속)
+
+### 0-PRE-FAIL. FAIL 세션 이어가기 체크
+
+`state.md`에 `nextSeed`가 있고 `failSessionArchive` 경로가 있으면:
+
+1. `failSessionArchive` 경로의 아카이브 JSONL 파일을 Read
+2. 아카이브 entries에서 이전 세션의 전체 Q&A 맥락 복원
+3. 사용자에게 보고:
+   ```
+   이전 FAIL 세션 복원:
+   - 주제: {topic}
+   - Q&A {N}회 학습 내용 로드 완료
+   - gap: {nextSeed}
+   이전 학습을 기반으로 gap 주제부터 이어갑니다.
+   ```
+4. 이전 세션의 Q&A 내용을 컨텍스트로 유지한 채 Phase 1 진입
+   - Phase 1은 gap(nextSeed) 주제에 집중하되, 이전 학습 전체를 포괄
+5. Phase 4 mini-forge 작성 시: **이전 FAIL 세션 + 현재 세션** 학습 내용을 모두 포함
+6. PASS 시: `state.md`에서 `nextSeed`, `failSessionArchive` 제거
 
 ### 0-A. 상태 확인
 
@@ -135,7 +159,7 @@ ref/ 폴백 규칙:
 
 - 사용자의 추가 질문을 대기. 최소 Q&A 3회를 목표로 한다.
 - 매 Q&A에서 근거 소스를 명시한다.
-- **매 Q&A 완료 후**: `routine.appendEntry({ entry: { phase: 1, type: "qa", question: "{질문}", keyInsight: "{핵심}", refs: ["{file:line}"], links: ["{url}"] } })`
+- **매 Q&A 완료 후**: `routine.appendEntry({ entry: { phase: 1, type: "qa", userQuestion: "{사용자 질문 원문}", aiAnswer: "{AI 응답 원문}", refs: ["{file:line}"], links: ["{url}"] } })`
 - `>>다음` 신호로 Phase 2 진행. 3회 미만이면 "아직 Q&A {N}회입니다. 더 탐색하시겠어요?" 확인.
 - `>>다음` 시: `routine.appendEntry({ entry: { phase: 1, type: "phase_end", summary: "{Phase 1 요약}" } })` → Phase 2 진행.
 
@@ -163,7 +187,7 @@ Phase 1에서 탐색한 주제를 소스코드 수준으로 심화한다.
   - "이 함수가 X를 하는 이유는?"
   - "Y 대신 Z를 쓴 이유는?"
 - 오답 시 보충 설명, 정답 시 진행.
-- **매 Q&A 완료 후**: `routine.appendEntry({ entry: { phase: 2, type: "qa", question: "{질문}", keyInsight: "{핵심}", refs: ["{file:line}"], links: ["{url}"] } })`
+- **매 Q&A 완료 후**: `routine.appendEntry({ entry: { phase: 2, type: "qa", userQuestion: "{사용자 질문 원문}", aiAnswer: "{AI 응답 원문}", refs: ["{file:line}"], links: ["{url}"] } })`
 
 `>>다음` 신호로 Phase 3 진행.
 - `>>다음` 시: `routine.appendEntry({ entry: { phase: 2, type: "phase_end", summary: "{Phase 2 요약}" } })` → Phase 3 진행.
@@ -261,6 +285,7 @@ mini-forge 결과를 보여주고 사용자 확인을 받는다.
 
 **FAIL 경로** (Phase 3에서 직행):
 1. state.md의 nextSeed에 막힌 지점 기록.
+2. state.md의 `failSessionArchive`에 아카이브될 JSONL 경로 기록 (포맷: `study/.routine/.session-log.{YYYY-MM-DD}-{주제}.jsonl`).
 
 ### 5-B. state.md 갱신
 
@@ -281,7 +306,7 @@ Write로 `study/.routine/history.md`에 행 추가:
 ### 5-D. 세션 로그 정리
 
 `routine.appendEntry({ entry: { phase: 5, type: "complete" } })`
-`routine.resetLog({ archive: true })`
+`routine.resetLog({})`
 
 ### 5-E. 마무리 출력
 

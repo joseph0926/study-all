@@ -30,7 +30,7 @@ allowed-tools: Read, Grep, Glob, Bash, Write, WebSearch, WebFetch, mcp__study__c
 
 - `routine.appendEntry({ context: { mode: "project", projectPath }, entry: ... })`
 - `routine.readLog({ context: { mode: "project", projectPath } })`
-- `routine.resetLog({ context: { mode: "project", projectPath }, archive: true })`
+- `routine.resetLog({ context: { mode: "project", projectPath } })`
 
 로그 경로: `<project>/.study/.routine/.session-log.jsonl`
 
@@ -129,7 +129,7 @@ allowed-tools: Read, Grep, Glob, Bash, Write, WebSearch, WebFetch, mcp__study__c
 - `<project>/.study/.routine/state.md`
 - `<project>/.study/.routine/history.md`
 - `routine.appendEntry({ phase: 5, type: "complete" })`
-- `routine.resetLog({ archive: true })`
+- `routine.resetLog({})`
 
 ---
 

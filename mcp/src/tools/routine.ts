@@ -36,8 +36,17 @@ const readLogInputSchema = z.object({
 
 const resetLogInputSchema = z.object({
   context: contextInputSchema.optional(),
-  archive: z.boolean().optional(),
 });
+
+function sanitizeTopicForFilename(topic: string): string {
+  return topic
+    .trim()
+    .replace(/[/\\:*?"<>|]/g, "-")
+    .replace(/\s+/g, "-")
+    .replace(/-{2,}/g, "-")
+    .replace(/^-|-$/g, "")
+    .slice(0, 60);
+}
 
 export async function routineAppendEntry(
   input: z.input<typeof appendEntryInputSchema>,
@@ -165,17 +174,32 @@ export async function routineResetLog(
     return makeEnvelope({ ok: true }, clock);
   }
 
-  if (parsed.archive) {
-    const date = clock.now().toISOString().slice(0, 10);
-    const dir = path.dirname(logPath);
-    const archivePath = path.join(dir, `.session-log.${date}.jsonl`);
-    await fs.copyFile(logPath, archivePath);
-    await writeText(logPath, "");
-    return makeEnvelope({ ok: true, archived: archivePath }, clock);
+  const content = await readText(logPath);
+  if (!content.trim()) {
+    return makeEnvelope({ ok: true }, clock);
   }
 
+  // Extract topic from init entry for archive filename
+  let topic = "";
+  for (const line of content.trim().split("\n")) {
+    try {
+      const entry = JSON.parse(line) as Record<string, unknown>;
+      if (entry.type === "init" && typeof entry.topic === "string") {
+        topic = entry.topic;
+        break;
+      }
+    } catch {
+      // skip
+    }
+  }
+
+  const date = clock.now().toISOString().slice(0, 10);
+  const dir = path.dirname(logPath);
+  const suffix = topic ? `-${sanitizeTopicForFilename(topic)}` : "";
+  const archivePath = path.join(dir, `.session-log.${date}${suffix}.jsonl`);
+  await fs.copyFile(logPath, archivePath);
   await writeText(logPath, "");
-  return makeEnvelope({ ok: true }, clock);
+  return makeEnvelope({ ok: true, archived: archivePath }, clock);
 }
 
 export const routineSchemas = {

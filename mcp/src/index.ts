@@ -128,7 +128,7 @@ const tools: ToolDef[] = [
   },
   {
     name: "routine.resetLog",
-    description: "Reset routine session log (optionally archive).",
+    description: "Reset routine session log (always archives with date-topic filename).",
     schema: routineSchemas.resetLog,
     run: routineResetLog,
   },
