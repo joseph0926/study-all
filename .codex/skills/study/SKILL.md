@@ -1,26 +1,26 @@
 ---
 name: study
-description: 소스코드 기반 딥 학습 — plan.md 기반 로드맵 → 설명+Q&A → 대화 기록. Codex에서는 `$study <주제>`로 호출한다.
+description: 소스코드 기반 딥 학습 — plan.md 기반 로드맵 → 설명+Q&A → 대화 기록 Codex에서는 `$study <주제>`으로 호출한다.
 ---
 
 # study
 
-입력: `$study <주제>` (예: `react`, `nextjs`)
+입력: `$study <주제>`
 
 실행 순서:
 
-0. `mcp__study__context_resolve(mode=skill, skill=$ARGUMENTS)`로 컨텍스트 확인
+0. `context.resolve(mode=skill, skill=$ARGUMENTS)`로 컨텍스트 확인
 1. `study/<주제>/plan.md` 존재 여부 확인 → 분기
 
    **[첫 세션] plan.md 없음:**
-   1-A. `mcp__study__session_getSourceDigest(context, skill)`로 소스 트리 요약 + 기존 토픽 목록 조회
+   1-A. `session.getSourceDigest(context, skill)`로 소스 트리 요약 + 기존 토픽 목록 조회
    1-B. **소스코드를 봐야 차이가 나는 토픽 5~8개** 제안
    1-C. 사용자 확인 후 `study/<주제>/plan.md` 생성 (제안 토픽 목록 + 학습 로드맵 체크리스트)
    1-D. → Step 2로 진행
 
    **[복귀 세션] plan.md 있음:**
-   1-A. `mcp__study__session_getResumePoint(context, topic)`로 마지막 진행 위치 조회
-   1-B. `mcp__study__progress_getPlan(context)`으로 plan.md 로드 → 진행률 요약 (완료/미완료 토픽 수)
+   1-A. `session.getResumePoint(context, topic)`로 마지막 진행 위치 조회
+   1-B. `progress.getPlan(context)`으로 plan.md 로드 → 진행률 요약 (완료/미완료 토픽 수)
    1-C. 사용자에게 보고: "Topic X > 서브토픽 Y까지 진행했습니다. 이어서 할까요?"
    1-D. plan.md에 없는 추가 토픽 후보가 있으면 간략히 제안 (기존 plan.md의 소스 다이제스트 대비 새로 발견된 것만)
    1-E. → Step 2로 진행
@@ -54,13 +54,13 @@ description: 소스코드 기반 딥 학습 — plan.md 기반 로드맵 → 설
 
    - **즉시 경계 선언**: 미래 토픽 개념 등장 시 "X는 별도 토픽에서 다룸" 명시.
    - **발견 목록 축적**: `[발견] <개념> → <제안 토픽> (출처: file:line)` 형식으로 세션 내 추적.
-   - **종료 시 일괄 반영**: Step 3에서 축적된 발견 목록을 사용자에게 제시 → 승인 시 plan.md에 토픽 추가.
+   - **종료 시 일괄 반영**: Step 3에서 축적된 발견 목록을 사용자에게 제시 → 승인 시 Write로 plan.md에 토픽 추가.
 
 3. 종료(`>>정리` 또는 `>>끝`) 시:
-   - `mcp__study__session_appendLog` → `study/<주제>/<토픽명>.md`에 대화 원문 기록 (오타 수정만)
-   - `mcp__study__review_saveMeta` → `study/<주제>/<토픽명>-meta.md` 생성/갱신
-   - `mcp__study__progress_updateCheckbox` → plan.md 내 완료 토픽 체크
-   - 발견된 연관 주제가 있으면 사용자에게 제시 → 승인 시 plan.md에 토픽 추가
+   - `session.appendLog` → `study/<주제>/<토픽명>.md`에 대화 원문 기록 (오타 수정만)
+   - `review.saveMeta` → `study/<주제>/<토픽명>-meta.md` 생성/갱신
+   - `progress.updateCheckbox` → plan.md 내 완료 토픽 체크
+   - 발견된 연관 주제가 있으면 사용자에게 제시 → 승인 시 Write로 plan.md에 토픽 추가
 
 사용자 신호 규칙:
 - `>>다음` — 다음 마이크로서브토픽으로 전환

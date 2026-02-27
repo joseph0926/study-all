@@ -46,10 +46,12 @@ study-all/
 ├── .claude/rules/*.md
 ├── mcp/                         # study MCP 서버
 ├── scripts/
+│   ├── generate-codex-skills.sh
 │   ├── sync-claude-home.sh
 │   ├── sync-codex-home.sh
 │   ├── setup-githooks.sh
 │   ├── check-docs.sh
+│   ├── test-generate-codex-skills.sh
 │   └── start-mcp.sh
 ├── study/                       # 학습 기록/메타
 └── ref/                         # 학습 소스 레퍼런스
@@ -61,10 +63,12 @@ study-all/
 cd <repo-root>
 
 # 1) home sync(기본 dry-run)
+bash scripts/generate-codex-skills.sh --dry-run
 bash scripts/sync-claude-home.sh --dry-run
 bash scripts/sync-codex-home.sh --dry-run
 
 # 2) 반영
+bash scripts/generate-codex-skills.sh --apply
 bash scripts/sync-claude-home.sh --apply
 bash scripts/sync-codex-home.sh --apply
 
@@ -115,12 +119,15 @@ bash scripts/sync-claude-home.sh --apply --prune-managed
 Codex:
 
 ```bash
+bash scripts/generate-codex-skills.sh --dry-run
+bash scripts/generate-codex-skills.sh --apply
+bash scripts/generate-codex-skills.sh --check
 bash scripts/sync-codex-home.sh --dry-run
 bash scripts/sync-codex-home.sh --apply
 bash scripts/sync-codex-home.sh --apply --prune-managed
 ```
 
-- 동기화 대상: `.codex/skills`
+- 동기화 대상: `.codex/skills` (`.claude/skills` 기준 생성 결과)
 - `agents/openai.yaml` 메타 파일도 동일 경로로 동기화
 - manifest: `~/.codex/.study-all-sync-manifest`
 
@@ -141,6 +148,8 @@ bash scripts/setup-githooks.sh
 ## Validation Commands
 
 ```bash
+bash scripts/generate-codex-skills.sh --check
+bash scripts/test-generate-codex-skills.sh
 bash scripts/check-docs.sh
 bash scripts/sync-claude-home.sh --dry-run
 bash scripts/sync-codex-home.sh --dry-run

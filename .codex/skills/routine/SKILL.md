@@ -1,13 +1,11 @@
 ---
 name: routine
-description: learn → study → checkpoint → forge 파이프라인을 하나의 세션에서 오케스트레이션 — 매 세션이 판단 프레임워크 또는 다음 질문으로 끝남. Codex에서는 `$routine`으로 호출한다.
+description: learn → study → checkpoint → forge 파이프라인을 하나의 세션에서 오케스트레이션 — 매 세션이 판단 프레임워크 또는 다음 질문으로 끝남 Codex에서는 `$routine [주제]`으로 호출한다.
 ---
 
 # routine
 
-입력: `$routine [주제]` (선택. 예: `$routine Suspense 타이밍`, 비어있으면 이전 seed 또는 대시보드 기반 제안)
-
----
+입력: `$routine [주제]`
 
 ## 컨텍스트 보존 (필수)
 
@@ -26,38 +24,61 @@ description: learn → study → checkpoint → forge 파이프라인을 하나�
 `session-state.md` 대신 JSONL 기반 세션 로그를 사용한다.
 
 **기록 시점:**
-- Phase 전환 시: `mcp__study__routine_appendEntry({ entry: { phase, type: "phase_end", summary } })`
-- Phase 1-2 매 Q&A 완료 후: `mcp__study__routine_appendEntry({ entry: { phase, type: "qa", question, keyInsight, refs, links } })`
-- Phase 3 코딩: `mcp__study__routine_appendEntry({ entry: { phase: 3, type: "coding", challengeType, challenge, userCode, review, result } })`
-- Phase 4 체크포인트: `mcp__study__routine_appendEntry({ entry: { phase: 4, type: "checkpoint", q1, q1Answer, q2, q2Answer, result } })`
-- Phase 6 완료: `mcp__study__routine_appendEntry({ entry: { phase: 6, type: "complete" } })`
+- Phase 전환 시: `routine.appendEntry({ entry: { phase, type: "phase_end", summary } })`
+- Phase 1-2 매 Q&A 완료 후: `routine.appendEntry({ entry: { phase, type: "qa", userQuestion: "{사용자 원문 그대로}", aiAnswer: "{AI 응답 원문 그대로}", refs: ["{file:line}"], links: ["{url}"] } })`
+- Phase 3 코딩: `routine.appendEntry({ entry: { phase: 3, type: "coding", challengeType, challenge, userCode, review, result } })`
+- Phase 4 체크포인트: `routine.appendEntry({ entry: { phase: 4, type: "checkpoint", q1, q1Answer: "{사용자 원문}", q2, q2Answer: "{사용자 원문}", aiFeedback: "{AI 피드백 원문}", result } })`
+- Phase 6 완료: `routine.appendEntry({ entry: { phase: 6, type: "complete" } })`
 
-**복원:** `mcp__study__routine_readLog({})` → exists, topic, currentPhase, qaCount, entries 로 맥락 복원.
+**원문 보존 원칙:**
+- `userQuestion`, `aiAnswer`, `q1Answer`, `q2Answer`, `aiFeedback`은 축약/요약 없이 **원문 그대로** 저장한다.
+- 오타 수정만 허용하며, 내용 변경/축약은 금지한다.
+- JSONL 한 줄이 길어지는 것은 허용한다 — 원문 보존이 축약보다 우선한다.
+
+**복원:** `routine.readLog({})` → exists, topic, currentPhase, qaCount, entries 로 맥락 복원.
 
 ### C. Self-check 규칙
 
-- **Phase 전환 직후**: `mcp__study__routine_readLog({})` 호출하여 상태 확인 후 진행.
-- **응답 생성 시 현재 Phase가 불확실하면**: 즉시 `mcp__study__routine_readLog({})` 호출하고 해당 상태 기준으로 진행.
+- **Phase 전환 직후**: `routine.readLog({})` 호출하여 상태 확인 후 진행.
+- **응답 생성 시 현재 Phase가 불확실하면**: 즉시 `routine.readLog({})` 호출하고 해당 상태 기준으로 진행.
 - readLog 결과와 대화 컨텍스트가 충돌하면 **readLog를 신뢰**한다 (로그가 더 최신).
 
----
 
 ## Phase 0: 오리엔테이션 (5분)
 
 ### 0-PRE. 이전 세션 이어하기 체크 (최우선)
 
-1. `mcp__study__routine_readLog({})` 호출
+1. `routine.readLog({})` 호출
 2. `exists=true` + 마지막 entry의 type이 `"complete"`가 아님 → 이전 세션 발견:
    - 사용자에게 보고: "이전 세션: {topic}, Phase {currentPhase}, Q&A {qaCount}회. 이어서 할까요?"
    - **이어하기** → entries에서 맥락 복원, 해당 Phase 진입
-   - **새로 시작** → `mcp__study__routine_resetLog({ archive: true })` 후 아래 정상 흐름
+   - **새로 시작** → `routine.resetLog({})` 후 아래 정상 흐름
 3. `exists=false` 또는 마지막 entry가 `"complete"` → 정상 흐름 (아래 계속)
+
+### 0-PRE-FAIL. FAIL 세션 이어가기 체크
+
+`state.md`에 `nextSeed`가 있고 `failSessionArchive` 경로가 있으면:
+
+1. `failSessionArchive` 경로의 아카이브 JSONL 파일을 Read
+2. 아카이브 entries에서 이전 세션의 전체 Q&A 맥락 복원
+3. 사용자에게 보고:
+   ```
+   이전 FAIL 세션 복원:
+   - 주제: {topic}
+   - Q&A {N}회 학습 내용 로드 완료
+   - gap: {nextSeed}
+   이전 학습을 기반으로 gap 주제부터 이어갑니다.
+   ```
+4. 이전 세션의 Q&A 내용을 컨텍스트로 유지한 채 Phase 1 진입
+   - Phase 1은 gap(nextSeed) 주제에 집중하되, 이전 학습 전체를 포괄
+5. Phase 5 mini-forge 작성 시: **이전 FAIL 세션 + 현재 세션** 학습 내용을 모두 포함
+6. PASS 시: `state.md`에서 `nextSeed`, `failSessionArchive` 제거
 
 ### 0-A. 상태 확인
 
 1. `study/.routine/state.md` Read — streak, nextSeed 확인
 2. `study/.routine/history.md` Read — 최근 5행 로드
-3. `mcp__study__stats_getDashboard(context={mode: "skill"})`로 전체 학습 상태 + 복습 대기 확인 (totalReviewPending, 스킬별 reviewPending 포함)
+3. `stats.getDashboard(context={mode: "skill"})`로 전체 학습 상태 + 복습 대기 확인 (totalReviewPending, 스킬별 reviewPending 포함)
 
 5. 시작 시각 기록 (내부 추적용, `startTime: HH:MM` 메모)
 
@@ -99,11 +120,10 @@ streak: {N}일 | 총 세션: {N} | 총 forge: {N}
 
 사용자가 주제를 확정하면:
 
-`mcp__study__routine_appendEntry({ entry: { phase: 0, type: "init", topic: "{주제명}", refDirs: ["{선택된 ref 디렉토리}"] } })`
+`routine.appendEntry({ entry: { phase: 0, type: "init", topic: "{주제명}", refDirs: ["{선택된 ref 디렉토리}"] } })`
 
 Phase 1 진행.
 
----
 
 ## Phase 1: 탐색 — learn 패턴 (30-45분)
 
@@ -135,11 +155,10 @@ ref/ 폴백 규칙:
 
 - 사용자의 추가 질문을 대기. 최소 Q&A 3회를 목표로 한다.
 - 매 Q&A에서 근거 소스를 명시한다.
-- **매 Q&A 완료 후**: `mcp__study__routine_appendEntry({ entry: { phase: 1, type: "qa", question: "{질문}", keyInsight: "{핵심}", refs: ["{file:line}"], links: ["{url}"] } })`
+- **매 Q&A 완료 후**: `routine.appendEntry({ entry: { phase: 1, type: "qa", userQuestion: "{사용자 질문 원문}", aiAnswer: "{AI 응답 원문}", refs: ["{file:line}"], links: ["{url}"] } })`
 - `>>다음` 신호로 Phase 2 진행. 3회 미만이면 "아직 Q&A {N}회입니다. 더 탐색하시겠어요?" 확인.
-- `>>다음` 시: `mcp__study__routine_appendEntry({ entry: { phase: 1, type: "phase_end", summary: "{Phase 1 요약}" } })` → Phase 2 진행.
+- `>>다음` 시: `routine.appendEntry({ entry: { phase: 1, type: "phase_end", summary: "{Phase 1 요약}" } })` → Phase 2 진행.
 
----
 
 ## Phase 2: 심화 — study 패턴 (30-45분)
 
@@ -163,12 +182,11 @@ Phase 1에서 탐색한 주제를 소스코드 수준으로 심화한다.
   - "이 함수가 X를 하는 이유는?"
   - "Y 대신 Z를 쓴 이유는?"
 - 오답 시 보충 설명, 정답 시 진행.
-- **매 Q&A 완료 후**: `mcp__study__routine_appendEntry({ entry: { phase: 2, type: "qa", question: "{질문}", keyInsight: "{핵심}", refs: ["{file:line}"], links: ["{url}"] } })`
+- **매 Q&A 완료 후**: `routine.appendEntry({ entry: { phase: 2, type: "qa", userQuestion: "{사용자 질문 원문}", aiAnswer: "{AI 응답 원문}", refs: ["{file:line}"], links: ["{url}"] } })`
 
 `>>다음` 신호로 Phase 3 진행.
-- `>>다음` 시: `mcp__study__routine_appendEntry({ entry: { phase: 2, type: "phase_end", summary: "{Phase 2 요약}" } })` → Phase 3 진행.
+- `>>다음` 시: `routine.appendEntry({ entry: { phase: 2, type: "phase_end", summary: "{Phase 2 요약}" } })` → Phase 3 진행.
 
----
 
 ## Phase 3: 라이브 코딩 (15-20분)
 
@@ -187,23 +205,39 @@ AI가 오늘 학습 주제 기반으로 코딩 과제 1개를 출제한다.
 | 리팩터링 | 안티패턴 코드를 올바른 패턴으로 수정 | 설계 원칙을 다룬 경우 |
 | 빈칸 채우기 | 핵심 부분이 빈칸인 코드를 완성 | 특정 API/패턴 숙달이 목표인 경우 |
 
+출제 형식:
+- **과제 유형**: [구현/디버깅/리팩터링/빈칸채우기]
+- **과제 설명**: 구현할 내용을 명확히 서술
+- **제약 조건**: 사용할 언어, 금지 사항 등
+- **힌트** (접어두기): 필요 시 핵심 개념 리마인드
+
 ### 3-B. 코드 작성
 
 사용자가 실제 언어(TS/JS 등)로 코드를 작성한다. AI는 기다린다.
 
 ### 3-C. 힌트 사다리 피드백
 
-1차 리뷰 (답 보류): 틀린 부분이 있으면 어디가 틀렸는지만 지적, 정답 미공개.
-재시도 기회 (1회): 사용자가 수정한 코드를 다시 제출. 수정을 원하지 않으면 바로 모범 답안.
-2차 리뷰 (모범 답안 공개): 최종 코드와 모범 답안 비교, 차이점 분석, 학습 포인트 정리.
+1차 리뷰 (답 보류):
+- 정확성: 로직이 올바른지
+- 핵심 개념 반영: 학습한 패턴/원칙이 적용되었는지
+- 엣지 케이스: 놓친 경우가 있는지
+- 틀린 부분이 있으면 **어디가 틀렸는지만 지적**, 정답은 공개하지 않음
+
+재시도 기회 (1회):
+- 사용자가 수정한 코드를 다시 제출
+- 수정을 원하지 않으면 바로 모범 답안
+
+2차 리뷰 (모범 답안 공개):
+- 최종 코드와 모범 답안을 비교
+- 차이점 분석: 무엇이 다르고, 왜 모범이 더 나은지 (또는 사용자 코드가 동등/더 나은 경우 인정)
+- 학습 포인트 정리
 
 ### 3-D. 기록
 
-`mcp__study__routine_appendEntry({ entry: { phase: 3, type: "coding", challengeType: "구현|디버깅|리팩터링|빈칸채우기", challenge: "{과제 설명}", userCode: "{사용자 코드 원문}", review: "{AI 리뷰 원문}", result: "pass|partial|retry" } })`
+`routine.appendEntry({ entry: { phase: 3, type: "coding", challengeType: "구현|디버깅|리팩터링|빈칸채우기", challenge: "{과제 설명}", userCode: "{사용자 코드 원문}", review: "{AI 리뷰 원문}", result: "pass|partial|retry" } })`
 
-`>>다음` 시: `mcp__study__routine_appendEntry({ entry: { phase: 3, type: "phase_end", summary: "{Phase 3 요약}" } })` → Phase 4 진행.
+`>>다음` 시: `routine.appendEntry({ entry: { phase: 3, type: "phase_end", summary: "{Phase 3 요약}" } })` → Phase 4 진행.
 
----
 
 ## Phase 4: 체크포인트 (10분)
 
@@ -246,14 +280,13 @@ AI가 오늘 학습 주제 기반으로 코딩 과제 1개를 출제한다.
 FAIL은 "나는 정확히 여기서 모른다"를 아는 것입니다. 부정적인 것이 아닙니다.
 ```
 
-- **PASS** → `mcp__study__routine_appendEntry({ entry: { phase: 4, type: "checkpoint", q1, q1Answer, q2, q2Answer, result: "PASS" } })` → Phase 5 진행
-- **FAIL** → 사용자에게 "어디서 막혔나요?" 확인 → `mcp__study__routine_appendEntry({ entry: { phase: 4, type: "checkpoint", q1, q1Answer, q2, q2Answer, result: "FAIL" } })` → Phase 6으로 건너뜀
+- **PASS** → `routine.appendEntry({ entry: { phase: 4, type: "checkpoint", q1, q1Answer, q2, q2Answer, result: "PASS" } })` → Phase 5 진행
+- **FAIL** → 사용자에게 "어디서 막혔나요?" 확인 → `routine.appendEntry({ entry: { phase: 4, type: "checkpoint", q1, q1Answer, q2, q2Answer, result: "FAIL" } })` → Phase 6으로 건너뜀
 
 규칙:
 - AI가 PASS/FAIL을 판정하지 않는다. 사용자 자기 평가.
 - FAIL에 부정적 뉘앙스 없음. "정확한 gap 발견"으로 프레이밍.
 
----
 
 ## Phase 5: 결정화 — mini-forge (20-30분)
 
@@ -285,7 +318,6 @@ mini-forge 결과를 보여주고 사용자 확인을 받는다.
 
 `>>정리` 또는 `>>끝` 또는 사용자 확인으로 Phase 6 진행.
 
----
 
 ## Phase 6: 정리 (5분)
 
@@ -296,6 +328,7 @@ mini-forge 결과를 보여주고 사용자 확인을 받는다.
 
 **FAIL 경로** (Phase 4에서 직행):
 1. state.md의 nextSeed에 막힌 지점 기록.
+2. state.md의 `failSessionArchive`에 아카이브될 JSONL 경로 기록 (포맷: `study/.routine/.session-log.{YYYY-MM-DD}-{주제}.jsonl`).
 
 ### 6-B. state.md 갱신
 
@@ -315,8 +348,8 @@ Write로 `study/.routine/history.md`에 행 추가:
 
 ### 6-D. 세션 로그 정리
 
-`mcp__study__routine_appendEntry({ entry: { phase: 6, type: "complete" } })`
-`mcp__study__routine_resetLog({ archive: true })`
+`routine.appendEntry({ entry: { phase: 6, type: "complete" } })`
+`routine.resetLog({})`
 
 ### 6-E. 마무리 출력
 
@@ -335,7 +368,6 @@ Write로 `study/.routine/history.md`에 행 추가:
 {다음 seed 있으면: "다음 세션 seed: {question}"}
 ```
 
----
 
 ## 시간 가드레일
 
@@ -343,7 +375,6 @@ Write로 `study/.routine/history.md`에 행 추가:
 - 105분 초과 시: "105분이 경과했습니다. 현재 Phase를 마무리하고 정리로 넘어갈까요?" 확인.
 - 사용자가 계속을 원하면 진행, 아니면 현재 Phase 완료 후 Phase 6으로 유도.
 
----
 
 ## mini-forge 문서 템플릿
 
@@ -375,7 +406,6 @@ Write로 `study/.routine/history.md`에 행 추가:
 {한 줄 비유 또는 이미지}
 ```
 
----
 
 ## 사용자 신호 규칙
 
@@ -383,13 +413,12 @@ Write로 `study/.routine/history.md`에 행 추가:
 - `>>정리` 또는 `>>끝` — 현재 Phase 완료 후 Phase 6 실행
 - 일반 대화 속 "다음", "정리", "끝"은 신호로 인식하지 않는다 (`>>` 접두사 필수).
 
----
 
 ## 규칙
 
 - Phase 순서를 건너뛰지 않는다. 예외: FAIL 시 Phase 5 → Phase 6 직행.
 - 쓰기 동작은 Phase 6 (`>>정리`) 이후에만 수행한다. **예외: `routine.appendEntry`는 Phase 전환 및 Q&A마다 호출한다.**
-- **컨텍스트 복원**: 현재 Phase나 진행 상태가 불확실하면, `mcp__study__routine_readLog({})` 호출 후 해당 상태 기준으로 진행한다.
+- **컨텍스트 복원**: 현재 Phase나 진행 상태가 불확실하면, `routine.readLog({})` 호출 후 해당 상태 기준으로 진행한다.
 - **Phase 배너**: 매 응답 첫 줄에 `> [ROUTINE] Phase {N}/6 | ...` 배너를 반드시 출력한다.
 - ref/ 코드가 있으면 반드시 먼저 탐색한다. 웹 검색만으로 대체하지 않는다.
 - ref/ 전환 알림 필수: ref/ 탐색 결과 없을 시 "ref/에 관련 소스 없음, 웹 검색으로 전환합니다" 알림 후 진행.

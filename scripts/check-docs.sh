@@ -125,6 +125,23 @@ if [[ -d "$SKILLS_DIR" && -d "$CODEX_SKILLS_DIR" ]]; then
   done < <(find "$SKILLS_DIR" -mindepth 2 -maxdepth 2 -name 'SKILL.md' -type f | sort)
 fi
 
+header "1-G. Generated Codex sync — .claude/skills -> .codex/skills"
+
+if [[ -x "$ROOT/scripts/generate-codex-skills.sh" ]]; then
+  gen_output="$("$ROOT/scripts/generate-codex-skills.sh" --check 2>&1)" || true
+  if echo "$gen_output" | grep -q "check passed"; then
+    ok "generated codex skills are in sync"
+  else
+    err "generated codex skills drift detected (run: bash scripts/generate-codex-skills.sh --apply)"
+    while IFS= read -r line; do
+      [[ -z "$line" ]] && continue
+      warn "generator: $line"
+    done <<< "$gen_output"
+  fi
+else
+  err "scripts/generate-codex-skills.sh 실행 파일이 없음"
+fi
+
 header "1-D. Codex repo-local path parity — .codex/skills vs .agents/skills"
 
 if [[ -d "$CODEX_SKILLS_DIR" ]]; then

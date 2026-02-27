@@ -1,6 +1,6 @@
 ---
 name: project-routine
-description: 커스텀 프로젝트 대상 learn → study → checkpoint → forge 오케스트레이션. 프로젝트 코드/문서를 우선 탐색하고 세션 상태를 <project>/.study/.routine에 기록한다. Codex에서는 `$project-routine <path> [주제]`로 호출한다.
+description: 커스텀 프로젝트 대상 learn → study → checkpoint → forge 오케스트레이션. 프로젝트 코드/문서를 우선 탐색하고 세션 상태를 <project>/.study/.routine에 기록한다. Codex에서는 `$project-routine <project-path> [주제]`으로 호출한다.
 ---
 
 # project-routine
@@ -8,10 +8,9 @@ description: 커스텀 프로젝트 대상 learn → study → checkpoint → fo
 입력: `$project-routine <project-path> [주제]`
 
 예시:
-- `$project-routine /path/to/my-app`
-- `$project-routine /path/to/my-app 인증 상태 동기화`
+- `/path/to/my-app`
+- `/path/to/my-app 인증 상태 동기화`
 
----
 
 ## 컨텍스트 보존 (필수)
 
@@ -27,9 +26,9 @@ description: 커스텀 프로젝트 대상 learn → study → checkpoint → fo
 
 다음 호출은 반드시 project context를 포함한다:
 
-- `mcp__study__routine_appendEntry({ context: { mode: "project", projectPath }, entry: ... })`
-- `mcp__study__routine_readLog({ context: { mode: "project", projectPath } })`
-- `mcp__study__routine_resetLog({ context: { mode: "project", projectPath } })`
+- `routine.appendEntry({ context: { mode: "project", projectPath }, entry: ... })`
+- `routine.readLog({ context: { mode: "project", projectPath } })`
+- `routine.resetLog({ context: { mode: "project", projectPath } })`
 
 로그 경로: `<project>/.study/.routine/.session-log.jsonl`
 
@@ -39,16 +38,15 @@ description: 커스텀 프로젝트 대상 learn → study → checkpoint → fo
 - phase 불확실 시 `routine.readLog` 재호출
 - 대화 문맥과 로그가 충돌하면 로그를 신뢰
 
----
 
 ## Phase 0: 오리엔테이션
 
 1. `$ARGUMENTS`에서 `<project-path>` + `[주제]` 파싱
-2. `mcp__study__context_resolve(mode=project, projectPath=<project-path>)`
+2. `context.resolve(mode=project, projectPath=<project-path>)`
 3. `routine.readLog(project context)`로 이어하기 확인
 4. `<project>/.study/.routine/state.md`, `history.md` 읽기 (없으면 새로 시작)
-5. `mcp__study__stats_getDashboard(context={mode: "skill"})`로 전체 학습 상태 확인
-6. `mcp__study__review_getQueue(context={mode: "project", projectPath=<project-path>})`로 프로젝트 복습 대기 확인
+5. `stats.getDashboard(context={mode: "skill"})`로 전체 학습 상태 확인
+6. `review.getQueue(context={mode: "project", projectPath=<project-path>})`로 프로젝트 복습 대기 확인
 
 시드 우선순위:
 - A) 인자 주제
@@ -58,9 +56,8 @@ description: 커스텀 프로젝트 대상 learn → study → checkpoint → fo
 
 세션 시작:
 
-`mcp__study__routine_appendEntry({ context: { mode: "project", projectPath }, entry: { phase: 0, type: "init", topic, projectPath } })`
+`routine.appendEntry({ context: { mode: "project", projectPath }, entry: { phase: 0, type: "init", topic, projectPath } })`
 
----
 
 ## Phase 1: 탐색 (learn 패턴)
 
@@ -78,7 +75,6 @@ description: 커스텀 프로젝트 대상 learn → study → checkpoint → fo
 - 매 Q&A 후 `routine.appendEntry` 기록 (`phase: 1, type: "qa"`)
 - `>>다음`이면 `phase_end` 기록 후 Phase 2
 
----
 
 ## Phase 2: 심화 (study 패턴)
 
@@ -88,7 +84,6 @@ description: 커스텀 프로젝트 대상 learn → study → checkpoint → fo
 - 매 Q&A 후 `routine.appendEntry` (`phase: 2, type: "qa"`)
 - `>>다음`이면 `phase_end` 기록 후 Phase 3
 
----
 
 ## Phase 3: 라이브 코딩 (15-20분)
 
@@ -119,11 +114,10 @@ AI가 오늘 학습 주제 기반으로 코딩 과제 1개를 출제한다 (프�
 
 ### 3-D. 기록
 
-`mcp__study__routine_appendEntry({ context: { mode: "project", projectPath }, entry: { phase: 3, type: "coding", challengeType, challenge, userCode, review, result } })`
+`routine.appendEntry({ context: { mode: "project", projectPath }, entry: { phase: 3, type: "coding", challengeType, challenge, userCode, review, result } })`
 
-`>>다음` 시: `mcp__study__routine_appendEntry({ context: { mode: "project", projectPath }, entry: { phase: 3, type: "phase_end", summary } })` → Phase 4 진행.
+`>>다음` 시: `routine.appendEntry({ context: { mode: "project", projectPath }, entry: { phase: 3, type: "phase_end", summary } })` → Phase 4 진행.
 
----
 
 ## Phase 4: 체크포인트
 
@@ -137,9 +131,8 @@ AI가 오늘 학습 주제 기반으로 코딩 과제 1개를 출제한다 (프�
 
 기록:
 
-`mcp__study__routine_appendEntry({ context: { mode: "project", projectPath }, entry: { phase: 4, type: "checkpoint", q1, q1Answer, q2, q2Answer, result } })`
+`routine.appendEntry({ context: { mode: "project", projectPath }, entry: { phase: 4, type: "checkpoint", q1, q1Answer, q2, q2Answer, result } })`
 
----
 
 ## Phase 5: mini-forge
 
@@ -151,7 +144,6 @@ AI가 오늘 학습 주제 기반으로 코딩 과제 1개를 출제한다 (프�
 
 사용자 확인 후 `>>정리` 또는 `>>끝` 시 Phase 6
 
----
 
 ## Phase 6: 정리
 
@@ -165,7 +157,6 @@ AI가 오늘 학습 주제 기반으로 코딩 과제 1개를 출제한다 (프�
 - `routine.appendEntry({ phase: 6, type: "complete" })`
 - `routine.resetLog({})`
 
----
 
 ## 사용자 신호 규칙
 
@@ -173,7 +164,6 @@ AI가 오늘 학습 주제 기반으로 코딩 과제 1개를 출제한다 (프�
 - `>>정리` 또는 `>>끝` — 현재 Phase 마감 후 Phase 6
 - 일반 문장 속 "다음/정리/끝"은 신호로 인식하지 않음
 
----
 
 ## 규칙
 

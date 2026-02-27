@@ -1,24 +1,23 @@
 ---
 name: forge
-description: 산발적 학습을 통합 멘탈모델 + 실전 판단 프레임워크로 결정화 — 통합 비유 + 핵심 원칙 + Q&A. Codex에서는 `$forge <skill> [scope]`로 호출한다.
+description: 산발적 학습을 통합 멘탈모델 + 실전 판단 프레임워크로 결정화 — 통합 비유 + 핵심 원칙 + Q&A Codex에서는 `$forge <skill> [scope]`으로 호출한다.
 ---
 
 # forge
 
-입력: `$forge <skill> [scope]` (예: `$forge react`, `$forge react rendering`)
+입력: `$forge <skill> [scope]`
 
 실행 순서:
 
-0. `mcp__study__context_resolve(mode=skill, skill=<skill>)`로 컨텍스트 확인
+0. `context.resolve(mode=skill, skill=<skill>)`로 컨텍스트 확인
 1. `$ARGUMENTS`에서 `<skill> [scope]` 파싱 (`skill` 필수, `scope` 선택)
 
----
 
 ## Phase 0: 인벤토리
 
 1. `study/{skill}/` 하위 모든 `.md` 파일 목록 수집 (Glob)
 2. `study/learn/` 에서 해당 skill 관련 파일 교차 수집 (Grep으로 키워드 매칭)
-3. `mcp__study__progress_getPlan(context)`으로 plan.md 로드 → 완료/미완료 토픽 파악
+3. `progress.getPlan(context)`으로 plan.md 로드 → 완료/미완료 토픽 파악
 4. 각 토픽의 meta 파일 읽기 (Read) → 약점 추출:
    - `wrong` 또는 `retry_pass` 점수의 개념 목록
    - streak 0인 개념
@@ -35,7 +34,6 @@ description: 산발적 학습을 통합 멘탈모델 + 실전 판단 프레임�
 
 7. 사용자 확인 후 Phase 1 진행.
 
----
 
 ## Phase 1: 통합 비유 + 핵심 원칙
 
@@ -96,7 +94,6 @@ description: 산발적 학습을 통합 멘탈모델 + 실전 판단 프레임�
 
 사용자 `>>다음` 신호로 Phase 2 진행.
 
----
 
 ## Phase 2: 판단 프레임워크 + Q&A
 
@@ -127,7 +124,6 @@ description: 산발적 학습을 통합 멘탈모델 + 실전 판단 프레임�
 
 사용자 `>>정리` 또는 `>>끝` 신호로 Phase 3 진행.
 
----
 
 ## Phase 3: 문서화
 
@@ -137,7 +133,7 @@ description: 산발적 학습을 통합 멘탈모델 + 실전 판단 프레임�
 
    Name 규칙: 핵심 주제를 반영한 kebab-case (예: `FORGE-업데이트-처리-파이프라인.md`)
 
-2. `mcp__study__session_appendLog(context, topic="FORGE-{Name}", content=<요약>)`로 세션 기록.
+2. `session.appendLog(context, topic="FORGE-{Name}", content=<요약>)`로 세션 기록.
 
 문서 템플릿:
 
@@ -148,7 +144,6 @@ description: 산발적 학습을 통합 멘탈모델 + 실전 판단 프레임�
 > 기반 토픽: {토픽 목록}
 > 범위: {scope 또는 "전체"}
 
----
 
 ## 통합 비유: {비유 제목}
 
@@ -160,7 +155,6 @@ description: 산발적 학습을 통합 멘탈모델 + 실전 판단 프레임�
 
 {비유 한계가 있으면 여기에 명시}
 
----
 
 ## 핵심 원칙
 
@@ -172,7 +166,6 @@ description: 산발적 학습을 통합 멘탈모델 + 실전 판단 프레임�
 
 ### 2. ...
 
----
 
 ## 판단 프레임워크
 
@@ -183,7 +176,6 @@ description: 산발적 학습을 통합 멘탈모델 + 실전 판단 프레임�
 
 ### 상황: ...
 
----
 
 ## 약점 보강
 
@@ -194,7 +186,6 @@ description: 산발적 학습을 통합 멘탈모델 + 실전 판단 프레임�
 **왜 헷갈리나**: ...
 **기억법**: ...
 
----
 
 ## Q&A 기록
 
@@ -203,7 +194,6 @@ description: 산발적 학습을 통합 멘탈모델 + 실전 판단 프레임�
 **Score**: {정답/오답}
 **보충**: {오답 시 보충 설명}
 
----
 
 ## 원페이저
 
@@ -212,7 +202,6 @@ description: 산발적 학습을 통합 멘탈모델 + 실전 판단 프레임�
 | ...  | ...   | ...  | ...    |
 ```
 
----
 
 ## 사용자 신호 규칙
 
