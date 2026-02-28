@@ -32,11 +32,28 @@ description: 커스텀 프로젝트 대상 learn → study → checkpoint → fo
 
 로그 경로: `<project>/.study/.routine/.session-log.jsonl`
 
+**원문 보존 원칙:**
+- `userQuestion`, `aiAnswer`, `q1Answer`, `q2Answer`, `aiFeedback`은 축약/요약 없이 **원문 그대로** 저장한다.
+- 오타 수정만 허용하며, 내용 변경/축약은 금지한다.
+- JSONL 한 줄이 길어지는 것은 허용한다 — 원문 보존이 축약보다 우선한다.
+
+**복원:** `routine.readLog({ context: { mode: "project", projectPath } })` → phaseSummaries로 전체 흐름 파악, entries(최근 5개)로 상세 맥락 복원.
+필요 시 `routine.readLog({ context: { mode: "project", projectPath }, entriesMode: "full" })` 재호출.
+
 ### C. Self-check 규칙
 
 - Phase 전환 직후 `routine.readLog`로 현재 phase 확인
 - phase 불확실 시 `routine.readLog` 재호출
 - 대화 문맥과 로그가 충돌하면 로그를 신뢰
+- **루틴 외 작업 후 복귀 감지**: 직전 AI 응답에 Phase 배너(`[PROJECT-ROUTINE]`)가
+  없으면 중간 인터럽션으로 간주한다:
+  1. `routine.readLog({ context: { mode: "project", projectPath } })` 호출하여 현재 상태 확인
+  2. 복귀 배너 출력:
+     ```
+     > [PROJECT-ROUTINE] 복귀 | Phase {N}/6 | {주제} | Q&A: {N}
+     > 이전 상태에서 계속합니다.
+     ```
+  3. 해당 Phase 진행 계속
 
 
 ## Phase 0: 오리엔테이션
@@ -44,6 +61,26 @@ description: 커스텀 프로젝트 대상 learn → study → checkpoint → fo
 1. `$ARGUMENTS`에서 `<project-path>` + `[주제]` 파싱
 2. `context.resolve(mode=project, projectPath=<project-path>)`
 3. `routine.readLog(project context)`로 이어하기 확인
+
+### 0-PRE-FAIL. FAIL 세션 이어가기 체크
+
+`<project>/.study/.routine/state.md`에 `nextSeed` + `failSessionArchive`가 있으면:
+
+1. `failSessionArchive` 경로의 아카이브 JSONL 파일을 Read
+2. 아카이브 entries에서 이전 세션의 전체 Q&A 맥락 복원
+3. 사용자에게 보고:
+   ```
+   이전 FAIL 세션 복원:
+   - 주제: {topic}
+   - Q&A {N}회 학습 내용 로드 완료
+   - gap: {nextSeed}
+   이전 학습을 기반으로 gap 주제부터 이어갑니다.
+   ```
+4. 이전 세션의 Q&A 내용을 컨텍스트로 유지한 채 Phase 1 진입
+   - Phase 1은 gap(nextSeed) 주제에 집중하되, 이전 학습 전체를 포괄
+5. Phase 5 mini-forge 작성 시: **이전 FAIL 세션 + 현재 세션** 학습 내용을 모두 포함
+6. PASS 시: `state.md`에서 `nextSeed`, `failSessionArchive` 제거
+
 4. `<project>/.study/.routine/state.md`, `history.md` 읽기 (없으면 새로 시작)
 5. `stats.getDashboard(context={mode: "skill"})`로 전체 학습 상태 확인
 6. `review.getQueue(context={mode: "project", projectPath=<project-path>})`로 프로젝트 복습 대기 확인
@@ -132,6 +169,23 @@ AI가 오늘 학습 주제 기반으로 코딩 과제 1개를 출제한다 (프�
 기록:
 
 `routine.appendEntry({ context: { mode: "project", projectPath }, entry: { phase: 4, type: "checkpoint", q1, q1Answer, q2, q2Answer, result } })`
+
+### 증분 체크포인트
+
+Phase 4 결과 기록 직후, `<project>/.study/.routine/state.md`에 진행 중 마커를 Write:
+
+```
+inProgressSession: {topic}
+inProgressPhase: 4
+inProgressResult: PASS|FAIL
+inProgressDate: {YYYY-MM-DD}
+```
+
+Phase 6에서 state.md 최종 갱신 시 `inProgress*` 필드를 제거한다.
+
+Phase 0에서 state.md 읽을 때 `inProgressSession`이 있으면:
+- JSONL이 없으나 inProgress가 있음 = 비정상 종료 발생
+- 해당 날짜 아카이브 JSONL 탐색하여 복원 시도
 
 
 ## Phase 5: mini-forge

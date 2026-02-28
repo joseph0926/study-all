@@ -127,6 +127,138 @@ describe("routine tools", () => {
     expect(result.data.currentPhase).toBe(4);
   });
 
+  it("readLog returns phaseSummaries from phase_end entries", async () => {
+    setupTmpRoot();
+
+    await routineAppendEntry(
+      { entry: { phase: 0, type: "init", topic: "Suspense" } },
+      clock,
+    );
+    await routineAppendEntry(
+      { entry: { phase: 1, type: "qa", userQuestion: "Q1", aiAnswer: "A1" } },
+      clock,
+    );
+    await routineAppendEntry(
+      { entry: { phase: 1, type: "phase_end", summary: "Phase 1 탐색 완료" } },
+      clock,
+    );
+    await routineAppendEntry(
+      { entry: { phase: 2, type: "phase_end", summary: "Phase 2 심화 완료" } },
+      clock,
+    );
+
+    const result = await routineReadLog({ entriesMode: "full" }, clock);
+    expect(result.data.phaseSummaries).toEqual([
+      { phase: 1, summary: "Phase 1 탐색 완료" },
+      { phase: 2, summary: "Phase 2 심화 완료" },
+    ]);
+  });
+
+  it("readLog returns codingResult from coding entries", async () => {
+    setupTmpRoot();
+
+    await routineAppendEntry(
+      { entry: { phase: 0, type: "init", topic: "Hooks" } },
+      clock,
+    );
+    await routineAppendEntry(
+      { entry: { phase: 3, type: "coding", challengeType: "구현", challenge: "useReducer 구현", userCode: "code", review: "good", result: "pass" } },
+      clock,
+    );
+
+    const result = await routineReadLog({}, clock);
+    expect(result.data.codingResult).toEqual({
+      challenge: "useReducer 구현",
+      result: "pass",
+    });
+  });
+
+  it("readLog returns elapsedMinutes between first and last ts", async () => {
+    const tmp = setupTmpRoot();
+    const logPath = path.join(tmp, "study", ".routine", ".session-log.jsonl");
+
+    const lines = [
+      JSON.stringify({ phase: 0, type: "init", topic: "Test", ts: "2026-02-26T14:00:00.000Z" }),
+      JSON.stringify({ phase: 1, type: "qa", ts: "2026-02-26T14:30:00.000Z" }),
+      JSON.stringify({ phase: 2, type: "qa", ts: "2026-02-26T15:05:00.000Z" }),
+    ];
+    writeFileSync(logPath, lines.join("\n") + "\n", "utf8");
+
+    const result = await routineReadLog({}, clock);
+    expect(result.data.elapsedMinutes).toBe(65);
+  });
+
+  it("readLog entriesMode='recent' returns last N entries (default 5)", async () => {
+    setupTmpRoot();
+
+    await routineAppendEntry({ entry: { phase: 0, type: "init", topic: "Test" } }, clock);
+    for (let i = 1; i <= 8; i++) {
+      await routineAppendEntry({ entry: { phase: 1, type: "qa", question: `Q${i}` } }, clock);
+    }
+
+    const result = await routineReadLog({}, clock);
+    expect(result.data.entryCount).toBe(9);
+    expect(result.data.entries.length).toBe(5);
+    // Should be the last 5 entries
+    expect((result.data.entries[0] as Record<string, unknown>).question).toBe("Q4");
+  });
+
+  it("readLog entriesMode='none' returns empty entries array", async () => {
+    setupTmpRoot();
+
+    await routineAppendEntry({ entry: { phase: 0, type: "init", topic: "Test" } }, clock);
+    await routineAppendEntry({ entry: { phase: 1, type: "qa", question: "Q1" } }, clock);
+
+    const result = await routineReadLog({ entriesMode: "none" }, clock);
+    expect(result.data.entryCount).toBe(2);
+    expect(result.data.entries).toEqual([]);
+    expect(result.data.qaCount).toBe(1);
+    expect(result.data.topic).toBe("Test");
+  });
+
+  it("readLog entriesMode='full' returns all entries", async () => {
+    setupTmpRoot();
+
+    await routineAppendEntry({ entry: { phase: 0, type: "init", topic: "Test" } }, clock);
+    for (let i = 1; i <= 8; i++) {
+      await routineAppendEntry({ entry: { phase: 1, type: "qa", question: `Q${i}` } }, clock);
+    }
+
+    const result = await routineReadLog({ entriesMode: "full" }, clock);
+    expect(result.data.entryCount).toBe(9);
+    expect(result.data.entries.length).toBe(9);
+  });
+
+  it("readLog with custom recentCount", async () => {
+    setupTmpRoot();
+
+    await routineAppendEntry({ entry: { phase: 0, type: "init", topic: "Test" } }, clock);
+    for (let i = 1; i <= 10; i++) {
+      await routineAppendEntry({ entry: { phase: 1, type: "qa", question: `Q${i}` } }, clock);
+    }
+
+    const result = await routineReadLog({ recentCount: 3 }, clock);
+    expect(result.data.entryCount).toBe(11);
+    expect(result.data.entries.length).toBe(3);
+    expect((result.data.entries[0] as Record<string, unknown>).question).toBe("Q8");
+  });
+
+  it("readLog phaseSummaries fallback when summary is missing", async () => {
+    const tmp = setupTmpRoot();
+    const logPath = path.join(tmp, "study", ".routine", ".session-log.jsonl");
+
+    const lines = [
+      JSON.stringify({ phase: 0, type: "init", topic: "Test", ts: "2026-02-26T14:00:00.000Z" }),
+      JSON.stringify({ phase: 1, type: "phase_end", ts: "2026-02-26T14:30:00.000Z" }),
+    ];
+    writeFileSync(logPath, lines.join("\n") + "\n", "utf8");
+
+    const result = await routineReadLog({}, clock);
+    expect(result.data.phaseSummaries).toEqual([
+      { phase: 1, summary: "Phase 1 완료" },
+    ]);
+  });
+
   it("readLog handles malformed JSON lines gracefully", async () => {
     const tmp = setupTmpRoot();
     const logPath = path.join(tmp, "study", ".routine", ".session-log.jsonl");

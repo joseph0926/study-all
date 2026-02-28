@@ -38,13 +38,23 @@ allowed-tools: Read, Grep, Glob, Write, WebSearch, WebFetch, mcp__study__routine
 - 오타 수정만 허용하며, 내용 변경/축약은 금지한다.
 - JSONL 한 줄이 길어지는 것은 허용한다 — 원문 보존이 축약보다 우선한다.
 
-**복원:** `routine.readLog({})` → exists, topic, currentPhase, qaCount, entries 로 맥락 복원.
+**복원:** `routine.readLog({})` → phaseSummaries로 전체 흐름 파악, entries(최근 5개)로 상세 맥락 복원.
+필요 시 `routine.readLog({ entriesMode: "full" })` 재호출.
 
 ### C. Self-check 규칙
 
 - **Phase 전환 직후**: `routine.readLog({})` 호출하여 상태 확인 후 진행.
 - **응답 생성 시 현재 Phase가 불확실하면**: 즉시 `routine.readLog({})` 호출하고 해당 상태 기준으로 진행.
 - readLog 결과와 대화 컨텍스트가 충돌하면 **readLog를 신뢰**한다 (로그가 더 최신).
+- **루틴 외 작업 후 복귀 감지**: 직전 AI 응답에 Phase 배너(`[ROUTINE]`)가
+  없으면 중간 인터럽션으로 간주한다:
+  1. `routine.readLog({})` 호출하여 현재 상태 확인
+  2. 복귀 배너 출력:
+     ```
+     > [ROUTINE] 복귀 | Phase {N}/6 | {주제} | Q&A: {N}
+     > 이전 상태에서 계속합니다.
+     ```
+  3. 해당 Phase 진행 계속
 
 ---
 
@@ -58,6 +68,10 @@ allowed-tools: Read, Grep, Glob, Write, WebSearch, WebFetch, mcp__study__routine
    - **이어하기** → entries에서 맥락 복원, 해당 Phase 진입
    - **새로 시작** → `routine.resetLog({})` 후 아래 정상 흐름
 3. `exists=false` 또는 마지막 entry가 `"complete"` → 정상 흐름 (아래 계속)
+4. `exists=false` + `state.md`에 `inProgressSession`이 있으면 = 비정상 종료 복원:
+   - 해당 날짜의 아카이브 JSONL 탐색 (`study/.routine/.session-log.{inProgressDate}-*.jsonl`)
+   - 아카이브 발견 시: Read하여 맥락 복원, 사용자에게 보고 후 해당 Phase 재개
+   - 아카이브 미발견 시: 사용자에게 "이전 세션 비정상 종료 감지, 새로 시작합니다" 보고
 
 ### 0-PRE-FAIL. FAIL 세션 이어가기 체크
 
@@ -290,6 +304,19 @@ FAIL은 "나는 정확히 여기서 모른다"를 아는 것입니다. 부정적
 
 - **PASS** → `routine.appendEntry({ entry: { phase: 4, type: "checkpoint", q1, q1Answer, q2, q2Answer, result: "PASS" } })` → Phase 5 진행
 - **FAIL** → 사용자에게 "어디서 막혔나요?" 확인 → `routine.appendEntry({ entry: { phase: 4, type: "checkpoint", q1, q1Answer, q2, q2Answer, result: "FAIL" } })` → Phase 6으로 건너뜀
+
+### 증분 체크포인트
+
+Phase 4 결과 기록 직후, `study/.routine/state.md`에 진행 중 마커를 Write:
+
+```
+inProgressSession: {topic}
+inProgressPhase: 4
+inProgressResult: PASS|FAIL
+inProgressDate: {YYYY-MM-DD}
+```
+
+Phase 6에서 state.md 최종 갱신 시 `inProgress*` 필드를 제거한다.
 
 규칙:
 - Claude가 PASS/FAIL을 판정하지 않는다. 사용자 자기 평가.

@@ -15,6 +15,37 @@ allowed-tools: Read, Grep, Glob, Write, WebSearch, WebFetch, mcp__study__context
 
 ---
 
+## 세션 상태 보존
+
+### FORGE-SESSION.md
+
+상태 파일: `study/{skill}/FORGE-SESSION.md`
+
+Phase 전환마다 Write로 갱신한다:
+
+```
+# FORGE-SESSION
+updated: {YYYY-MM-DD HH:MM}
+skill: {skill}
+scope: {scope}
+currentPhase: {N}
+topicCount: {N}
+principleCount: {N}
+scenarioCount: {N}
+```
+
+- Phase 0 완료 시: 초기화 Write (currentPhase: 0)
+- Phase 1 완료 시: currentPhase: 1 + 원칙/비유 요약
+- Phase 2 완료 시: currentPhase: 2 + 시나리오 수
+- Phase 3 완료 시: `# COMPLETED\n` 마커로 덮어쓰기
+
+복원:
+- Phase 0 진입 시 `study/{skill}/FORGE-SESSION.md` Read
+- `# COMPLETED` 또는 파일 없음 → 새 세션
+- 활성 내용 → "이전 forge 세션: Phase {N}, {skill}. 이어서 할까요?" 확인
+
+---
+
 ## Phase 0: 인벤토리
 
 1. `study/{skill}/` 하위 모든 `.md` 파일 목록 수집 (Glob)

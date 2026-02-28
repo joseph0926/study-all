@@ -34,6 +34,9 @@ allowed-tools: Read, Grep, Glob, WebSearch, WebFetch, Write, mcp__study__context
      connections: (없음)
      nextDirection: 초기 탐색
      ---
+     ## QA Summary
+     (없음)
+     ---
      ## QA History
      (없음)
      ```
@@ -82,7 +85,7 @@ allowed-tools: Read, Grep, Glob, WebSearch, WebFetch, Write, mcp__study__context
      - 판단 기준: 동일 개념의 다른 관점, 상위/하위 메커니즘, 인과 관계, 전제 지식.
      - 억지 연결 금지 (단순 동일 라이브러리 수준은 연결하지 않는다).
 6. 사용자의 추가 질문을 대기한다. → Step 4~5 반복.
-   - 매 Q&A 후 `study/learn/session-state.md`를 Write 갱신한다 (qaCount++, analogyFrame, connections, nextDirection, QA History 추가).
+   - 매 Q&A 후 `study/learn/session-state.md`를 Write 갱신한다 (qaCount++, analogyFrame, connections, nextDirection, QA Summary에 핵심 1줄 + refs 축적, QA History 추가).
 
 종료(`>>정리`) 시:
 

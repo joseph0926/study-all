@@ -148,6 +148,9 @@ export interface RoutineLogSummary {
   entries: Record<string, unknown>[];
   lastTs: string | null;
   checkpointResult: "PASS" | "FAIL" | "PENDING" | null;
+  phaseSummaries: Array<{ phase: number; summary: string }>;
+  codingResult: { challenge: string; result: string } | null;
+  elapsedMinutes: number | null;
 }
 
 export interface ExtractTranscriptResult {

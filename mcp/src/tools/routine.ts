@@ -33,6 +33,8 @@ const appendEntryInputSchema = z.object({
 
 const readLogInputSchema = z.object({
   context: contextInputSchema.optional(),
+  entriesMode: z.enum(["full", "recent", "none"]).default("recent"),
+  recentCount: z.number().int().min(1).max(50).default(5),
 });
 
 const resetLogInputSchema = z.object({
@@ -77,37 +79,27 @@ export async function routineReadLog(
   const logPath = await getLogPath(parsed.context);
   const fileExists = await exists(logPath);
 
+  const emptyResult: RoutineLogSummary = {
+    exists: false,
+    topic: null,
+    currentPhase: 0,
+    qaCount: 0,
+    entryCount: 0,
+    entries: [],
+    lastTs: null,
+    checkpointResult: null,
+    phaseSummaries: [],
+    codingResult: null,
+    elapsedMinutes: null,
+  };
+
   if (!fileExists) {
-    return makeEnvelope(
-      {
-        exists: false,
-        topic: null,
-        currentPhase: 0,
-        qaCount: 0,
-        entryCount: 0,
-        entries: [],
-        lastTs: null,
-        checkpointResult: null,
-      },
-      clock,
-    );
+    return makeEnvelope(emptyResult, clock);
   }
 
   const content = await readText(logPath);
   if (!content.trim()) {
-    return makeEnvelope(
-      {
-        exists: false,
-        topic: null,
-        currentPhase: 0,
-        qaCount: 0,
-        entryCount: 0,
-        entries: [],
-        lastTs: null,
-        checkpointResult: null,
-      },
-      clock,
-    );
+    return makeEnvelope(emptyResult, clock);
   }
 
   const lines = content.trim().split("\n").filter(Boolean);
@@ -125,7 +117,10 @@ export async function routineReadLog(
   let currentPhase = 0;
   let qaCount = 0;
   let lastTs: string | null = null;
+  let firstTs: string | null = null;
   let checkpointResult: "PASS" | "FAIL" | "PENDING" | null = null;
+  const phaseSummaries: Array<{ phase: number; summary: string }> = [];
+  let codingResult: { challenge: string; result: string } | null = null;
 
   for (const entry of entries) {
     if (typeof entry.phase === "number") {
@@ -138,6 +133,9 @@ export async function routineReadLog(
       qaCount++;
     }
     if (typeof entry.ts === "string") {
+      if (firstTs === null) {
+        firstTs = entry.ts;
+      }
       lastTs = entry.ts;
     }
     if (entry.type === "checkpoint") {
@@ -146,6 +144,32 @@ export async function routineReadLog(
         checkpointResult = result;
       }
     }
+    if (entry.type === "phase_end" && typeof entry.phase === "number") {
+      const summary = typeof entry.summary === "string" ? entry.summary : `Phase ${entry.phase} 완료`;
+      phaseSummaries.push({ phase: entry.phase, summary });
+    }
+    if (entry.type === "coding") {
+      const challenge = typeof entry.challenge === "string" ? entry.challenge : "";
+      const result = typeof entry.result === "string" ? entry.result : "";
+      codingResult = { challenge, result };
+    }
+  }
+
+  // Compute elapsed minutes
+  let elapsedMinutes: number | null = null;
+  if (firstTs && lastTs) {
+    const elapsed = new Date(lastTs).getTime() - new Date(firstTs).getTime();
+    elapsedMinutes = Math.round(elapsed / 60000);
+  }
+
+  // Apply entriesMode filter
+  let filteredEntries: Record<string, unknown>[];
+  if (parsed.entriesMode === "none") {
+    filteredEntries = [];
+  } else if (parsed.entriesMode === "recent") {
+    filteredEntries = entries.slice(-parsed.recentCount);
+  } else {
+    filteredEntries = entries;
   }
 
   return makeEnvelope(
@@ -155,9 +179,12 @@ export async function routineReadLog(
       currentPhase,
       qaCount,
       entryCount: entries.length,
-      entries,
+      entries: filteredEntries,
       lastTs,
       checkpointResult,
+      phaseSummaries,
+      codingResult,
+      elapsedMinutes,
     },
     clock,
   );
