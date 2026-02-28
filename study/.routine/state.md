@@ -1,7 +1,7 @@
 # Routine State
 
-lastCompleted: 2026-02-27
-totalSessions: 2
-totalForges: 1
+lastCompleted: 2026-02-28
+totalSessions: 3
+totalForges: 2
 totalSeeds: 1
-streak: 1
+streak: 2
