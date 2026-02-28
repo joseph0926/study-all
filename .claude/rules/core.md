@@ -1,7 +1,7 @@
 # Core Rules (study-all)
 
 ## 목적
-- 이 저장소의 기본 실행 인터페이스는 `/study`, `/learn`, `/forge`, `/review`, `/dashboard`, `/project`, `/project-learn`, `/project-routine`, `/routine` 9개 스킬이다.
+- 이 저장소의 기본 실행 인터페이스는 `/study`, `/learn`, `/forge`, `/review`, `/dashboard`, `/project`, `/project-learn`, `/project-routine`, `/routine`, `/test` 10개 스킬이다.
 - 모든 학습/복습 상태 계산은 study MCP 결과를 단일 진실 원천으로 사용한다.
 
 ## 필수 원칙

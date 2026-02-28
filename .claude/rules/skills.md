@@ -10,9 +10,10 @@
 - `/project-learn <경로> <질문>` — 프로젝트 코드베이스 자유 Q&A (소스/문서/git/웹/추론 → 문서화)
 - `/project-routine <경로> [주제]` — 프로젝트 대상 learn → study → checkpoint → forge 오케스트레이션
 - `/routine [주제]` — learn → study → checkpoint → forge 파이프라인 오케스트레이션
+- `/test [skill] [level]` — 학습 기반 코딩 테스트 → 4축 평가 → 레벨 프로파일 갱신
 
 ## 실행 규칙
 - 각 skill의 `allowed-tools` 범위를 넘어서는 도구 호출을 추가하지 않는다.
-- 쓰기형 skill(`study`, `learn`, `forge`, `review`, `project`, `project-learn`, `project-routine`, `routine`)은 `disable-model-invocation: true`를 유지한다.
+- 쓰기형 skill(`study`, `learn`, `forge`, `review`, `project`, `project-learn`, `project-routine`, `routine`, `test`)은 `disable-model-invocation: true`를 유지한다.
 - 읽기형 skill(`dashboard`)은 집계/추천을 MCP 결과로만 출력한다.
 - `/project`는 `/dashboard`와 통합하지 않는다.
