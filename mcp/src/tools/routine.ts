@@ -7,8 +7,9 @@ import { makeEnvelope } from "../lib/envelope.js";
 import type { Clock } from "../lib/clock.js";
 import { systemClock } from "../lib/clock.js";
 import { contextInputSchema, type ContextInput, type Envelope } from "../types/contracts.js";
-import type { RoutineLogSummary } from "../types/domain.js";
+import type { ExtractTranscriptResult, RoutineLogSummary } from "../types/domain.js";
 import { resolveContextData } from "./context.js";
+import { extractMessages, findSessionFiles, toTranscriptMarkdown } from "../lib/transcript.js";
 
 async function getLogPath(context?: ContextInput): Promise<string> {
   if (context?.mode === "project") {
@@ -202,8 +203,107 @@ export async function routineResetLog(
   return makeEnvelope({ ok: true, archived: archivePath }, clock);
 }
 
+const extractTranscriptInputSchema = z.object({
+  context: contextInputSchema.optional(),
+  client: z.enum(["claude-code", "codex", "auto"]).default("auto"),
+});
+
+export async function routineExtractTranscript(
+  input: z.input<typeof extractTranscriptInputSchema>,
+  clock: Clock = systemClock,
+): Promise<Envelope<ExtractTranscriptResult>> {
+  const parsed = extractTranscriptInputSchema.parse(input);
+  const logPath = await getLogPath(parsed.context);
+  const logContent = await readText(logPath);
+
+  if (!logContent.trim()) {
+    throw new Error("No routine session log found. Run a routine session first.");
+  }
+
+  // Extract init entry to get topic and startTs
+  let topic: string | null = null;
+  let startTs: number | null = null;
+
+  for (const line of logContent.trim().split("\n")) {
+    try {
+      const entry = JSON.parse(line) as Record<string, unknown>;
+      if (entry.type === "init" && typeof entry.topic === "string") {
+        topic = entry.topic;
+      }
+      if (typeof entry.ts === "string" && startTs === null) {
+        startTs = new Date(entry.ts as string).getTime();
+      }
+    } catch {
+      // skip
+    }
+  }
+
+  if (!topic) {
+    throw new Error("No init entry with topic found in session log.");
+  }
+  if (startTs === null) {
+    throw new Error("No timestamp found in session log.");
+  }
+
+  const endTs = clock.now().getTime();
+
+  // Determine CWD for session file discovery
+  let cwd: string;
+  if (parsed.context?.mode === "project" && parsed.context.projectPath) {
+    cwd = path.resolve(parsed.context.projectPath);
+  } else {
+    cwd = loadConfig().studyRoot;
+  }
+
+  // Find session files
+  const { client, files } = await findSessionFiles(cwd, startTs, endTs, parsed.client);
+
+  if (files.length === 0) {
+    throw new Error(
+      `No session files found for client=${client}, cwd=${cwd}. ` +
+      `Looked for sessions between ${new Date(startTs).toISOString()} and ${new Date(endTs).toISOString()}.`,
+    );
+  }
+
+  // Extract messages
+  const messages = await extractMessages(files, client, startTs, endTs);
+
+  // Generate markdown
+  const date = clock.now().toISOString().slice(0, 10);
+  const markdown = toTranscriptMarkdown(topic, date, client, messages);
+
+  // Determine output path
+  let transcriptsDir: string;
+  if (parsed.context?.mode === "project" && parsed.context.projectPath) {
+    const resolved = await resolveContextData(parsed.context);
+    transcriptsDir = path.join(resolved.studyDir!, ".routine", "transcripts");
+  } else {
+    const config = loadConfig();
+    transcriptsDir = path.join(config.notesDir, ".routine", "transcripts");
+  }
+
+  const transcriptPath = path.join(
+    transcriptsDir,
+    `${date}-${sanitizeTopicForFilename(topic)}.md`,
+  );
+
+  await writeText(transcriptPath, markdown);
+
+  return makeEnvelope(
+    {
+      ok: true,
+      transcriptPath,
+      sessionFiles: files,
+      messageCount: messages.length,
+      client,
+    },
+    clock,
+  );
+}
+
 export const routineSchemas = {
   appendEntry: appendEntryInputSchema,
   readLog: readLogInputSchema,
   resetLog: resetLogInputSchema,
+  extractTranscript: extractTranscriptInputSchema,
 };

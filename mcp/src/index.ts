@@ -12,7 +12,7 @@ import {
 import { sessionAppendLog, sessionGetResumePoint, sessionGetSourceDigest, sessionGetSourcePaths, sessionSchemas } from "./tools/session.js";
 import { reviewAppendQnA, reviewGetMeta, reviewGetQueue, reviewRecordResult, reviewSaveMeta, reviewSchemas } from "./tools/review.js";
 import { statsGetDashboard, statsSchemas } from "./tools/stats.js";
-import { routineAppendEntry, routineReadLog, routineResetLog, routineSchemas } from "./tools/routine.js";
+import { routineAppendEntry, routineExtractTranscript, routineReadLog, routineResetLog, routineSchemas } from "./tools/routine.js";
 import { makeEnvelope } from "./lib/envelope.js";
 
 interface ToolDef {
@@ -131,6 +131,12 @@ const tools: ToolDef[] = [
     description: "Reset routine session log (always archives with date-topic filename).",
     schema: routineSchemas.resetLog,
     run: routineResetLog,
+  },
+  {
+    name: "routine.extractTranscript",
+    description: "Extract conversation transcript from session JSONL files and save as markdown.",
+    schema: routineSchemas.extractTranscript,
+    run: routineExtractTranscript,
   },
 ];
 

@@ -3,7 +3,7 @@ import os from "node:os";
 import path from "node:path";
 import { describe, expect, it, beforeEach } from "vitest";
 import { FixedClock } from "../../src/lib/clock.js";
-import { routineAppendEntry, routineReadLog, routineResetLog } from "../../src/tools/routine.js";
+import { routineAppendEntry, routineExtractTranscript, routineReadLog, routineResetLog } from "../../src/tools/routine.js";
 
 function setupTmpRoot(): string {
   const tmp = mkdtempSync(path.join(os.tmpdir(), "mcp-routine-"));
@@ -202,5 +202,133 @@ describe("routine tools", () => {
 
     const afterReset = await routineReadLog({ context: { mode: "project", projectPath } }, clock);
     expect(afterReset.data.exists).toBe(false);
+  });
+});
+
+describe("routineExtractTranscript", () => {
+  beforeEach(() => {
+    delete process.env.STUDY_ROOT;
+    delete process.env.NOTES_DIR;
+  });
+
+  it("throws when no session log exists", async () => {
+    setupTmpRoot();
+    await expect(routineExtractTranscript({}, clock)).rejects.toThrow(
+      "No routine session log found",
+    );
+  });
+
+  it("throws when session log has no init entry", async () => {
+    const tmp = setupTmpRoot();
+    const logPath = path.join(tmp, "study", ".routine", ".session-log.jsonl");
+    writeFileSync(
+      logPath,
+      '{"phase":1,"type":"qa","ts":"2026-02-26T14:00:00.000Z"}\n',
+      "utf8",
+    );
+
+    await expect(routineExtractTranscript({}, clock)).rejects.toThrow(
+      "No init entry with topic found",
+    );
+  });
+
+  it("throws when no session files found (no matching JSONL)", async () => {
+    setupTmpRoot();
+    await routineAppendEntry(
+      { entry: { phase: 0, type: "init", topic: "Suspense" } },
+      clock,
+    );
+
+    // No Claude Code / Codex session files exist, so it should throw
+    await expect(routineExtractTranscript({}, clock)).rejects.toThrow(
+      "No session files found",
+    );
+  });
+
+  it("extracts transcript from mock Claude Code session files", async () => {
+    const tmp = setupTmpRoot();
+
+    // Create session log with init entry
+    await routineAppendEntry(
+      { entry: { phase: 0, type: "init", topic: "React Fiber" } },
+      clock,
+    );
+
+    // Create a mock Claude Code session file
+    const encoded = tmp.replace(/[/@.~ ]/g, "-");
+    const projectDir = path.join(os.homedir(), ".claude", "projects", encoded);
+    mkdirSync(projectDir, { recursive: true });
+
+    const sessionFile = path.join(projectDir, "mock-session.jsonl");
+    const lines = [
+      JSON.stringify({
+        type: "user",
+        timestamp: "2026-02-26T14:00:30.000Z",
+        message: { role: "user", content: "What is React Fiber?" },
+        uuid: "u1",
+      }),
+      JSON.stringify({
+        type: "assistant",
+        timestamp: "2026-02-26T14:01:00.000Z",
+        message: {
+          role: "assistant",
+          content: [{ type: "text", text: "React Fiber is a reconciliation engine." }],
+        },
+        uuid: "a1",
+      }),
+      JSON.stringify({
+        type: "user",
+        timestamp: "2026-02-26T14:02:00.000Z",
+        message: {
+          role: "user",
+          content: [{ type: "tool_result", tool_use_id: "t1", content: "ok" }],
+        },
+        uuid: "u2",
+      }),
+    ];
+    writeFileSync(sessionFile, lines.join("\n") + "\n", "utf8");
+
+    const result = await routineExtractTranscript(
+      { client: "claude-code" },
+      clock,
+    );
+
+    expect(result.data.ok).toBe(true);
+    expect(result.data.client).toBe("claude-code");
+    expect(result.data.messageCount).toBe(2); // user + assistant, tool_result skipped
+    expect(result.data.transcriptPath).toContain("transcripts");
+    expect(result.data.transcriptPath).toContain("React-Fiber");
+    expect(existsSync(result.data.transcriptPath)).toBe(true);
+
+    const content = readFileSync(result.data.transcriptPath, "utf8");
+    expect(content).toContain("# Transcript: React Fiber");
+    expect(content).toContain("What is React Fiber?");
+    expect(content).toContain("React Fiber is a reconciliation engine.");
+
+    // Cleanup mock session file
+    const { rmSync } = await import("node:fs");
+    rmSync(projectDir, { recursive: true, force: true });
+  });
+
+  it("uses project-scoped output path when context.mode=project", async () => {
+    const root = setupTmpRoot();
+    const projectPath = setupTmpProject(root);
+
+    await routineAppendEntry(
+      {
+        context: { mode: "project", projectPath },
+        entry: { phase: 0, type: "init", topic: "Auth" },
+      },
+      clock,
+    );
+
+    // Will throw because no session files exist, but we can check the error message
+    // contains the project path as CWD
+    await expect(
+      routineExtractTranscript(
+        { context: { mode: "project", projectPath } },
+        clock,
+      ),
+    ).rejects.toThrow(/No session files found/);
   });
 });

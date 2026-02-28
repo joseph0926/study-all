@@ -149,3 +149,11 @@ export interface RoutineLogSummary {
   lastTs: string | null;
   checkpointResult: "PASS" | "FAIL" | "PENDING" | null;
 }
+
+export interface ExtractTranscriptResult {
+  ok: boolean;
+  transcriptPath: string;
+  sessionFiles: string[];
+  messageCount: number;
+  client: "claude-code" | "codex";
+}
