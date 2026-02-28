@@ -3,7 +3,7 @@ name: project-routine
 description: 커스텀 프로젝트 대상 learn → study → checkpoint → forge 오케스트레이션. 프로젝트 코드/문서를 우선 탐색하고 세션 상태를 <project>/.study/.routine에 기록한다.
 argument-hint: "<project-path> [주제]"
 disable-model-invocation: true
-allowed-tools: Read, Grep, Glob, Bash, Write, WebSearch, WebFetch, mcp__study__context_resolve, mcp__study__routine_appendEntry, mcp__study__routine_readLog, mcp__study__routine_resetLog, mcp__study__stats_getDashboard, mcp__study__review_getQueue
+allowed-tools: Read, Grep, Glob, Bash, Write, WebSearch, WebFetch, mcp__study__context_resolve, mcp__study__routine_appendEntry, mcp__study__routine_readLog, mcp__study__routine_resetLog, mcp__study__routine_extractTranscript, mcp__study__stats_getDashboard, mcp__study__review_getQueue
 ---
 
 입력: `$ARGUMENTS`
@@ -159,6 +159,12 @@ AI가 오늘 학습 주제 기반으로 코딩 과제 1개를 출제한다 (프�
 기록 경로:
 - PASS: `<project>/.study/.routine/forges/{YYYY-MM-DD}-{주제}.md`
 - FAIL: `<project>/.study/.routine/state.md`의 nextSeed 갱신
+
+### 6-D. 대화 원문 추출
+
+`routine.extractTranscript({ context: { mode: "project", projectPath: "<project-path>" } })` 호출.
+- 저장: `<project>/.study/.routine/transcripts/{YYYY-MM-DD}-{주제}.md`
+- 실패 시: 경고만 출력, 나머지 정리 계속 진행.
 
 필수 갱신:
 - `<project>/.study/.routine/state.md`

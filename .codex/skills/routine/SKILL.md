@@ -346,12 +346,18 @@ Write로 `study/.routine/history.md`에 행 추가:
 - 날짜 연속성 유지: lastCompleted ~ 오늘 사이 빈 날이 있으면 빈 행(`| MM-DD | — | — | — | 0 |`)으로 채움
 - 오늘 행: `| MM-DD | {주제} | {PASS/FAIL} | {forge: 파일명 / seed: 질문} | {streak} |`
 
-### 6-D. 세션 로그 정리
+### 6-D. 대화 원문 추출
+
+`routine.extractTranscript({})` 호출.
+- 저장: `study/.routine/transcripts/{YYYY-MM-DD}-{주제}.md`
+- 실패 시: 경고만 출력, 나머지 정리 계속 진행.
+
+### 6-E. 세션 로그 정리
 
 `routine.appendEntry({ entry: { phase: 6, type: "complete" } })`
 `routine.resetLog({})`
 
-### 6-E. 마무리 출력
+### 6-F. 마무리 출력
 
 ```
 ## 루틴 완료

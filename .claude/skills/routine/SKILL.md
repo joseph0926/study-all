@@ -3,7 +3,7 @@ name: routine
 description: learn → study → checkpoint → forge 파이프라인을 하나의 세션에서 오케스트레이션 — 매 세션이 판단 프레임워크 또는 다음 질문으로 끝남
 argument-hint: "[주제]"
 disable-model-invocation: true
-allowed-tools: Read, Grep, Glob, Write, WebSearch, WebFetch, mcp__study__routine_appendEntry, mcp__study__routine_readLog, mcp__study__routine_resetLog, mcp__study__stats_getDashboard
+allowed-tools: Read, Grep, Glob, Write, WebSearch, WebFetch, mcp__study__routine_appendEntry, mcp__study__routine_readLog, mcp__study__routine_resetLog, mcp__study__routine_extractTranscript, mcp__study__stats_getDashboard
 ---
 
 입력: `$ARGUMENTS` (선택. 예: `Suspense 타이밍`, 비어있으면 이전 seed 또는 대시보드 기반 제안)
@@ -356,12 +356,18 @@ Write로 `study/.routine/history.md`에 행 추가:
 - 날짜 연속성 유지: lastCompleted ~ 오늘 사이 빈 날이 있으면 빈 행(`| MM-DD | — | — | — | 0 |`)으로 채움
 - 오늘 행: `| MM-DD | {주제} | {PASS/FAIL} | {forge: 파일명 / seed: 질문} | {streak} |`
 
-### 6-D. 세션 로그 정리
+### 6-D. 대화 원문 추출
+
+`routine.extractTranscript({})` 호출.
+- 저장: `study/.routine/transcripts/{YYYY-MM-DD}-{주제}.md`
+- 실패 시: 경고만 출력, 나머지 정리 계속 진행.
+
+### 6-E. 세션 로그 정리
 
 `routine.appendEntry({ entry: { phase: 6, type: "complete" } })`
 `routine.resetLog({})`
 
-### 6-E. 마무리 출력
+### 6-F. 마무리 출력
 
 ```
 ## 루틴 완료

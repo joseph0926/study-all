@@ -151,6 +151,12 @@ AI가 오늘 학습 주제 기반으로 코딩 과제 1개를 출제한다 (프�
 - PASS: `<project>/.study/.routine/forges/{YYYY-MM-DD}-{주제}.md`
 - FAIL: `<project>/.study/.routine/state.md`의 nextSeed 갱신
 
+### 6-D. 대화 원문 추출
+
+`routine.extractTranscript({ context: { mode: "project", projectPath: "<project-path>" } })` 호출.
+- 저장: `<project>/.study/.routine/transcripts/{YYYY-MM-DD}-{주제}.md`
+- 실패 시: 경고만 출력, 나머지 정리 계속 진행.
+
 필수 갱신:
 - `<project>/.study/.routine/state.md`
 - `<project>/.study/.routine/history.md`
