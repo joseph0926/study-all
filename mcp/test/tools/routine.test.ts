@@ -263,13 +263,13 @@ describe("routineExtractTranscript", () => {
     const lines = [
       JSON.stringify({
         type: "user",
-        timestamp: "2026-02-26T14:00:30.000Z",
+        timestamp: "2026-02-26T14:00:00.000Z",
         message: { role: "user", content: "What is React Fiber?" },
         uuid: "u1",
       }),
       JSON.stringify({
         type: "assistant",
-        timestamp: "2026-02-26T14:01:00.000Z",
+        timestamp: "2026-02-26T14:00:10.000Z",
         message: {
           role: "assistant",
           content: [{ type: "text", text: "React Fiber is a reconciliation engine." }],
@@ -278,7 +278,7 @@ describe("routineExtractTranscript", () => {
       }),
       JSON.stringify({
         type: "user",
-        timestamp: "2026-02-26T14:02:00.000Z",
+        timestamp: "2026-02-26T14:00:20.000Z",
         message: {
           role: "user",
           content: [{ type: "tool_result", tool_use_id: "t1", content: "ok" }],
@@ -288,9 +288,11 @@ describe("routineExtractTranscript", () => {
     ];
     writeFileSync(sessionFile, lines.join("\n") + "\n", "utf8");
 
+    // Use a later clock so endTs covers the session messages
+    const laterClock = new FixedClock("2026-02-26T15:00:00.000Z");
     const result = await routineExtractTranscript(
       { client: "claude-code" },
-      clock,
+      laterClock,
     );
 
     expect(result.data.ok).toBe(true);
