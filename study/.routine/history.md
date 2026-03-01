@@ -6,3 +6,5 @@
 | 02-27 | beginWork 분기 트리 6가지 조합 추적 | PASS | forge: 2026-02-27-beginWork-분기-트리-6가지-조합.md | 1 |
 | 02-28 | React Router Loader | PASS | forge: 2026-02-28-React-Router-Loader.md | 2 |
 | 02-28 | React Router 캐시 메커니즘 | PASS | forge: 2026-02-28-React-Router-캐시-메커니즘.md | 2 |
+| 03-01 | — | — | — | 0 |
+| 03-02 | useRef 심화: 내부구현·ref callback·실무패턴 | PASS | review 등록: Hook 링크드 리스트 구조, currentlyRenderingFiber 초기화 타이밍, memoizedState 이중 레벨, useRef 객체 참조 공유 | 1 |
