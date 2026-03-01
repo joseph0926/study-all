@@ -1,20 +1,24 @@
 ---
 name: learn
-description: 자유 Q&A 기반 학습 — 질문 → 근거 탐색(ref/웹/추론) → 답변 → 반복 → 문서화
-argument-hint: "<질문>"
+description: 즉석 Q&A 학습 — 질문 → 근거 탐색 → 답변 → 반복 → 문서화. 프로젝트 경로를 지정하면 프로젝트 모드로 동작한다.
+argument-hint: "[project-path] <질문>"
 disable-model-invocation: true
-allowed-tools: Read, Grep, Glob, WebSearch, WebFetch, Write, mcp__study__context_resolve, mcp__study__session_appendLog
+allowed-tools: Read, Grep, Glob, Bash, WebSearch, WebFetch, Write, mcp__study__context_resolve, mcp__study__session_appendLog
 ---
 
-입력: `$ARGUMENTS` (예: `Suspense는 어떠한 원리로 동작하나요?`)
+입력: `$ARGUMENTS` (예: `Suspense는 어떠한 원리로 동작하나요?` 또는 `/path/to/project 인증 흐름이 어떻게 구현되어있나요?`)
 
 실행 순서:
 
-1. `context.resolve(mode=skill, skill=learn)`로 컨텍스트 확인
-2. 사용자 질문(`$ARGUMENTS`)에서 주제명 추출 (간결한 kebab-case, 예: `Suspense-동작원리`)
+1. **모드 판별**: `$ARGUMENTS`의 첫 토큰이 `/`로 시작하는 경로면 → **project 모드**, 아니면 → **skill 모드**
+   - project 모드: `<project-path>` + `<질문>` 파싱 → `context.resolve(mode=project, projectPath=<project-path>)`
+   - skill 모드: `context.resolve(mode=skill, skill=learn)`
+2. 사용자 질문에서 주제명 추출 (간결한 kebab-case, 예: `Suspense-동작원리`, `인증-흐름`)
 3. 세션 복원/초기화
 
-   상태 파일: `study/learn/session-state.md`
+   상태 파일:
+   - skill 모드: `study/learn/session-state.md`
+   - project 모드: `{project}/.study/learn/session-state.md`
 
    3-A. Read 시도:
      - 파일 없음 또는 `# COMPLETED` → 새 세션 → Step 3-C
@@ -22,7 +26,7 @@ allowed-tools: Read, Grep, Glob, WebSearch, WebFetch, Write, mcp__study__context
      - 활성 내용 + 이전 날짜 → "이전 세션 발견 ({날짜}). 이어서/새로?" → 사용자 선택
 
    3-B. 복원 정보:
-     - topic, qaCount, analogyFrame, connections, nextDirection, qaHistory
+     - topic, qaCount, frameType/analogyFrame, connections, nextDirection, qaHistory
 
    3-C. 새 세션 → 상태 파일 초기화 Write:
      ```
@@ -30,7 +34,7 @@ allowed-tools: Read, Grep, Glob, WebSearch, WebFetch, Write, mcp__study__context
      updated: {YYYY-MM-DD HH:MM}
      topic: {주제명}
      qaCount: 0
-     analogyFrame: (미결정)
+     frameType: (미결정)
      connections: (없음)
      nextDirection: 초기 탐색
      ---
@@ -41,7 +45,9 @@ allowed-tools: Read, Grep, Glob, WebSearch, WebFetch, Write, mcp__study__context
      (없음)
      ```
 
-4. 근거 탐색 — 아래 우선순위를 순서대로 시도한다.
+4. 근거 탐색 — 모드별 우선순위를 순서대로 시도한다.
+
+   **skill 모드:**
 
    | 우선순위 | 소스 | 도구 | 조건 |
    |---------|------|------|------|
@@ -60,7 +66,38 @@ allowed-tools: Read, Grep, Glob, WebSearch, WebFetch, Write, mcp__study__context
    - 버전 표기: 웹 소스 인용 시 버전 또는 날짜 병기 (예: "React 19 문서 (2024-12)")
    - 웹 코드 접두사: 웹에서 가져온 코드는 "외부 코드:" 접두사 (예: "외부 코드: (react.dev, v19)")
 
-5. 아래 순서로 답변한다. (선행 조직자 → 상세 → 통합)
+   **project 모드:**
+
+   | 우선순위 | 소스 | 도구 | 조건 |
+   |---------|------|------|------|
+   | 1 | 프로젝트 소스코드 | Glob, Grep, Read | `file:line` 인용 필수 |
+   | 2 | 프로젝트 문서 (README, ADR, docs/ 등) | Glob, Read | 존재 시 |
+   | 3 | ref/ 교차참조 | Glob, Grep, Read | 프로젝트 import 대상 라이브러리의 소스가 ref/에 존재할 때 |
+   | 4 | git history — blame, log | Bash | **판단 가능한 경우만** (아래 규칙 참조) |
+   | 5 | 웹 검색 | WebSearch, WebFetch | 외부 패턴/라이브러리 이해 필요 시 |
+   | 6 | 추론 | — | 1~5 결과를 바탕으로 추론. 반드시 "추론:" 접두사 명시 |
+
+   git history 사용 규칙:
+   - conventional commit / 명확한 PR 설명 → 근거로 인용
+   - "fix bug", "update" 등 불명확한 메시지 → 건너뜀, 언급하지 않음
+   - blame으로 작성 시점만 유용한 경우 → "시점:" 접두사로 제한적 인용
+   - 불명확한 git history를 근거로 사용하지 않는다
+
+   ref/ 교차참조 규칙 (project 모드):
+   - 프로젝트 소스에서 외부 라이브러리 import 발견 → `ref/` Glob 확인
+   - 존재 → "ref 소스:" 접두사로 내부 동작 인용
+   - 용도: 프로젝트 사용부(project)와 라이브러리 구현부(ref/) 교차 설명
+   - ref/에 없으면 → 건너뛰기
+
+   project 모드 탐색 범위 설정:
+   - **소규모** (<100 파일): 전체 탐색
+   - **중규모** (100~500): 진입점 기반 (package.json → 키워드 Grep → import 체인 1~2단계)
+   - **대규모** (500+): 점진적 심화 (디렉토리 단위 식별 → 범위 확인 후 상세)
+
+5. 아래 순서로 답변한다. 모드별 구조가 다르다.
+
+   **skill 모드** (비유 → 코드/텍스트 → 시각화 → 연결):
+
    - 5-A. **비유** — 핵심 개념마다 실생활 비유를 **먼저** 제시한다.
      - 목적: 세부 설명 전에 머릿속 프레임을 형성한다.
      - 1:1 대응 가능한 비유를 사용하고, 대응 관계를 명시한다.
@@ -72,30 +109,54 @@ allowed-tools: Read, Grep, Glob, WebSearch, WebFetch, Write, mcp__study__context
      - 웹 소스 코드: "외부 코드:" 접두사 + 출처 (예: "외부 코드: (react.dev, v19)")
      - 추론: "추론:" 접두사로 명확히 구분
      - 설명 중 비유 요소와 실제 코드/개념의 매칭 이유를 서술한다.
-       (예: "비유에서 X에 해당하는 것이 코드에서는 Y인데, 그 이유는 …")
    - 5-C. **시각화** — 최종 정리로 핵심을 시각화한다.
      - ASCII 다이어그램, 테이블, 플로차트, 상태전이도 중 적합한 것을 선택한다.
      - 비유 요소 ↔ 실제 개념 매핑을 시각화에 반영하면 더 좋다.
      - 생략 조건: 단일 사실 확인(예/아니오 수준)인 경우.
-     - 거창할 필요 없다. 핵심 관계나 흐름만 보여준다.
    - 5-D. **연결** — 기존 학습 내용과의 연관을 탐색한다.
      - `study/` 디렉토리를 Glob/Grep/Read로 스캔한다.
      - 대화 중: 발견 시 간략히 언급한다.
      - 문서: `## 연결` 섹션에 구조적으로 기록한다.
      - 판단 기준: 동일 개념의 다른 관점, 상위/하위 메커니즘, 인과 관계, 전제 지식.
      - 억지 연결 금지 (단순 동일 라이브러리 수준은 연결하지 않는다).
+
+   **project 모드** (패턴매핑 → 코드추적 → 시각화 → 이중연결):
+
+   - 5-A. **패턴 매핑** — 해당 코드가 사용하는 디자인 패턴이나 아키텍처 패턴을 **먼저** 식별한다.
+     - 알려진 패턴에 매핑하고, 매핑 근거를 명시한다.
+     - 매핑 가능한 패턴이 없으면 "커스텀 구조:" 접두사로 구조 요약만 제시한다.
+     - "커스텀 구조:" 시 비유를 병행한다: 실생활 1:1 대응 비유로 구조를 설명한다 (대응 요소 3개 이상).
+     - 비유 불가 시 → "비유 한계:" 접두사로 이유와 부분 비유를 제시한다.
+     - 억지 매핑/억지 비유 금지.
+   - 5-B. **코드 추적** — 패턴 프레임 위에 코드 근거를 쌓는다.
+     - 프로젝트 소스 근거: `file:line` 경로 포함
+     - ref/ 소스 근거: "ref 소스:" 접두사 + `ref/<lib>/path:line`
+     - 교차 인용: 프로젝트 사용부와 라이브러리 구현부 병렬 인용
+     - git 근거: 커밋 해시 + 메시지 포함 (판단 가능한 경우만)
+     - 웹 근거: 출처 URL 포함
+     - 추론: "추론:" 접두사로 명확히 구분
+   - 5-C. **시각화** — 호출 그래프, 의존성 다이어그램, 데이터 흐름도, 컴포넌트 트리 중 적합한 것 선택.
+     - 생략 조건: 단일 사실 확인(예/아니오 수준)인 경우.
+   - 5-D. **이중 연결** — 프로젝트 내부 + 학습 토픽 연관을 탐색한다.
+     - **프로젝트 내부 연결**: 관련 모듈/파일 간 의존 관계를 Grep/Glob으로 추적한다.
+     - **학습 토픽 연결**: `study/` 디렉토리를 Glob/Grep/Read로 스캔한다.
+     - 억지 연결 금지.
+
 6. 사용자의 추가 질문을 대기한다. → Step 4~5 반복.
-   - 매 Q&A 후 `study/learn/session-state.md`를 Write 갱신한다 (qaCount++, analogyFrame, connections, nextDirection, QA Summary에 핵심 1줄 + refs 축적, QA History 추가).
+   - 매 Q&A 후 세션 상태 파일을 Write 갱신한다 (qaCount++, frameType, connections, nextDirection, QA Summary/History 추가).
 
 종료(`>>정리`) 시:
 
-1. 전체 Q&A를 `study/learn/<주제명>.md`에 Write한다.
-   - 포맷: 아래 템플릿을 따른다.
+1. 전체 Q&A를 문서 파일에 Write한다.
+   - skill 모드: `study/learn/<주제명>.md`
+   - project 모드: `{project}/.study/learn/<주제명>.md`
+   - 포맷: 아래 모드별 템플릿을 따른다.
    - 원문 그대로 기록한다. 오탈자만 수정.
 2. `session.appendLog(context, topic=<주제명>, content=<요약>)`로 세션 기록.
-3. `study/learn/session-state.md`를 `# COMPLETED\n` 마커로 Write한다.
+   - project 모드에서는 `via="via /learn (project mode)"` 추가.
+3. 세션 상태 파일을 `# COMPLETED\n` 마커로 Write한다.
 
-문서 템플릿:
+**skill 모드 문서 템플릿:**
 
 ```markdown
 # <주제명>
@@ -126,19 +187,62 @@ allowed-tools: Read, Grep, Glob, WebSearch, WebFetch, Write, mcp__study__context
 연결이 없으면 이 섹션을 생략한다.
 ```
 
+**project 모드 문서 템플릿:**
+
+```markdown
+# <주제명>
+
+> 최초 질문: <사용자의 원본 질문>
+> 프로젝트: <project-path>
+> 일시: <YYYY-MM-DD>
+
+---
+
+## Q1. <사용자 질문>
+
+<답변 원문>
+
+## Q2. <사용자 후속 질문>
+
+<답변 원문>
+
+...
+
+---
+
+## 연결
+
+### 프로젝트 내부
+
+| 모듈/파일 | 관계 | 근거 |
+|-----------|------|------|
+| `src/...` | <관계 유형> | <왜 연결되는지> |
+
+### 학습 토픽
+
+| 대상 토픽 | 관계 | 근거 |
+|-----------|------|------|
+| `study/<skill>/<Topic>.md` | <관계 유형> | <왜 연결되는지> |
+
+연결이 없으면 해당 하위 섹션을 생략한다.
+```
+
 사용자 신호 규칙:
 - `>>정리` — 세션 종료 + 문서화 실행
 - 일반 대화 속 "정리"는 신호로 인식하지 않는다 (`>>` 접두사 필수).
 
 규칙:
-- ref/ 코드가 있으면 반드시 먼저 탐색한다. 웹 검색만으로 대체하지 않는다.
+- skill 모드: ref/ 코드가 있으면 반드시 먼저 탐색한다. 웹 검색만으로 대체하지 않는다.
+- project 모드: 프로젝트 소스코드를 반드시 먼저 탐색한다. 웹 검색만으로 대체하지 않는다.
 - ref/ 전환 알림 필수: ref/ 탐색 결과 없을 시 "ref/에 관련 소스 없음, 웹 검색으로 전환합니다" 알림 후 진행한다 (무언의 전환 금지).
-- 근거의 출처(ref 코드/웹/추론)를 항상 명시한다.
+- 근거의 출처(ref 코드/소스코드/문서/git/웹/추론)를 항상 명시한다.
 - "외부 코드:" 접두사: 웹에서 가져온 코드 블록에는 반드시 "외부 코드:" 접두사 + 출처를 표기한다.
 - 웹 소스 인용 시 버전 또는 날짜를 반드시 병기한다.
 - 쓰기 동작은 `>>정리` 이후에만 수행한다. 예외: `session-state.md`는 매 Q&A 후 갱신한다.
-- 답변 순서: 비유(프레임) → 코드/텍스트(근거+매칭) → 시각화(통합 정리). 이 순서를 지킨다.
+- skill 모드 답변 순서: 비유(프레임) → 코드/텍스트(근거+매칭) → 시각화(통합 정리) → 연결. 이 순서를 지킨다.
+- project 모드 답변 순서: 패턴 매핑(프레임) → 코드 추적(근거+매칭) → 시각화(통합 정리) → 이중 연결. 이 순서를 지킨다.
 - 비유는 1:1 대응을 기본으로 한다. 억지 비유보다 "비유 한계:" 설명이 낫다.
-- 코드/텍스트 설명 시 비유 요소와의 매칭 이유를 반드시 서술한다.
-- 시각화는 단일 사실 확인이 아닌 한 포함한다. 최종 정리 역할로, 비유↔실제 매핑을 반영한다.
+- 시각화는 단일 사실 확인이 아닌 한 포함한다.
 - 연결 탐색은 `study/` 스캔으로 수행한다. 단순 동일 라이브러리 연결은 금지한다.
+- project 모드에서 프로젝트 코드를 수정하지 않는다 (읽기 전용).
+- project 모드에서 git history는 판단 가능한 경우에만 근거로 사용한다.

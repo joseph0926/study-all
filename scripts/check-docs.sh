@@ -161,7 +161,7 @@ fi
 
 header "1-E. Codex metadata — agents/openai.yaml"
 
-for skill_name in routine study project project-routine; do
+for skill_name in routine project; do
   if [[ -f "$CODEX_SKILLS_DIR/$skill_name/agents/openai.yaml" ]]; then
     ok "metadata: $skill_name/agents/openai.yaml"
   else
@@ -207,7 +207,7 @@ check_shell_refs() {
     else
       ok "$label — $script_path 존재"
     fi
-  done < <(grep -oE '(python |bash |sh )[^ `]+' "$md_file" 2>/dev/null \
+  done < <(grep -oE '(\bpython |\bbash |\bsh )[^ `]+' "$md_file" 2>/dev/null \
     | sed 's/^python //;s/^bash //;s/^sh //' || true)
 }
 
