@@ -147,14 +147,64 @@ allowed-tools: Read, Grep, Glob, Bash, WebSearch, WebFetch, Write, mcp__study__c
 
 종료(`>>정리`) 시:
 
-1. 전체 Q&A를 문서 파일에 Write한다.
+1. **세션 JSONL에서 원문 Q&A를 추출**한다.
+
+   1-A. JSONL 파일 탐색:
+   ```bash
+   # 프로젝트 키: 작업 디렉토리 경로에서 / → -, 선행 - 포함
+   # 예: /Users/foo/Downloads/@work/study-all → -Users-foo-Downloads--work-study-all
+   ls -t ~/.claude/projects/<project-key>/*.jsonl | head -5
+   ```
+   - fallback: `~/.codex/projects/` 동일 구조
+   - 후보 5개 중 현재 세션 식별 (동시 세션 안전장치):
+     1. session-state.md에서 `topic:` 값을 읽는다
+     2. 후보 JSONL들에서 topic 이름이 포함된 파일을 `grep -l` 로 찾는다
+     3. 매칭된 파일 중 가장 최근 수정된 것을 사용
+     4. 매칭 실패 시 → 가장 최근 파일을 사용하되 "⚠️ 세션 자동 매칭 실패, 가장 최근 JSONL 사용" 경고 출력
+
+   1-B. JSONL 파싱 + 필터링 (Bash + python3):
+
+   **목표**: JSONL에서 user 질문과 assistant 답변 텍스트를 대화 순서대로 추출한다.
+
+   **추출 전략** (방어적, 포맷 변경에 유연):
+   1. 각 JSON 라인에서 `type` 필드로 user/assistant를 구분한다
+   2. 텍스트 추출 — 여러 경로를 순서대로 시도:
+      - `message.content`가 문자열 → 그대로 사용
+      - `message.content`가 리스트 → 각 요소의 `text` 필드 추출
+      - 위 경로 실패 → entry 내 200자 이상 문자열을 재귀 탐색하여 수집
+   3. 필터링 (유연한 기준):
+      - 시스템 메시지 제외: `<command-message>`, `<command-name>`, `<system-reminder>` 태그 포함
+      - 스킬 프롬프트 제외: `실행 순서:` + `모드 판별` 동시 포함
+      - 짧은 assistant 메시지 제외: 200자 미만
+      - `>>정리` 신호 제외
+   4. 모든 필드 접근은 try/except로 감싸고, 파싱 실패 라인은 건너뛴다
+
+   **출력 형식**: `=== USER ===` / `=== ASSISTANT ===` 구분자 + 텍스트 본문
+
+   **추출 검증**:
+   - session-state.md의 `qaCount`와 추출된 USER 블록 수를 비교
+   - ±1 차이는 허용 (정리 시점 차이)
+   - ±2 이상 차이 시 "⚠️ 추출 Q&A 수({N})와 세션 기록({qaCount}) 불일치" 경고
+
+   **폴백** (추출 실패 시):
+   - 조건: 스크립트 에러, 추출 결과 0건, 또는 검증 심각 불일치 (±2 이상)
+   - 동작: 현재 대화 컨텍스트에서 AI가 Q&A를 재구성
+   - "⚠️ JSONL 원문 추출 실패 → 세션 컨텍스트에서 재구성" 경고를 문서 상단에 포함
+   - 재구성 시: 사용자 질문은 최대한 정확히, 답변은 핵심 구조를 유지하되 원문 보장 불가 명시
+
+   1-C. 추출 결과 → 문서 조립:
+   - `USER` 블록 → `## Q{N}. <원문>` (질문이 길면 첫 문장을 제목, 전문을 본문)
+   - `ASSISTANT` 블록 → 답변 본문 (markdown 그대로)
+   - 메타데이터 헤더(`# <주제명>`, `> 최초 질문`, `> 일시`)는 AI가 작성
+   - `## 연결` 섹션은 AI가 세션 중 탐색한 연결 정보를 기반으로 작성
+
+2. 문서 파일에 Write한다.
    - skill 모드: `study/learn/<주제명>.md`
    - project 모드: `{project}/.study/learn/<주제명>.md`
    - 포맷: 아래 모드별 템플릿을 따른다.
-   - 원문 그대로 기록한다. 오탈자만 수정.
-2. `session.appendLog(context, topic=<주제명>, content=<요약>)`로 세션 기록.
+3. `session.appendLog(context, topic=<주제명>, content=<요약>)`로 세션 기록.
    - project 모드에서는 `via="via /learn (project mode)"` 추가.
-3. 세션 상태 파일을 `# COMPLETED\n` 마커로 Write한다.
+4. 세션 상태 파일을 `# COMPLETED\n` 마커로 Write한다.
 
 **skill 모드 문서 템플릿:**
 
@@ -166,13 +216,13 @@ allowed-tools: Read, Grep, Glob, Bash, WebSearch, WebFetch, Write, mcp__study__c
 
 ---
 
-## Q1. <사용자 질문>
+## Q1. <사용자 질문 원문>
 
-<답변 원문>
+<JSONL에서 추출한 답변 원문>
 
-## Q2. <사용자 후속 질문>
+## Q2. <사용자 후속 질문 원문>
 
-<답변 원문>
+<JSONL에서 추출한 답변 원문>
 
 ...
 
@@ -198,13 +248,13 @@ allowed-tools: Read, Grep, Glob, Bash, WebSearch, WebFetch, Write, mcp__study__c
 
 ---
 
-## Q1. <사용자 질문>
+## Q1. <사용자 질문 원문>
 
-<답변 원문>
+<JSONL에서 추출한 답변 원문>
 
-## Q2. <사용자 후속 질문>
+## Q2. <사용자 후속 질문 원문>
 
-<답변 원문>
+<JSONL에서 추출한 답변 원문>
 
 ...
 
