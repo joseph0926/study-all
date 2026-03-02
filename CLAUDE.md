@@ -23,7 +23,8 @@ study-all/
 │       ├── review/SKILL.md
 │       ├── dashboard/SKILL.md
 │       ├── project/SKILL.md
-│       └── test/SKILL.md
+│       ├── test/SKILL.md
+│       └── apply/SKILL.md
 ├── .codex/
 │   └── skills/           # Codex용 스킬 미러
 ├── study/                 # 학습 기록
@@ -36,7 +37,7 @@ study-all/
 ```
 
 ## 운영 메모
-- 기본 실행 경로는 `/routine`, `/learn`, `/src`, `/review`, `/dashboard`, `/project`, `/test` 7개 스킬이다.
+- 기본 실행 경로는 `/routine`, `/learn`, `/src`, `/review`, `/dashboard`, `/project`, `/test`, `/apply` 8개 스킬이다.
 - 학습 기록은 `study/` 디렉토리에 저장된다.
 - home sync: `bash scripts/sync-claude-home.sh --apply`, `bash scripts/sync-codex-home.sh --apply`
 - 검증 명령은 `.claude/rules/docs.md`를 따른다.

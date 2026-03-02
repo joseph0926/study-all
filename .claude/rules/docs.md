@@ -5,6 +5,7 @@
 - 소스 리딩 모드: `study/src/{Topic-Name}.md` (패턴 워크스루), `study/src/session-state.md` (세션 상태)
 - 프로젝트 모드: `{project}/.study/` 하위 동일 규칙
 - 프로젝트 분석 모드: `{project}/.study/plan.md` + `{project}/.study/{Area-Name}.md`
+- 적용 모드: `{project}/.study/apply/{Topic-Name}.md` (적용 리포트), `{project}/.study/apply/session-state.md` (세션 상태)
 - 루틴 모드: `study/.routine/state.md`, `study/.routine/history.md`, `study/.routine/forges/{날짜}-{주제}.md`, `study/.routine/.session-log.{날짜}-{주제}.jsonl`
 - 프로젝트 루틴 모드: `{project}/.study/.routine/state.md`, `{project}/.study/.routine/history.md`, `{project}/.study/.routine/forges/{날짜}-{주제}.md`, `{project}/.study/.routine/.session-log.{날짜}-{주제}.jsonl`
 

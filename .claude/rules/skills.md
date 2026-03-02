@@ -8,9 +8,10 @@
 - `/dashboard` — 학습 대시보드
 - `/project <경로> [영역]` — 프로젝트 소스 분석 → 개선
 - `/test [skill] [level]` — 코딩 테스트 → 4축 평가
+- `/apply <project-path> <topic>` — 학습 내용을 프로젝트에 적용 → 진단 → 코칭 → 선택적 수정
 
 ## 실행 규칙
 - 각 skill의 `allowed-tools` 범위를 넘지 않는다.
-- 쓰기형 skill(`routine`, `learn`, `src`, `review`, `project`, `test`)은 `disable-model-invocation: true`를 유지한다.
+- 쓰기형 skill(`routine`, `learn`, `src`, `review`, `project`, `test`, `apply`)은 `disable-model-invocation: true`를 유지한다.
 - 읽기형 skill(`dashboard`)은 MCP 결과로만 출력한다.
 - `/project`는 `/dashboard`와 통합하지 않는다.
