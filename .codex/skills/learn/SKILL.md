@@ -152,11 +152,9 @@ description: 즉석 Q&A 학습 — 질문 → 근거 탐색 → 답변 → 반�
    ```bash
    # 프로젝트 키: 작업 디렉토리 경로에서 / → -, 선행 - 포함
    # 예: /Users/foo/Downloads/@work/study-all → -Users-foo-Downloads--work-study-all
-   # Claude Code: ~/.claude/projects/<project-key>/
-   # Codex: ~/.codex/projects/<project-key>/
-   ls -t ~/.codex/projects/<project-key>/*.jsonl 2>/dev/null | head -5 || \
-   ls -t ~/.claude/projects/<project-key>/*.jsonl 2>/dev/null | head -5
+   ls -t ~/.claude/projects/<project-key>/*.jsonl | head -5
    ```
+   - fallback: `~/.codex/projects/` 동일 구조
    - 후보 5개 중 현재 세션 식별 (동시 세션 안전장치):
      1. session-state.md에서 `topic:` 값을 읽는다
      2. 후보 JSONL들에서 topic 이름이 포함된 파일을 `grep -l` 로 찾는다

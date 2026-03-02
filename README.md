@@ -4,19 +4,16 @@ Claude/Codex용 학습 스킬 + study MCP 서버를 함께 관리하는 저장�
 
 ## Active Skills
 
-현재 운영 스킬은 아래 10개입니다.
+현재 운영 스킬은 아래 7개입니다.
 
 | 목적 | Claude | Codex |
 | --- | --- | --- |
-| 학습 대시보드 조회 | `/dashboard` | `$dashboard` |
-| 통합 멘탈모델 결정화 | `/forge <skill> [scope]` | `$forge <skill> [scope]` |
-| 자유 Q&A 학습 | `/learn <질문>` | `$learn <질문>` |
-| 프로젝트 분석/개선 | `/project <path> [area]` | `$project <path> [area]` |
-| 프로젝트 코드베이스 Q&A | `/project-learn <path> <질문>` | `$project-learn <path> <질문>` |
-| 프로젝트 학습 루틴 (7-Phase) | `/project-routine <path> [주제]` | `$project-routine <path> [주제]` |
-| 복습 큐 기반 문제 풀이 | `/review <skill> [topic]` | `$review <skill> [topic]` |
 | 학습 파이프라인 오케스트레이션 (7-Phase) | `/routine [주제]` | `$routine [주제]` |
-| plan 기반 딥 학습 | `/study <주제>` | `$study <주제>` |
+| 자유 Q&A 학습 | `/learn <질문>` | `$learn <질문>` |
+| 소스코드 패턴 리딩 | `/src [project-path] <주제>` | `$src [project-path] <주제>` |
+| 복습 큐 기반 문제 풀이 | `/review <skill> [topic]` | `$review <skill> [topic]` |
+| 학습 대시보드 조회 | `/dashboard` | `$dashboard` |
+| 프로젝트 분석/개선 | `/project <path> [area]` | `$project <path> [area]` |
 | 학습 기반 코딩 테스트 + 4축 평가 | `/test [skill] [level]` | `$test [skill] [level]` |
 
 ### Routine Phase 구조

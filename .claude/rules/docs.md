@@ -2,6 +2,7 @@
 
 ## 기록 파일
 - 스킬 모드: `study/{skill}/{Topic-Name}.md`, `study/{skill}/{Topic-Name}-meta.md`
+- 소스 리딩 모드: `study/src/{Topic-Name}.md` (패턴 워크스루), `study/src/session-state.md` (세션 상태)
 - 프로젝트 모드: `{project}/.study/` 하위 동일 규칙
 - 프로젝트 분석 모드: `{project}/.study/plan.md` + `{project}/.study/{Area-Name}.md`
 - 루틴 모드: `study/.routine/state.md`, `study/.routine/history.md`, `study/.routine/forges/{날짜}-{주제}.md`, `study/.routine/.session-log.{날짜}-{주제}.jsonl`
