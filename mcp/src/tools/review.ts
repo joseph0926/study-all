@@ -1,5 +1,7 @@
+import { promises as fs } from "node:fs";
 import path from "node:path";
 import { z } from "zod";
+import { loadConfig } from "../config.js";
 import { makeEnvelope } from "../lib/envelope.js";
 import { appendText, listFiles, readText, writeText } from "../lib/fs.js";
 import { parseMeta } from "../parsers/meta-parser.js";
@@ -255,17 +257,35 @@ export async function reviewGetQueue(
   clock: Clock = systemClock,
 ): Promise<Envelope<{ today: string; items: ReviewQueueItem[]; graduated: number; totalActive: number }>> {
   const parsed = getQueueInputSchema.parse(input);
-  const context = await resolveContextData(parsed.context as ContextInput);
+  const resolvedSkill = parsed.skill ?? parsed.context.skill;
 
   const today = toDateOnly(clock.now());
   const dirs: Array<{ skill: string; dir: string }> = [];
 
-  if (context.mode === "project") {
+  if (parsed.context.mode === "project") {
+    const context = await resolveContextData(parsed.context as ContextInput);
     dirs.push({ skill: path.basename(context.projectPath ?? "project"), dir: context.studyDir! });
+  } else if (resolvedSkill) {
+    // 단일 skill (기존 동작)
+    const context = await resolveContextData({ ...parsed.context, skill: resolvedSkill } as ContextInput);
+    dirs.push({ skill: resolvedSkill, dir: path.join(context.notesDir, resolvedSkill) });
   } else {
-    // mode=skill is validated at context resolution and always has context.skill.
-    const skill = context.skill!;
-    dirs.push({ skill, dir: path.join(context.notesDir, skill) });
+    // all-skills (새 동작)
+    const cfg = loadConfig();
+    const notesDir = parsed.context.notesDir ? path.resolve(cfg.studyRoot, parsed.context.notesDir) : cfg.notesDir;
+    const entries = await fs.readdir(notesDir, { withFileTypes: true });
+    for (const entry of entries) {
+      if (entry.isDirectory() && !entry.name.startsWith(".")) {
+        dirs.push({ skill: entry.name, dir: path.join(notesDir, entry.name) });
+      }
+    }
+    const transcriptsDir = path.join(notesDir, ".routine", "transcripts");
+    try {
+      await fs.access(transcriptsDir);
+      dirs.push({ skill: "routine", dir: transcriptsDir });
+    } catch {
+      // transcripts 디렉토리 없으면 skip
+    }
   }
 
   const items: ReviewQueueItem[] = [];
@@ -363,10 +383,34 @@ export async function reviewAppendQnA(
   return makeEnvelope({ ok: true, filePath });
 }
 
+const removeConceptInputSchema = z.object({
+  context: contextSchema,
+  skill: z.string().optional(),
+  topic: z.string(),
+  concept: z.string(),
+});
+
+export async function reviewRemoveConcept(
+  input: z.input<typeof removeConceptInputSchema>,
+): Promise<Envelope<{ ok: boolean; removed: boolean; filePath: string }>> {
+  const parsed = removeConceptInputSchema.parse(input);
+  const context = await resolveContextData(parsed.context as ContextInput);
+  const dir = resolveReviewDir(context, parsed.skill);
+  const { path: filePath, meta } = await readMetaFile(dir, parsed.topic);
+
+  const before = meta.concepts.length;
+  meta.concepts = meta.concepts.filter((c) => c.name !== parsed.concept);
+  const removed = meta.concepts.length < before;
+
+  await writeText(filePath, metaToMarkdown(parsed.topic, meta));
+  return makeEnvelope({ ok: true, removed, filePath });
+}
+
 export const reviewSchemas = {
   getQueue: getQueueInputSchema,
   recordResult: recordResultInputSchema,
   getMeta: getMetaInputSchema,
   saveMeta: saveMetaInputSchema,
   appendQnA: appendQnAInputSchema,
+  removeConcept: removeConceptInputSchema,
 };

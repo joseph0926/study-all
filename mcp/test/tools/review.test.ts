@@ -2,17 +2,47 @@ import { mkdirSync, readFileSync } from "node:fs";
 import os from "node:os";
 import path from "node:path";
 import { describe, expect, it } from "vitest";
-import { reviewAppendQnA, reviewGetMeta, reviewGetQueue, reviewRecordResult, reviewSaveMeta } from "../../src/tools/review.js";
+import { reviewAppendQnA, reviewGetMeta, reviewGetQueue, reviewRecordResult, reviewRemoveConcept, reviewSaveMeta } from "../../src/tools/review.js";
 
 describe("review tools", () => {
-  it("review.getQueue in skill mode requires skill", async () => {
-    const base = path.join(os.tmpdir(), `mcp-review-skill-required-${Date.now()}`);
+  it("review.getQueue without skill returns all skills", async () => {
+    const base = path.join(os.tmpdir(), `mcp-review-all-skills-${Date.now()}`);
     process.env.STUDY_ROOT = base;
-    await expect(
-      reviewGetQueue({
-        context: { mode: "skill" },
-      }),
-    ).rejects.toThrow("mode=skill requires skill");
+    mkdirSync(path.join(base, "study", "react"), { recursive: true });
+    mkdirSync(path.join(base, "study", "nextjs"), { recursive: true });
+
+    await reviewSaveMeta({
+      context: { mode: "skill", skill: "react" },
+      skill: "react",
+      topic: "React-All",
+      meta: {
+        concepts: [
+          { name: "hooks", level: "L1", streak: 0, nextReview: "2026-01-01", graduated: false, attempts: 0 },
+        ],
+        sessionCount: 0,
+      },
+    });
+
+    await reviewSaveMeta({
+      context: { mode: "skill", skill: "nextjs" },
+      skill: "nextjs",
+      topic: "Nextjs-All",
+      meta: {
+        concepts: [
+          { name: "router", level: "L2", streak: 1, nextReview: "2026-01-01", graduated: false, attempts: 1 },
+        ],
+        sessionCount: 1,
+      },
+    });
+
+    const result = await reviewGetQueue({
+      context: { mode: "skill" },
+    });
+
+    expect(result.data.items.length).toBe(2);
+    const skills = result.data.items.map((item) => item.skill);
+    expect(skills).toContain("react");
+    expect(skills).toContain("nextjs");
   });
 
   it("review.getQueue in skill mode scopes to one skill", async () => {
@@ -442,5 +472,71 @@ describe("review tools", () => {
     expect(result.data.items.length).toBeGreaterThan(0);
     expect(result.data.items[0]?.nextReview).toBe("2026-01-01");
     expect(result.data.items[0]?.lastReview).toBeUndefined();
+  });
+
+  it("review.removeConcept removes matching concept", async () => {
+    const base = path.join(os.tmpdir(), `mcp-review-remove-${Date.now()}`);
+    process.env.STUDY_ROOT = base;
+    mkdirSync(path.join(base, ".study"), { recursive: true });
+
+    await reviewSaveMeta({
+      context: { mode: "project", projectPath: base },
+      topic: "Demo",
+      meta: {
+        concepts: [
+          { name: "keep-me", level: "L2", streak: 1, nextReview: "2026-01-01", graduated: false, attempts: 1 },
+          { name: "remove-me", level: "L1", streak: 0, nextReview: "2026-01-01", graduated: false, attempts: 0 },
+        ],
+        sessionCount: 1,
+      },
+    });
+
+    const result = await reviewRemoveConcept({
+      context: { mode: "project", projectPath: base },
+      topic: "Demo",
+      concept: "remove-me",
+    });
+
+    expect(result.data.ok).toBe(true);
+    expect(result.data.removed).toBe(true);
+
+    const meta = await reviewGetMeta({
+      context: { mode: "project", projectPath: base },
+      topic: "Demo",
+    });
+    expect(meta.data.concepts.length).toBe(1);
+    expect(meta.data.concepts[0]?.name).toBe("keep-me");
+  });
+
+  it("review.removeConcept returns removed=false when concept not found", async () => {
+    const base = path.join(os.tmpdir(), `mcp-review-remove-miss-${Date.now()}`);
+    process.env.STUDY_ROOT = base;
+    mkdirSync(path.join(base, ".study"), { recursive: true });
+
+    await reviewSaveMeta({
+      context: { mode: "project", projectPath: base },
+      topic: "Demo",
+      meta: {
+        concepts: [
+          { name: "existing", level: "L1", streak: 0, nextReview: "2026-01-01", graduated: false, attempts: 0 },
+        ],
+        sessionCount: 0,
+      },
+    });
+
+    const result = await reviewRemoveConcept({
+      context: { mode: "project", projectPath: base },
+      topic: "Demo",
+      concept: "nonexistent",
+    });
+
+    expect(result.data.ok).toBe(true);
+    expect(result.data.removed).toBe(false);
+
+    const meta = await reviewGetMeta({
+      context: { mode: "project", projectPath: base },
+      topic: "Demo",
+    });
+    expect(meta.data.concepts.length).toBe(1);
   });
 });

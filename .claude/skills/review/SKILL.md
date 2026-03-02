@@ -1,17 +1,17 @@
 ---
 name: review
 description: 복습 대기열을 기준으로 1문제씩 출제하고 결과를 study MCP에 기록한다.
-argument-hint: "<skill-name> [topic]"
+argument-hint: "[skill] [topic]"
 disable-model-invocation: true
-allowed-tools: Read, Grep, Glob, WebSearch, WebFetch, mcp__study__context_resolve, mcp__study__review_getQueue, mcp__study__review_getMeta, mcp__study__review_recordResult, mcp__study__review_saveMeta, mcp__study__review_appendQnA
+allowed-tools: Read, Grep, Glob, WebSearch, WebFetch, mcp__study__context_resolve, mcp__study__review_getQueue, mcp__study__review_getMeta, mcp__study__review_recordResult, mcp__study__review_saveMeta, mcp__study__review_appendQnA, mcp__study__review_removeConcept
 ---
 
-입력: `$ARGUMENTS` (`<skill> [topic]`)
+입력: `$ARGUMENTS` (`[skill] [topic]`, 둘 다 선택)
 
 실행 순서:
-1. `$ARGUMENTS`에서 `<skill> [topic]` 파싱 (`skill` 필수)
-2. `context.resolve(mode=skill, skill=<skill>)`
-3. `review.getQueue(context={mode=skill, skill=<skill>}, skill=<skill>)`
+1. `$ARGUMENTS`에서 `[skill] [topic]` 파싱 (둘 다 선택)
+2. skill 지정 시 `review.getQueue(context={mode=skill, skill=<skill>}, skill=<skill>)` → 해당 skill 큐
+3. skill 미지정 시 `review.getQueue(context={mode=skill})` → 전체 skill 큐에서 overdue 순 출제
 4. topic 지정 시 `review.getMeta(context={mode=skill, skill=<skill>}, skill=<skill>, topic=<topic>)`
 5. 문제별 채점 후 `review.recordResult(context={mode=skill, skill=<skill>}, skill=<skill>, topic=<topic>, concept=<concept>, score=<score>)`
 6. 사용자가 "정리"를 말하면 `review.saveMeta` + `review.appendQnA` (동일 context/skill 유지)

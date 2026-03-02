@@ -10,7 +10,7 @@ import {
   progressUpdateCheckbox,
 } from "./tools/progress.js";
 import { sessionAppendLog, sessionGetResumePoint, sessionGetSourceDigest, sessionGetSourcePaths, sessionSchemas } from "./tools/session.js";
-import { reviewAppendQnA, reviewGetMeta, reviewGetQueue, reviewRecordResult, reviewSaveMeta, reviewSchemas } from "./tools/review.js";
+import { reviewAppendQnA, reviewGetMeta, reviewGetQueue, reviewRecordResult, reviewRemoveConcept, reviewSaveMeta, reviewSchemas } from "./tools/review.js";
 import { statsGetDashboard, statsSchemas } from "./tools/stats.js";
 import { routineAppendEntry, routineExtractTranscript, routineReadLog, routineResetLog, routineSchemas } from "./tools/routine.js";
 import { makeEnvelope } from "./lib/envelope.js";
@@ -107,6 +107,12 @@ const tools: ToolDef[] = [
     description: "Append review QnA records to topic QnA file.",
     schema: reviewSchemas.appendQnA,
     run: reviewAppendQnA,
+  },
+  {
+    name: "review.removeConcept",
+    description: "Remove a concept from topic review metadata.",
+    schema: reviewSchemas.removeConcept,
+    run: reviewRemoveConcept,
   },
   {
     name: "stats.getDashboard",
