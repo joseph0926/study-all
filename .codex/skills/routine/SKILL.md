@@ -346,6 +346,9 @@ FAIL은 "나는 정확히 여기서 모른다"를 아는 것입니다. 부정적
 1. 세션에서 다룬 핵심 개념 3~5개를 추출한다.
 2. 사용자에게 개념 목록을 보여주고 확인을 받는다.
 3. `review.saveMeta` 호출하여 개념들을 L1/streak:0/nextReview:내일로 등록한다.
+   - **skill 모드**: `review.saveMeta({ context: { mode: "skill", skill: "{스킬명}" }, topic: "{토픽명}", meta: { concepts: [...], sessionCount: 1 } })`
+   - **project 모드**: `review.saveMeta({ context: { mode: "project", projectPath: "{경로}" }, topic: "{토픽명}", meta: { concepts: [...], sessionCount: 1 } })`
+   - skill 모드에서 `context.skill`은 필수 (예: `"react"`, `"nextjs"` 등 주제에 맞는 스킬 카테고리).
 4. `routine.appendEntry({ entry: { phase: 4, type: "checkpoint", q1, q1Answer, q2, q2Answer, aiFeedback, result: "PASS" } })` → Phase 5 진행
 
 ### FAIL 경로
