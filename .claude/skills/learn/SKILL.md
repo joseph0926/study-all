@@ -1,6 +1,6 @@
 ---
 name: learn
-description: 즉석 Q&A 학습 — 질문 → 근거 탐색 → 답변 → 반복 → 문서화. 프로젝트 경로를 지정하면 프로젝트 모드로 동작한다.
+description: 즉석 Q&A 학습 — 궁금한 걸 질문하면 소스코드/웹 근거를 찾아 비유와 시각화로 답변하고, 정리 시 문서로 저장한다. "이거 왜 이래?", "X가 뭐야?", "알려줘", "질문 있어" 등 학습 질문 시 사용한다. 프로젝트 경로 지정 시 해당 프로젝트 코드 기반으로 답변한다.
 argument-hint: "[project-path] <질문>"
 disable-model-invocation: true
 allowed-tools: Read, Grep, Glob, Bash, WebSearch, WebFetch, Write, mcp__study__context_resolve, mcp__study__session_appendLog
@@ -37,62 +37,13 @@ allowed-tools: Read, Grep, Glob, Bash, WebSearch, WebFetch, Write, mcp__study__c
      frameType: (미결정)
      connections: (없음)
      nextDirection: 초기 탐색
-     ---
-     ## QA Summary
-     (없음)
-     ---
-     ## QA History
-     (없음)
      ```
 
-4. 근거 탐색 — 모드별 우선순위를 순서대로 시도한다.
+4. 근거 탐색 — `references/evidence-priority.md`의 모드별 우선순위를 따른다.
 
-   **skill 모드:**
-
-   | 우선순위 | 소스 | 도구 | 조건 |
-   |---------|------|------|------|
-   | 1 | `ref/` 하위 소스코드 | Glob, Grep, Read | 관련 코드 존재 시 `file:line` 인용 |
-   | 2 | 웹 검색 | WebSearch, WebFetch | ref/에서 충분한 근거를 못 찾은 경우 |
-   | 3 | 추론 | — | 1+2 결과를 바탕으로 AI가 추론. 반드시 "추론:" 접두사 명시 |
-
-   ref/ 폴백 규칙:
-   - ref/ 탐색 결과가 없을 때: "ref/에 관련 소스 없음, 웹 검색으로 전환합니다" 사용자 알림 후 우선순위 2로 진행
-   - 웹 소스 선호 순위:
-     1. 공식 문서 (react.dev, nextjs.org 등)
-     2. GitHub 소스 코드 (원본 저장소)
-     3. 스펙/RFC (TC39, W3C, IETF 등)
-     4. 핵심 기여자/공식 블로그
-     5. 일반 기술 아티클
-   - 버전 표기: 웹 소스 인용 시 버전 또는 날짜 병기 (예: "React 19 문서 (2024-12)")
-   - 웹 코드 접두사: 웹에서 가져온 코드는 "외부 코드:" 접두사 (예: "외부 코드: (react.dev, v19)")
-
-   **project 모드:**
-
-   | 우선순위 | 소스 | 도구 | 조건 |
-   |---------|------|------|------|
-   | 1 | 프로젝트 소스코드 | Glob, Grep, Read | `file:line` 인용 필수 |
-   | 2 | 프로젝트 문서 (README, ADR, docs/ 등) | Glob, Read | 존재 시 |
-   | 3 | ref/ 교차참조 | Glob, Grep, Read | 프로젝트 import 대상 라이브러리의 소스가 ref/에 존재할 때 |
-   | 4 | git history — blame, log | Bash | **판단 가능한 경우만** (아래 규칙 참조) |
-   | 5 | 웹 검색 | WebSearch, WebFetch | 외부 패턴/라이브러리 이해 필요 시 |
-   | 6 | 추론 | — | 1~5 결과를 바탕으로 추론. 반드시 "추론:" 접두사 명시 |
-
-   git history 사용 규칙:
-   - conventional commit / 명확한 PR 설명 → 근거로 인용
-   - "fix bug", "update" 등 불명확한 메시지 → 건너뜀, 언급하지 않음
-   - blame으로 작성 시점만 유용한 경우 → "시점:" 접두사로 제한적 인용
-   - 불명확한 git history를 근거로 사용하지 않는다
-
-   ref/ 교차참조 규칙 (project 모드):
-   - 프로젝트 소스에서 외부 라이브러리 import 발견 → `ref/` Glob 확인
-   - 존재 → "ref 소스:" 접두사로 내부 동작 인용
-   - 용도: 프로젝트 사용부(project)와 라이브러리 구현부(ref/) 교차 설명
-   - ref/에 없으면 → 건너뛰기
-
-   project 모드 탐색 범위 설정:
-   - **소규모** (<100 파일): 전체 탐색
-   - **중규모** (100~500): 진입점 기반 (package.json → 키워드 Grep → import 체인 1~2단계)
-   - **대규모** (500+): 점진적 심화 (디렉토리 단위 식별 → 범위 확인 후 상세)
+   추가 규칙 (learn 전용):
+   - 웹 소스 선호 순위: 공식 문서 > GitHub 소스 > 스펙/RFC > 핵심 기여자 블로그 > 일반 아티클
+   - project 모드 탐색 범위: 소규모(<100) 전체, 중규모(100~500) 진입점 기반, 대규모(500+) 점진적 심화
 
 5. 아래 순서로 답변한다. 모드별 구조가 다르다.
 
@@ -143,60 +94,18 @@ allowed-tools: Read, Grep, Glob, Bash, WebSearch, WebFetch, Write, mcp__study__c
      - 억지 연결 금지.
 
 6. 사용자의 추가 질문을 대기한다. → Step 4~5 반복.
-   - 매 Q&A 후 세션 상태 파일을 Write 갱신한다 (qaCount++, frameType, connections, nextDirection, QA Summary/History 추가).
+   - 매 Q&A 후 세션 상태 파일을 Write 갱신한다 (qaCount++, frameType, connections, nextDirection).
 
 종료(`>>정리`) 시:
 
-1. **세션 JSONL에서 원문 Q&A를 추출**한다.
+1. **대화 컨텍스트에서 Q&A를 추출**하여 문서를 작성한다.
 
-   1-A. JSONL 파일 탐색:
-   ```bash
-   # 프로젝트 키: 작업 디렉토리 경로에서 / → -, 선행 - 포함
-   # 예: /Users/foo/Downloads/@work/study-all → -Users-foo-Downloads--work-study-all
-   ls -t ~/.claude/projects/<project-key>/*.jsonl | head -5
-   ```
-   - fallback: `~/.codex/projects/` 동일 구조
-   - 후보 5개 중 현재 세션 식별 (동시 세션 안전장치):
-     1. session-state.md에서 `topic:` 값을 읽는다
-     2. 후보 JSONL들에서 topic 이름이 포함된 파일을 `grep -l` 로 찾는다
-     3. 매칭된 파일 중 가장 최근 수정된 것을 사용
-     4. 매칭 실패 시 → 가장 최근 파일을 사용하되 "⚠️ 세션 자동 매칭 실패, 가장 최근 JSONL 사용" 경고 출력
-
-   1-B. JSONL 파싱 + 필터링 (Bash + python3):
-
-   **목표**: JSONL에서 user 질문과 assistant 답변 텍스트를 대화 순서대로 추출한다.
-
-   **추출 전략** (방어적, 포맷 변경에 유연):
-   1. 각 JSON 라인에서 `type` 필드로 user/assistant를 구분한다
-   2. 텍스트 추출 — 여러 경로를 순서대로 시도:
-      - `message.content`가 문자열 → 그대로 사용
-      - `message.content`가 리스트 → 각 요소의 `text` 필드 추출
-      - 위 경로 실패 → entry 내 200자 이상 문자열을 재귀 탐색하여 수집
-   3. 필터링 (유연한 기준):
-      - 시스템 메시지 제외: `<command-message>`, `<command-name>`, `<system-reminder>` 태그 포함
-      - 스킬 프롬프트 제외: `실행 순서:` + `모드 판별` 동시 포함
-      - 짧은 assistant 메시지 제외: 200자 미만
-      - `>>정리` 신호 제외
-   4. 모든 필드 접근은 try/except로 감싸고, 파싱 실패 라인은 건너뛴다
-
-   **출력 형식**: `=== USER ===` / `=== ASSISTANT ===` 구분자 + 텍스트 본문
-
-   **추출 검증**:
-   - session-state.md의 `qaCount`와 추출된 USER 블록 수를 비교
-   - ±1 차이는 허용 (정리 시점 차이)
-   - ±2 이상 차이 시 "⚠️ 추출 Q&A 수({N})와 세션 기록({qaCount}) 불일치" 경고
-
-   **폴백** (추출 실패 시):
-   - 조건: 스크립트 에러, 추출 결과 0건, 또는 검증 심각 불일치 (±2 이상)
-   - 동작: 현재 대화 컨텍스트에서 AI가 Q&A를 재구성
-   - "⚠️ JSONL 원문 추출 실패 → 세션 컨텍스트에서 재구성" 경고를 문서 상단에 포함
-   - 재구성 시: 사용자 질문은 최대한 정확히, 답변은 핵심 구조를 유지하되 원문 보장 불가 명시
-
-   1-C. 추출 결과 → 문서 조립:
-   - `USER` 블록 → `## Q{N}. <원문>` (질문이 길면 첫 문장을 제목, 전문을 본문)
-   - `ASSISTANT` 블록 → 답변 본문 (markdown 그대로)
-   - 메타데이터 헤더(`# <주제명>`, `> 최초 질문`, `> 일시`)는 AI가 작성
-   - `## 연결` 섹션은 AI가 세션 중 탐색한 연결 정보를 기반으로 작성
+   - 현재 대화에서 사용자 질문과 AI 답변을 순서대로 추출한다.
+   - 각 사용자 질문 → `## Q{N}. <원문>` (질문이 길면 첫 문장을 제목, 전문을 본문)
+   - 각 AI 답변 → 답변 본문 (비유/코드/시각화/연결 구조를 그대로 유지)
+   - 메타데이터 헤더(`# <주제명>`, `> 최초 질문`, `> 일시`)를 작성한다.
+   - `## 연결` 섹션은 세션 중 탐색한 연결 정보를 기반으로 작성한다.
+   - 사용자 질문은 원문 그대로, 답변은 핵심 구조와 코드 인용을 유지한다.
 
 2. 문서 파일에 Write한다.
    - skill 모드: `study/learn/<주제명>.md`
@@ -218,11 +127,11 @@ allowed-tools: Read, Grep, Glob, Bash, WebSearch, WebFetch, Write, mcp__study__c
 
 ## Q1. <사용자 질문 원문>
 
-<JSONL에서 추출한 답변 원문>
+<답변 원문>
 
 ## Q2. <사용자 후속 질문 원문>
 
-<JSONL에서 추출한 답변 원문>
+<답변 원문>
 
 ...
 
@@ -250,11 +159,11 @@ allowed-tools: Read, Grep, Glob, Bash, WebSearch, WebFetch, Write, mcp__study__c
 
 ## Q1. <사용자 질문 원문>
 
-<JSONL에서 추출한 답변 원문>
+<답변 원문>
 
 ## Q2. <사용자 후속 질문 원문>
 
-<JSONL에서 추출한 답변 원문>
+<답변 원문>
 
 ...
 
@@ -282,17 +191,11 @@ allowed-tools: Read, Grep, Glob, Bash, WebSearch, WebFetch, Write, mcp__study__c
 - 일반 대화 속 "정리"는 신호로 인식하지 않는다 (`>>` 접두사 필수).
 
 규칙:
-- skill 모드: ref/ 코드가 있으면 반드시 먼저 탐색한다. 웹 검색만으로 대체하지 않는다.
-- project 모드: 프로젝트 소스코드를 반드시 먼저 탐색한다. 웹 검색만으로 대체하지 않는다.
-- ref/ 전환 알림 필수: ref/ 탐색 결과 없을 시 "ref/에 관련 소스 없음, 웹 검색으로 전환합니다" 알림 후 진행한다 (무언의 전환 금지).
-- 근거의 출처(ref 코드/소스코드/문서/git/웹/추론)를 항상 명시한다.
-- "외부 코드:" 접두사: 웹에서 가져온 코드 블록에는 반드시 "외부 코드:" 접두사 + 출처를 표기한다.
-- 웹 소스 인용 시 버전 또는 날짜를 반드시 병기한다.
+- 근거 탐색 우선순위 → `references/evidence-priority.md` 참조.
 - 쓰기 동작은 `>>정리` 이후에만 수행한다. 예외: `session-state.md`는 매 Q&A 후 갱신한다.
-- skill 모드 답변 순서: 비유(프레임) → 코드/텍스트(근거+매칭) → 시각화(통합 정리) → 연결. 이 순서를 지킨다.
-- project 모드 답변 순서: 패턴 매핑(프레임) → 코드 추적(근거+매칭) → 시각화(통합 정리) → 이중 연결. 이 순서를 지킨다.
+- skill 모드 답변 순서: 비유(프레임) → 코드/텍스트(근거+매칭) → 시각화(통합 정리) → 연결.
+- project 모드 답변 순서: 패턴 매핑(프레임) → 코드 추적(근거+매칭) → 시각화(통합 정리) → 이중 연결.
 - 비유는 1:1 대응을 기본으로 한다. 억지 비유보다 "비유 한계:" 설명이 낫다.
 - 시각화는 단일 사실 확인이 아닌 한 포함한다.
 - 연결 탐색은 `study/` 스캔으로 수행한다. 단순 동일 라이브러리 연결은 금지한다.
 - project 모드에서 프로젝트 코드를 수정하지 않는다 (읽기 전용).
-- project 모드에서 git history는 판단 가능한 경우에만 근거로 사용한다.
