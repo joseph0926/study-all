@@ -1,6 +1,6 @@
 ---
 name: src
-description: 소스코드 패턴 리딩 — 핵심 코드에서 패턴을 발견하고, "왜 이렇게 작성했을까?" 사고 후 미니 코딩으로 체화한다.
+description: 소스코드 패턴 리딩 — 핵심 코드에서 패턴을 발견하고, "왜 이렇게 작성했을까?" 사고 후 미니 코딩으로 체화한다. "소스 읽자", "코드 분석", "내부 구현 보자", "패턴 리딩" 등 소스코드 심층 리딩 요청 시 사용한다.
 argument-hint: "[project-path] <주제>"
 disable-model-invocation: true
 allowed-tools: Read, Grep, Glob, Bash, Write, WebSearch, WebFetch, mcp__study__context_resolve, mcp__study__session_appendLog, mcp__study__session_getSourcePaths, mcp__study__session_getSourceDigest

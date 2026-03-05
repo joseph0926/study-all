@@ -1,6 +1,6 @@
 ---
 name: apply
-description: 학습한 내용을 실제 프로젝트에 적용 — 학습 기록 기반 진단 → 코칭 → 선택적 수정
+description: 학습한 내용을 실제 프로젝트에 적용 — 학습 기록 기반 진단 → 코칭 → 선택적 수정. "배운 거 적용", "프로젝트에 적용해줘", "학습 내용 실전 적용", "코드에 반영" 등 학습→실전 적용 요청 시 사용한다.
 argument-hint: "<project-path> <topic>"
 disable-model-invocation: true
 allowed-tools: Read, Grep, Glob, Bash, Write, Edit, WebSearch, WebFetch, mcp__study__context_resolve, mcp__study__session_appendLog
