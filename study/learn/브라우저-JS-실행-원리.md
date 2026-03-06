@@ -2273,11 +2273,176 @@ ACK      = 네 시작도 확인
 
 원하면 다음부터는 `HTTP 응답을 받기 시작한 순간부터 브라우저에서 무슨 일이 일어나는지` 이어서 설명하겠습니다.
 
+## Q26. $learn study/learn/브라우저-JS-실행-원리.md 이어서
+
+이전 세션이 네트워크/연결 단계에서 끝났으므로, 다음 범위는 **HTTP 응답이 도착한 뒤 화면이 만들어지는 흐름**입니다.
+
+### 비유: 공항 입국 처리
+
+| 비유 요소 | 실제 개념 | 대응 이유 |
+|-----------|-----------|-----------|
+| 비행기 착륙 | HTTP 응답 바이트 도착 | 서버 데이터가 브라우저에 들어오기 시작 |
+| 입국 심사대 | HTML 파서 | 도착한 문서를 규칙대로 해석 |
+| 수하물 분류 벨트 | CSS/JS/이미지 하위 리소스 요청 | HTML을 읽다가 필요한 파일을 추가로 가져옴 |
+| 동선 설계팀 | Render Tree + Layout | 무엇을 어디에 그릴지 계산 |
+| 도장/표지 부착 | Paint + Composite | 실제 픽셀을 화면에 표시 |
+
+### 설명
+
+응답이 오기 시작하면 브라우저는 HTML을 파싱하며 DOM을 만들고, 동시에 CSS/JS/이미지 같은 하위 리소스를 발견해 요청합니다. 이후 `DOM -> CSSOM -> Render Tree -> Layout -> Paint -> Composite` 흐름으로 화면이 만들어집니다.  
+근거: [브라우저-JS-실행-원리.md:2257](/Users/kimyounghoon/Downloads/@work/study-all/study/learn/브라우저-JS-실행-원리.md:2257), [브라우저-JS-실행-원리.md:494](/Users/kimyounghoon/Downloads/@work/study-all/study/learn/브라우저-JS-실행-원리.md:494), MDN CRP (조회 2026-03-06) <https://developer.mozilla.org/en-US/docs/Web/Performance/Critical_rendering_path>
+
+동기 `<script>`는 파서를 멈출 수 있고, CSS 준비 상태도 첫 렌더 타이밍에 영향을 줍니다. `DOMContentLoaded`나 `load`는 “모든 렌더링 완전 종료”와 같은 뜻은 아닙니다.  
+근거: [브라우저-JS-실행-원리.md:510](/Users/kimyounghoon/Downloads/@work/study-all/study/learn/브라우저-JS-실행-원리.md:510), [브라우저-JS-실행-원리.md:511](/Users/kimyounghoon/Downloads/@work/study-all/study/learn/브라우저-JS-실행-원리.md:511)
+
+### 시각화
+
+```text
+[HTTP Response Start]
+        |
+        v
+HTML Parser -----> DOM
+   |  \
+   |   \---- discover CSS/JS/Image ----> fetch
+   v
+CSS Parser -----> CSSOM
+        |
+DOM + CSSOM
+        v
+Render Tree -> Layout -> Paint -> Composite
+        |
+        v
+First pixels on screen
+```
+
+### 연결
+
+- [useEffect-사이드이펙트-역할.md:59](/Users/kimyounghoon/Downloads/@work/study-all/study/learn/useEffect-사이드이펙트-역할.md:59): `useEffect`가 paint 이후 실행된다는 점이 CRP 후반부와 이어집니다.
+- [scheduleUpdateOnFiber.md:684](/Users/kimyounghoon/Downloads/@work/study-all/study/learn/scheduleUpdateOnFiber.md:684): 렌더링 뒤 후속 작업이 event loop / microtask에서 이어지는 모델과 연결됩니다.
+
+## Q27. 어제 배웠던 내용이, 사용자가 "google.com"을 주소창에 입력해서 엔터를치면, 1. google.com에 대응되는 IP주소를 DNS 서버에서 찾음 2. 이때 바로 네트워크 요청으로 이어지는게 아니라 우선 브라우저 캐시 체크 -> OS 캐시 체크 후 없으면 DNS 서버에 질의 3. TCP 연결 --- 여기까지 배웠는데 맞나요?
+
+거의 맞습니다. 다만 더 정확히는 **캐시 확인 -> 필요하면 DNS 조회 -> 기존 연결 재사용 여부 확인 -> 없으면 TCP -> HTTPS면 TLS** 순서입니다.  
+근거: [브라우저-JS-실행-원리.md:2240](/Users/kimyounghoon/Downloads/@work/study-all/study/learn/브라우저-JS-실행-원리.md:2240), [브라우저-JS-실행-원리.md:2243](/Users/kimyounghoon/Downloads/@work/study-all/study/learn/브라우저-JS-실행-원리.md:2243), [브라우저-JS-실행-원리.md:2245](/Users/kimyounghoon/Downloads/@work/study-all/study/learn/브라우저-JS-실행-원리.md:2245)
+
+특히 “항상 DNS부터”는 아닙니다. 캐시 hit, 서비스워커, 기존 연결 재사용이면 일부 단계를 건너뛸 수 있습니다.  
+근거: [브라우저-JS-실행-원리.md:508](/Users/kimyounghoon/Downloads/@work/study-all/study/learn/브라우저-JS-실행-원리.md:508)
+
+## Q28. TCP/TLS의 차이는 뭔가요?
+
+### 비유
+
+`TCP`는 전화선 연결이고, `TLS`는 그 전화선 위에 신분 확인과 암호화를 붙이는 단계입니다.
+
+| 항목 | TCP | TLS |
+|------|-----|-----|
+| 역할 | 신뢰성 있는 전송 통로 생성 | 인증, 키 협상, 암호화 |
+| 관심사 | 연결, 순서 보장, 재전송 | 기밀성, 무결성, 서버 신원 확인 |
+| 시점 | 먼저 | TCP 뒤, HTTP 앞 |
+
+### 설명
+
+TCP는 `reliable, in-order, byte-stream service`를 제공하는 전송 계층입니다.  
+근거: [브라우저-JS-실행-원리.md:1540](/Users/kimyounghoon/Downloads/@work/study-all/study/learn/브라우저-JS-실행-원리.md:1540), RFC 9293 (2022-08) <https://www.rfc-editor.org/rfc/rfc9293>
+
+TLS는 그 통로 위에서 인증서 확인, 키 협상, 암호화 설정을 합니다.  
+근거: [브라우저-JS-실행-원리.md:1297](/Users/kimyounghoon/Downloads/@work/study-all/study/learn/브라우저-JS-실행-원리.md:1297), RFC 8446 (2018-08) <https://www.rfc-editor.org/rfc/rfc8446.html>
+
+즉 흐름은 보통 `DNS -> TCP handshake -> TLS handshake -> HTTP request` 입니다.  
+근거: [브라우저-JS-실행-원리.md:2186](/Users/kimyounghoon/Downloads/@work/study-all/study/learn/브라우저-JS-실행-원리.md:2186)
+
+## Q29. TLS 핸드쉐이크는 TCP 핸드쉐이크랑 다른가요? (서로 연결이 시작되었는지 확인하는 3단계?)
+
+네, 다릅니다. 둘 다 handshake이지만 **확인하는 대상이 다릅니다.**
+
+- TCP 3-way handshake: 연결을 열 준비가 됐는지, 초기 sequence number를 맞춥니다.
+- TLS handshake: 서버 신원을 검증하고, 세션 키를 합의하고, 암호화 파라미터를 정합니다.
+
+TLS handshake는 TCP처럼 고정된 `SYN -> SYN+ACK -> ACK` 3메시지 구조가 아닙니다. TLS 1.3 full handshake는 `ClientHello`, `ServerHello`, 인증/`Finished` 교환으로 진행됩니다.  
+근거: [브라우저-JS-실행-원리.md:2190](/Users/kimyounghoon/Downloads/@work/study-all/study/learn/브라우저-JS-실행-원리.md:2190), [브라우저-JS-실행-원리.md:1297](/Users/kimyounghoon/Downloads/@work/study-all/study/learn/브라우저-JS-실행-원리.md:1297), RFC 8446 Figure 1 <https://www.rfc-editor.org/rfc/rfc8446.html>
+
+## Q30. 지금 제 머리속에 그려진 그림은, 1. 사용자가 어떤 url을 브라우저 주소창에 입력하고 엔터를 누름 2. 해당 url에 매칭되는 IP주소를 DNS 서버에서 찾음 3. 이때 브라우저나 OS에 캐시되어있는게 있는지 선확인 4. 없으면 DNS 서버에 조회 5. 해당되는 IP주소로 이동하기위해 TCP/TLS를 이용해 연결 --- 맞나요?
+
+거의 맞습니다. 다만 순서를 더 정확히 고치면:
+
+1. 사용자가 URL 입력
+2. 브라우저가 navigation 시작
+3. 브라우저/서비스워커/DNS 캐시 확인
+4. 필요하면 DNS 조회
+5. IP 확보
+6. 기존 연결 재사용 여부 확인
+7. 없으면 TCP 연결
+8. HTTPS면 TLS handshake
+9. HTTP 요청 전송
+
+즉 `캐시 확인 -> 필요시 DNS -> 기존 연결 재사용 확인 -> TCP -> TLS` 로 이해하는 게 가장 정확합니다.  
+근거: [브라우저-JS-실행-원리.md:2238](/Users/kimyounghoon/Downloads/@work/study-all/study/learn/브라우저-JS-실행-원리.md:2238), [브라우저-JS-실행-원리.md:2245](/Users/kimyounghoon/Downloads/@work/study-all/study/learn/브라우저-JS-실행-원리.md:2245)
+
+## Q31. 그림을 완성하기 위해 몇가지 의문이 있습니다
+
+원문:
+
+1. 네트워크 연결이 안되어있어도 캐시 조회는 하는가? (예를들어 와이파이 연결이 끊긴 맥북에서 google.com을 검색한다 가정합시다, 이 맥북에서는 이전에 google은 여러번 접근한 기록이있습니다)
+2. DNS는 서버가 맞는가? 개념적으로 질문입니다
+3. 기존 연결 재사용이라는게 정확히 뭔지?
+
+### 비유
+
+- 캐시 = 내 컴퓨터 안 메모장
+- DNS = 전화번호 체계 전체
+- DNS 서버 = 전화번호부를 들고 응답하는 창구
+- 기존 연결 재사용 = 이미 열어둔 전화선을 다시 쓰는 것
+
+### 설명
+
+1. 네트워크가 끊겨도 **캐시 조회 자체는 할 수 있습니다.** 브라우저 HTTP 캐시, 메모리 캐시, Service Worker `Cache Storage`는 로컬 자원이기 때문입니다. 다만 `google.com`이 실제로 열리려면 필요한 HTML/리소스가 캐시에 있어야 하고, 새 네트워크 연결이 필요하면 오프라인에서는 실패합니다.  
+근거: [브라우저-JS-실행-원리.md:590](/Users/kimyounghoon/Downloads/@work/study-all/study/learn/브라우저-JS-실행-원리.md:590), [브라우저-JS-실행-원리.md:599](/Users/kimyounghoon/Downloads/@work/study-all/study/learn/브라우저-JS-실행-원리.md:599), web.dev 오프라인 가이드 <https://web.dev/articles/offline-cookbook>
+2. DNS는 서버 하나가 아니라 **분산 시스템**입니다. 따라서 “DNS는 서버인가?”에 대한 개념 답은 아니고, “DNS 서버는 DNS 시스템의 구성요소”가 맞습니다.  
+근거: [브라우저-JS-실행-원리.md:667](/Users/kimyounghoon/Downloads/@work/study-all/study/learn/브라우저-JS-실행-원리.md:667), [브라우저-JS-실행-원리.md:707](/Users/kimyounghoon/Downloads/@work/study-all/study/learn/브라우저-JS-실행-원리.md:707), RFC 1034 <https://www.rfc-editor.org/rfc/rfc1034>
+3. 기존 연결 재사용은 캐시처럼 값을 꺼내는 게 아니라, **아직 살아 있는 TCP/TLS 연결을 다시 쓰는 것**입니다. 이미 같은 origin에 열린 연결이 있으면 새 TCP/TLS 수립 없이 그 연결로 요청을 보낼 수 있습니다. 특히 HTTP/2, HTTP/3에서는 하나의 연결에서 여러 요청을 동시에 흘릴 수 있습니다.  
+근거: [브라우저-JS-실행-원리.md:1289](/Users/kimyounghoon/Downloads/@work/study-all/study/learn/브라우저-JS-실행-원리.md:1289), [브라우저-JS-실행-원리.md:1446](/Users/kimyounghoon/Downloads/@work/study-all/study/learn/브라우저-JS-실행-원리.md:1446), RFC 9113 (2022-06) <https://www.rfc-editor.org/rfc/rfc9113.html>
+
+### 시각화
+
+```text
+URL 입력
+  |
+  v
+로컬에서 먼저 볼 수 있는 것
+- 브라우저 HTTP 캐시
+- Service Worker Cache
+- 브라우저/OS DNS 캐시
+  |
+  +-- 필요한 응답이 로컬에 있음 -> 바로 사용 가능
+  |
+  +-- 없거나 부족함 -> DNS -> IP 확보
+                         |
+                         v
+              살아 있는 기존 연결 있음? -> 재사용
+                         |
+                         +-- 없으면 새 TCP
+                         +-- HTTPS면 TLS
+```
+
+## Q32. 여기까지 배웟으면 크리티컬 렌더링 패스 전까지 다 배운걸까요?
+
+네. **큰 줄기로는 CRP 전까지 거의 다 배운 상태**라고 봐도 됩니다.
+
+지금까지는 `URL 입력 -> 캐시 판단 -> DNS -> 기존 연결 재사용 -> TCP -> TLS -> HTTP 요청 전송`까지이고, 다음 단계가 `응답 수신 -> HTML 파싱 -> CSSOM/Render Tree -> Layout -> Paint` 입니다. 즉 네트워크/연결 파트는 거의 끝났고, 이제부터가 CRP입니다.  
+근거: [브라우저-JS-실행-원리.md:2232](/Users/kimyounghoon/Downloads/@work/study-all/study/learn/브라우저-JS-실행-원리.md:2232), [브라우저-JS-실행-원리.md:2257](/Users/kimyounghoon/Downloads/@work/study-all/study/learn/브라우저-JS-실행-원리.md:2257)
+
+## Q33. 여기까지 정리하는게 맞을까요? ("/learn >>정리 해도될지?")
+
+네. **지금 정리하는 게 맞습니다.**
+
+이유는 지금까지의 범위가 `네트워크/연결 단계`로 명확하게 닫혀 있고, 다음 주제는 성격이 다른 `응답 이후 렌더링/CRP` 파트이기 때문입니다. 학습 단위를 나누기 가장 좋은 경계가 여기입니다.
+
 ## 연결
 
 | 대상 토픽 | 관계 | 근거 |
 |-----------|------|------|
 | `study/learn/JSX-객체-반환-원리.md` | 브라우저 고유 객체와 JS 표현 계층 연결 | DOM은 브라우저 고유 객체이고, JS는 그 객체를 다루는 표현 계층이라는 점에서 이번 주제의 출발점과 맞닿아 있습니다. |
+| `study/learn/useEffect-사이드이펙트-역할.md` | 렌더링 이후 후속 작업 연결 | `useEffect`가 paint 이후 실행된다는 설명은 CRP 후반부와 이어집니다. |
 | `study/learn/scheduleUpdateOnFiber.md` | 이벤트 루프/마이크로태스크 연결 | 브라우저가 JS를 실행하고 콜백 순서를 조정하는 event loop, microtask 개념이 React 스케줄링 이해와 직접 이어집니다. |
 | `study/learn/캐시-개념.md` | 네비게이션 전 캐시 판단 연결 | `google.com` 입력 후 바로 네트워크로 나가지 않을 수 있다는 설명은 브라우저/OS/DNS/HTTP 캐시 계층을 이해해야 정확히 설명할 수 있습니다. |
 
@@ -2286,3 +2451,9 @@ ACK      = 네 시작도 확인
 ## 2026-03-06 (via recovered jsonl >>정리)
 
 원본 Codex jsonl 세션에서 2026-03-06 학습 Q&A 25개를 복구해 브라우저/JS 실행, 네비게이션, DNS 캐시, TCP 연결/3-way handshake 흐름 문서로 정리함.
+
+---
+
+## 2026-03-07 (via /learn)
+
+Q&A 8건. (1) 이전 세션 다음 범위로 HTTP 응답 수신 이후 파싱/렌더링 개요를 연결. (2) URL 입력 후 흐름을 `캐시 확인 -> 필요시 DNS -> 기존 연결 재사용 확인 -> TCP -> TLS`로 정교화. (3) TCP와 TLS의 역할 차이 정리. (4) TCP handshake와 TLS handshake의 목적과 구조 차이 정리. (5) 머릿속 흐름 그림을 네트워크/연결 단계 기준으로 교정. (6) 오프라인 캐시 조회, DNS의 개념적 위치, 기존 연결 재사용 의미 정리. (7) 지금까지가 CRP 전까지 거의 모두라는 범위 점검. (8) 여기서 한 번 정리하고 다음 세션을 CRP로 넘어가는 것이 적절하다고 정리.
