@@ -1,6 +1,6 @@
 ---
 name: learn
-description: 즉석 Q&A 학습 — 궁금한 걸 질문하면 소스코드/웹 근거를 찾아 비유와 시각화로 답변하고, 정리 시 문서로 저장한다. "이거 왜 이래?", "X가 뭐야?", "알려줘", "질문 있어" 등 학습 질문 시 사용한다. 프로젝트 경로 지정 시 해당 프로젝트 코드 기반으로 답변한다.
+description: 즉석 Q&A 학습. 궁금한 개념을 소스코드나 웹 근거로 설명하고, 비유와 시각화로 이해를 돕고, 필요 시 학습 문서로 정리한다. "이거 왜 이래?", "X가 뭐야?", "알려줘", "질문 있어" 같은 학습 질문이나 프로젝트 코드 기반 설명 요청에서 사용한다. 프로젝트 경로를 함께 주면 해당 코드베이스를 읽기 전용으로 분석한다.
 argument-hint: "[project-path] <질문>"
 disable-model-invocation: true
 allowed-tools: Read, Grep, Glob, Bash, WebSearch, WebFetch, Write, mcp__study__context_resolve, mcp__study__session_appendLog
@@ -10,7 +10,12 @@ allowed-tools: Read, Grep, Glob, Bash, WebSearch, WebFetch, Write, mcp__study__c
 
 실행 순서:
 
-1. **모드 판별**: `$ARGUMENTS`의 첫 토큰이 `/`로 시작하는 경로면 → **project 모드**, 아니면 → **skill 모드**
+1. **모드 판별**: `$ARGUMENTS`에서 질문 앞의 경로 후보를 먼저 파싱한다.
+   - project 모드로 간주하는 경우:
+     - 첫 인자가 `/`, `./`, `../`, `~/`로 시작한다.
+     - 첫 인자가 `/`를 포함하는 상대경로 형태이고 실제 경로가 존재한다. 예: `apps/web`, `packages/ui`
+     - 공백이 있는 경로는 따옴표로 감싼 첫 구간을 경로 후보로 파싱하고, 위 조건을 만족하면 project 모드로 본다.
+   - bare token 하나만 보고 project 모드로 추정하지 않는다. 예: `react`, `src`, `auth`
    - project 모드: `<project-path>` + `<질문>` 파싱 → `context.resolve(mode=project, projectPath=<project-path>)`
    - skill 모드: `context.resolve(mode=skill, skill=learn)`
 2. 사용자 질문에서 주제명 추출 (간결한 kebab-case, 예: `Suspense-동작원리`, `인증-흐름`)
@@ -27,6 +32,7 @@ allowed-tools: Read, Grep, Glob, Bash, WebSearch, WebFetch, Write, mcp__study__c
 
    3-B. 복원 정보:
      - topic, qaCount, frameType/analogyFrame, connections, nextDirection, qaHistory
+     - `qaHistory`는 컨텍스트 컴팩션 대비 폴백이다. 각 항목은 사용자 질문 원문과 AI 답변 요약을 보관한다.
 
    3-C. 새 세션 → 상태 파일 초기화 Write:
      ```
@@ -37,6 +43,7 @@ allowed-tools: Read, Grep, Glob, Bash, WebSearch, WebFetch, Write, mcp__study__c
      frameType: (미결정)
      connections: (없음)
      nextDirection: 초기 탐색
+     qaHistory: []
      ```
 
 4. 근거 탐색 — `references/evidence-priority.md`의 모드별 우선순위를 따른다.
@@ -95,12 +102,20 @@ allowed-tools: Read, Grep, Glob, Bash, WebSearch, WebFetch, Write, mcp__study__c
 
 6. 사용자의 추가 질문을 대기한다. → Step 4~5 반복.
    - 매 Q&A 후 세션 상태 파일을 Write 갱신한다 (qaCount++, frameType, connections, nextDirection).
+   - `qaHistory`에 아래 형식으로 append한다. 답변은 요약(핵심 1-3줄 + refs)으로 저장한다.
+     ```
+     qaHistory:
+       - question: <사용자 질문 원문>
+         summary: <답변 핵심 1-3줄 요약>
+         refs: [file:line, url, ...]
+     ```
 
 종료(`>>정리`) 시:
 
-1. **대화 컨텍스트에서 Q&A를 추출**하여 문서를 작성한다.
+1. **대화 컨텍스트를 우선 사용**하여 문서를 작성한다. 컨텍스트 컴팩션으로 유실된 턴은 `session-state.md`의 `qaHistory`(summary+refs)로 보완한다.
 
-   - 현재 대화에서 사용자 질문과 AI 답변을 순서대로 추출한다.
+   - 대화 컨텍스트에 남아있는 Q&A → 원문 구조(비유/코드/시각화/연결) 그대로 사용.
+   - 컴팩션으로 유실된 Q&A → qaHistory의 question 원문 + summary를 기반으로 재구성.
    - 각 사용자 질문 → `## Q{N}. <원문>` (질문이 길면 첫 문장을 제목, 전문을 본문)
    - 각 AI 답변 → 답변 본문 (비유/코드/시각화/연결 구조를 그대로 유지)
    - 메타데이터 헤더(`# <주제명>`, `> 최초 질문`, `> 일시`)를 작성한다.
@@ -193,6 +208,7 @@ allowed-tools: Read, Grep, Glob, Bash, WebSearch, WebFetch, Write, mcp__study__c
 규칙:
 - 근거 탐색 우선순위 → `references/evidence-priority.md` 참조.
 - 쓰기 동작은 `>>정리` 이후에만 수행한다. 예외: `session-state.md`는 매 Q&A 후 갱신한다.
+- 문서화 source of truth는 대화 컨텍스트다. `session-state.md`의 `qaHistory`는 컨텍스트 컴팩션 시 폴백으로만 사용한다.
 - skill 모드 답변 순서: 비유(프레임) → 코드/텍스트(근거+매칭) → 시각화(통합 정리) → 연결.
 - project 모드 답변 순서: 패턴 매핑(프레임) → 코드 추적(근거+매칭) → 시각화(통합 정리) → 이중 연결.
 - 비유는 1:1 대응을 기본으로 한다. 억지 비유보다 "비유 한계:" 설명이 낫다.

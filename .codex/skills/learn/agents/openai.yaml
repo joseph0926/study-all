@@ -1,0 +1,4 @@
+interface:
+  display_name: "Learn"
+  short_description: "코드와 웹 근거로 개념을 설명하고 학습 내용을 정리"
+  default_prompt: "Use $learn to explain a concept with code or web evidence, an analogy, and a concise visualization."
