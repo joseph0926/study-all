@@ -69,6 +69,12 @@ if [[ ! -d "$SOURCE_DIR" ]]; then
   exit 1
 fi
 
+SKILL_REF_PATTERN="$(
+  while IFS= read -r dir; do
+    basename "$dir"
+  done < <(find "$SOURCE_DIR" -mindepth 1 -maxdepth 1 -type d | sort) | paste -sd'|' -
+)"
+
 extract_frontmatter_value() {
   local file="$1"
   local key="$2"
@@ -140,7 +146,17 @@ render_body() {
     }
   ' "$body_file" > "$trimmed_file"
 
-  perl -pe '
+  SKILL_REF_PATTERN="$SKILL_REF_PATTERN" perl -pe '
+    my $skills = $ENV{SKILL_REF_PATTERN} // q{};
+    if ($skills ne q{}) {
+      s{(?<![A-Za-z0-9._-])/(?:$skills)(?=$|[^a-z0-9-])}{
+        my $cmd = $&;
+        $cmd =~ s{^/}{\$};
+        $cmd;
+      }eg;
+    }
+    s/`\$ARGUMENTS`/`호출 인자`/g;
+    s/\$ARGUMENTS/호출 인자/g;
     s{`/([a-z][a-z0-9-]*)(?=[ `])([^`]*)`}{`\$$1$2`}g;
     s/Claude가/AI가/g;
     s/Claude는/AI는/g;

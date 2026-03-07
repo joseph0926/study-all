@@ -91,6 +91,7 @@ allowed-tools: Read, Grep, Glob, Bash, WebSearch, WebFetch, Write, mcp__study__c
      - ref/ 소스 근거: "ref 소스:" 접두사 + `ref/<lib>/path:line`
      - 교차 인용: 프로젝트 사용부와 라이브러리 구현부 병렬 인용
      - git 근거: 커밋 해시 + 메시지 포함 (판단 가능한 경우만)
+     - Bash는 read-only git 조회(`git log`, `git blame`)에만 사용한다.
      - 웹 근거: 출처 URL 포함
      - 추론: "추론:" 접두사로 명확히 구분
    - 5-C. **시각화** — 호출 그래프, 의존성 다이어그램, 데이터 흐름도, 컴포넌트 트리 중 적합한 것 선택.
@@ -99,6 +100,11 @@ allowed-tools: Read, Grep, Glob, Bash, WebSearch, WebFetch, Write, mcp__study__c
      - **프로젝트 내부 연결**: 관련 모듈/파일 간 의존 관계를 Grep/Glob으로 추적한다.
      - **학습 토픽 연결**: `study/` 디렉토리를 Glob/Grep/Read로 스캔한다.
      - 억지 연결 금지.
+   - 5-E. **응답 직전 체크** — 아래 항목을 빠르게 점검한다.
+     - 사실/추론이 섞이지 않았는지 확인한다.
+     - 근거 인용이 최소 1개 이상 포함됐는지 확인한다.
+     - 억지 비유/억지 패턴 매핑이면 "비유 한계:" 또는 "커스텀 구조:"로 낮춘다.
+     - 단일 사실 확인이 아니면 시각화를 포함했는지 확인한다.
 
 6. 사용자의 추가 질문을 대기한다. → Step 4~5 반복.
    - 매 Q&A 후 세션 상태 파일을 Write 갱신한다 (qaCount++, frameType, connections, nextDirection).

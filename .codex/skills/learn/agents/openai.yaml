@@ -1,4 +1,11 @@
 interface:
   display_name: "Learn"
   short_description: "코드와 웹 근거로 개념을 설명하고 학습 내용을 정리"
-  default_prompt: "Use $learn to explain a concept with code or web evidence, an analogy, and a concise visualization."
+  default_prompt: "Use $learn to explain a concept or project codepath with evidence, an analogy, and an ASCII visualization."
+policy:
+  allow_implicit_invocation: false
+dependencies:
+  tools:
+    - type: "mcp"
+      value: "study"
+      description: "study MCP server"

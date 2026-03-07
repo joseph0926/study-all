@@ -1,27 +1,42 @@
 ---
 name: routine
-description: 메인 학습 루틴 — 탐색→심화→코딩→체크포인트→복습등록 5단계 파이프라인. "루틴 시작", "공부하자", "오늘 뭐 배울까", "학습 시작", "루틴" 등의 요청 시 사용한다. 프로젝트 경로를 지정하면 해당 프로젝트 소스 기반 학습 모드로 동작한다.
+description: 장기 학습 세션 오케스트레이터. 탐색→심화→코딩→체크포인트→복습등록 5단계를 한 세션으로 운영하고, JSONL 로그로 이어하기와 복구를 관리한다. "루틴 시작", "공부하자", "오늘 뭐 배울까", "학습 시작", "루틴"처럼 세션을 새로 시작하거나 이어갈 때 사용한다. 단일 질문 답변, 개별 복습, 소스코드 패턴 리딩만 필요하면 learn/review/src를 사용한다.
 argument-hint: "[project-path] [주제]"
 disable-model-invocation: true
-allowed-tools: Read, Grep, Glob, Bash, Write, WebSearch, WebFetch, mcp__study__context_resolve, mcp__study__routine_appendEntry, mcp__study__routine_readLog, mcp__study__routine_resetLog, mcp__study__routine_extractTranscript, mcp__study__stats_getDashboard, mcp__study__review_getQueue, mcp__study__review_saveMeta, mcp__study__review_getMeta
+allowed-tools: Read, Grep, Glob, Bash, Write, WebSearch, WebFetch, mcp__study__context_resolve, mcp__study__routine_appendEntry, mcp__study__routine_readLog, mcp__study__routine_resetLog, mcp__study__routine_extractTranscript, mcp__study__stats_getDashboard, mcp__study__review_saveMeta
 ---
 
-입력: `$ARGUMENTS` (선택. 예: `Suspense 타이밍`, `/path/to/project 인증 동기화`, 비어있으면 이전 seed 또는 대시보드 기반 제안)
+입력: `$ARGUMENTS` (선택. 예: `Suspense 타이밍`, `./apps/web 인증 동기화`, 비어 있으면 이전 seed 또는 대시보드 기반 제안)
 
 ---
 
 ## 모드 판별
 
-`$ARGUMENTS`의 첫 토큰이 `/`로 시작하는 경로면 → **project 모드**, 아니면 → **skill 모드**.
+`$ARGUMENTS`에서 주제 앞의 경로 후보를 먼저 파싱한다.
 
+- project 모드로 간주하는 경우:
+  - 첫 인자가 `/`, `./`, `../`, `~/`로 시작한다.
+  - 첫 인자가 `/`를 포함하는 상대경로 형태이고 실제 경로가 존재한다. 예: `apps/web`, `packages/ui`
+  - 공백이 있는 경로는 따옴표로 감싼 첫 구간을 경로 후보로 파싱하고, 위 조건을 만족하면 project 모드로 본다.
+- bare token 하나만 보고 project 모드로 추정하지 않는다. 예: `react`, `src`, `auth`
 - project 모드: `<project-path>` + `[주제]` 파싱 → `context.resolve(mode=project, projectPath=<project-path>)`
-- skill 모드: 별도 context.resolve 불필요 (기본)
+- skill 모드: `[주제]`만 사용하고, 별도 `context.resolve`는 호출하지 않는다.
 
 모드에 따라 아래가 달라진다:
 - 상태 경로: skill → `study/.routine/`, project → `{project}/.study/.routine/`
 - 근거 탐색 우선순위
 - Phase 배너 접두사
 - `routine.*` 호출 시 context 전달
+
+---
+
+## 역할 경계
+
+- 이 스킬은 5단계 학습 세션을 처음부터 끝까지 오케스트레이션할 때만 사용한다.
+- 단일 질문 답변만 필요하면 `learn`을 사용한다.
+- 소스코드 패턴 리딩만 필요하면 `src`를 사용한다.
+- 복습 큐 소화만 필요하면 `review`를 사용한다.
+- 코딩 평가만 필요하면 `test`를 사용한다.
 
 ---
 
@@ -134,7 +149,7 @@ project 모드: > [ROUTINE:PROJECT] Phase {N}/5 | {주제} | Q&A: {누적횟수}
 
 ### 0-B. 오늘의 시드 결정 (우선순위)
 
-- A) `$ARGUMENTS`에서 주제가 있으면 → 그 주제
+- A) 파싱된 주제가 있으면 → 그 주제
 - B) state.md에 nextSeed가 있으면 → 제안 ("이전 세션에서 남긴 질문: {question}. 이어서 할까요?")
 - C) 복습 대기가 있으면 → 제안 ("복습 대기 {N}개. 복습 기반으로 시작할까요?")
 - D) 없으면 → "오늘 궁금한 게 뭔가요?"
@@ -345,7 +360,7 @@ FAIL은 "나는 정확히 여기서 모른다"를 아는 것입니다. 부정적
 3. `review.saveMeta` 호출하여 개념들을 L1/streak:0/nextReview:내일로 등록한다.
    - **skill 모드**: `review.saveMeta({ context: { mode: "skill", skill: "{스킬명}" }, topic: "{토픽명}", meta: { concepts: [...], sessionCount: 1 } })`
    - **project 모드**: `review.saveMeta({ context: { mode: "project", projectPath: "{경로}" }, topic: "{토픽명}", meta: { concepts: [...], sessionCount: 1 } })`
-   - skill 모드에서 `context.skill`은 필수 (예: `"react"`, `"nextjs"` 등 주제에 맞는 스킬 카테고리).
+   - skill 모드에서 `context.skill`은 필수 (예: `"react"`, `"nextjs"` 등 주제에 맞는 스킬 카테고리). 카테고리가 불명확하면 사용자에게 확인 후 저장한다.
 4. `routine.appendEntry({ entry: { phase: 4, type: "checkpoint", q1, q1Answer, q2, q2Answer, aiFeedback, result: "PASS" } })` → Phase 5 진행
 
 ### FAIL 경로
@@ -369,7 +384,7 @@ inProgressDate: {YYYY-MM-DD}
 Phase 5에서 state.md 최종 갱신 시 `inProgress*` 필드를 제거한다.
 
 규칙:
-- Claude가 PASS/FAIL을 판정하지 않는다. 사용자 자기 평가.
+- AI가 PASS/FAIL을 판정하지 않는다. 사용자 자기 평가.
 - FAIL에 부정적 뉘앙스 없음. "정확한 gap 발견"으로 프레이밍.
 
 ---
@@ -429,7 +444,7 @@ Write로 `history.md`에 행 추가:
 | streak | {N}일 |
 | 총 세션 | {N} |
 
-{복습 대기 있으면: "복습 대기 {N}개 — `/review`로 복습하세요."}
+{복습 대기 있으면: "복습 대기 {N}개 — review 스킬로 복습하세요."}
 {다음 seed 있으면: "다음 세션 seed: {question} (접근: {suggestedApproach})"}
 ```
 
@@ -454,10 +469,10 @@ Write로 `history.md`에 행 추가:
 ## 규칙
 
 - Phase 순서를 건너뛰지 않는다. AI가 자체 판단으로 Phase를 건너뛰지 않는다.
-- 쓰기 동작은 Phase 5 (`>>정리`) 이후에만 수행한다. **예외: `routine.appendEntry`는 Phase 전환 및 Q&A마다 호출한다.**
+- 일반적인 Write는 Phase 5 (`>>정리`) 이후에만 수행한다. **예외: `routine.appendEntry`는 Phase 전환 및 Q&A마다 호출하고, Phase 4의 `inProgress*` 마커 Write는 체크포인트 직후 수행한다.**
 - 컨텍스트 복원/Phase 배너/Self-check → §컨텍스트 보존 참조.
 - 근거 탐색 우선순위 → `references/evidence-priority.md` 참조.
 - 비유는 1:1 대응을 기본으로 한다. 불가 시 "비유 한계:" 처리.
-- Claude가 체크포인트 PASS/FAIL을 판정하지 않는다. 사용자 자기 평가.
+- AI가 체크포인트 PASS/FAIL을 판정하지 않는다. 사용자 자기 평가.
 - Q&A 원문은 오타 수정만 하고 그대로 기록한다.
-- 기존 study/ 파일은 읽기만 한다. 수정하지 않는다.
+- `study/`의 학습 내용 문서는 읽기만 한다. `state.md`, `history.md`, JSONL 로그, transcript처럼 루틴이 관리하는 상태 파일만 예외로 수정한다.

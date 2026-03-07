@@ -1,6 +1,7 @@
 interface:
   display_name: "Routine"
-  short_description: "learn → study → checkpoint → forge 오케스트레이션"
+  short_description: "탐색→심화→코딩→체크포인트→복습등록 학습 루틴"
+  default_prompt: "Use $routine to start or resume a five-phase study session with recoverable JSONL state."
 policy:
   allow_implicit_invocation: false
 dependencies:
