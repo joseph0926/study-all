@@ -107,6 +107,16 @@ strip_wrapping_quotes() {
   printf '%s' "$value"
 }
 
+sanitize_for_quick_validate_description() {
+  local value="$1"
+
+  perl -0pe '
+    s/<([^>]+)>/$1/g;
+    s/\s+/ /g;
+    s/^\s+|\s+$//g;
+  ' <<< "$value" | tr -d '\n'
+}
+
 render_body() {
   local src_file="$1"
   local skill_name="$2"
@@ -171,6 +181,9 @@ validate_generated_file() {
   local file="$1"
   local skill_name="$2"
   local cmd_pattern="\\\$${skill_name}"
+  local description
+  description="$(extract_frontmatter_value "$file" "description")"
+  description="$(strip_wrapping_quotes "$description")"
 
   if [[ "$(head -n 1 "$file")" != "---" ]]; then
     echo "[generate-codex-skills] invalid output($skill_name): missing frontmatter start" >&2
@@ -184,6 +197,31 @@ validate_generated_file() {
 
   if ! grep -q "^description: " "$file"; then
     echo "[generate-codex-skills] invalid output($skill_name): missing description" >&2
+    return 1
+  fi
+
+  if [[ ! "$skill_name" =~ ^[a-z0-9-]+$ ]]; then
+    echo "[generate-codex-skills] invalid output($skill_name): name must be hyphen-case" >&2
+    return 1
+  fi
+
+  if [[ "$skill_name" == -* || "$skill_name" == *- || "$skill_name" == *--* ]]; then
+    echo "[generate-codex-skills] invalid output($skill_name): invalid hyphen placement" >&2
+    return 1
+  fi
+
+  if (( ${#skill_name} > 64 )); then
+    echo "[generate-codex-skills] invalid output($skill_name): name too long" >&2
+    return 1
+  fi
+
+  if [[ "$description" == *"<"* || "$description" == *">"* ]]; then
+    echo "[generate-codex-skills] invalid output($skill_name): description contains angle brackets" >&2
+    return 1
+  fi
+
+  if (( ${#description} > 1024 )); then
+    echo "[generate-codex-skills] invalid output($skill_name): description too long" >&2
     return 1
   fi
 
@@ -214,11 +252,14 @@ render_codex_skill() {
   if [[ -n "$argument_hint" ]]; then
     invocation="$invocation $argument_hint"
   fi
+  local description_invocation="$invocation"
+  description_invocation="$(sanitize_for_quick_validate_description "$description_invocation")"
 
   local codex_description="$description"
   if [[ "$codex_description" != *"Codex에서는"* ]]; then
-    codex_description="$codex_description Codex에서는 \`$invocation\`으로 호출한다."
+    codex_description="$codex_description Codex에서는 \`$description_invocation\`으로 호출한다."
   fi
+  codex_description="$(sanitize_for_quick_validate_description "$codex_description")"
 
   local input_line
   if [[ -n "$argument_hint" ]]; then

@@ -1,6 +1,6 @@
 ---
 name: test
-description: 학습 기반 코딩 문제 출제 → 사용자 구현 → 4축 평가 → 레벨 프로파일 갱신. "코딩 테스트", "실력 확인", "문제 풀어볼래", "레벨 측정", "테스트 해보자" 등 학습 검증/평가 요청 시 사용한다. Codex에서는 `$test <skill> [level]`으로 호출한다.
+description: 학습 기반 코딩 문제 출제 → 사용자 구현 → 4축 평가 → 레벨 프로파일 갱신. "코딩 테스트", "실력 확인", "문제 풀어볼래", "레벨 측정", "테스트 해보자" 등 학습 검증/평가 요청 시 사용한다. Codex에서는 `$test skill [level]`으로 호출한다.
 ---
 
 # test
@@ -39,7 +39,7 @@ problems:
 
 ## Phase 0: 인벤토리 수집
 
-1. `$ARGUMENTS`에서 `[skill] [level]` 파싱 (`skill` 필수, `level` 선택)
+1. `호출 인자`에서 `[skill] [level]` 파싱 (`skill` 필수, `level` 선택)
 2. `context.resolve(mode=skill, skill=test)`
 3. `stats.getDashboard(context={mode=skill})` → 전체 스킬/토픽 현황
 4. `study/{skill}/` 학습 기록 Read → 학습한 개념 전체 목록 추출

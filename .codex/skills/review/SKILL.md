@@ -38,7 +38,7 @@ items:
 
 ## Phase 0: 큐 확인
 
-1. `$ARGUMENTS`에서 `[skill] [topic]` 파싱 (둘 다 선택)
+1. `호출 인자`에서 `[skill] [topic]` 파싱 (둘 다 선택)
 2. 세션 복원 체크 (위 참조)
 3. 큐 로드:
    - skill 지정 시: `review.getQueue(context={mode=skill, skill=<skill>}, skill=<skill>)`

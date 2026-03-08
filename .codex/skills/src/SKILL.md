@@ -1,6 +1,6 @@
 ---
 name: src
-description: 소스코드 패턴 리딩 — 핵심 코드에서 패턴을 발견하고, "왜 이렇게 작성했을까?" 사고 후 미니 코딩으로 체화한다. "소스 읽자", "코드 분석", "내부 구현 보자", "패턴 리딩" 등 소스코드 심층 리딩 요청 시 사용한다. Codex에서는 `$src [project-path] <주제>`으로 호출한다.
+description: 소스코드 패턴 리딩 — 핵심 코드에서 패턴을 발견하고, "왜 이렇게 작성했을까?" 사고 후 미니 코딩으로 체화한다. "소스 읽자", "코드 분석", "내부 구현 보자", "패턴 리딩" 등 소스코드 심층 리딩 요청 시 사용한다. Codex에서는 `$src [project-path] 주제`으로 호출한다.
 ---
 
 # src
@@ -11,7 +11,7 @@ description: 소스코드 패턴 리딩 — 핵심 코드에서 패턴을 발견
 
 ## Phase 0: 패턴 발견
 
-1. **모드 판별**: `$ARGUMENTS`의 첫 토큰이 `/`로 시작하는 경로면 → **project 모드**, 아니면 → **skill 모드**
+1. **모드 판별**: `호출 인자`의 첫 토큰이 `/`로 시작하는 경로면 → **project 모드**, 아니면 → **skill 모드**
    - project 모드: `<project-path>` + `<주제>` 파싱 → `context.resolve(mode=project, projectPath=<project-path>)`
    - skill 모드: `context.resolve(mode=skill, skill=src)`
 2. 사용자 입력에서 주제명 추출 (간결한 kebab-case, 예: `react-useRef`, `상태관리-패턴`)
@@ -130,7 +130,7 @@ description: 소스코드 패턴 리딩 — 핵심 코드에서 패턴을 발견
    - project 모드: `{project}/.study/src/{주제명}.md`
 
 2. `session.appendLog(context, topic=<주제명>, content=<요약>)`로 세션 기록
-   - project 모드에서는 `via="via /src (project mode)"` 추가
+   - project 모드에서는 `via="via $src (project mode)"` 추가
 
 3. session-state.md → `# COMPLETED\n` 마커로 Write
 

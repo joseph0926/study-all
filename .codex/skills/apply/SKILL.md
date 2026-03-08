@@ -1,6 +1,6 @@
 ---
 name: apply
-description: 학습한 내용을 실제 프로젝트에 적용 — 학습 기록 기반 진단 → 코칭 → 선택적 수정. "배운 거 적용", "프로젝트에 적용해줘", "학습 내용 실전 적용", "코드에 반영" 등 학습→실전 적용 요청 시 사용한다. Codex에서는 `$apply <project-path> <topic>`으로 호출한다.
+description: 학습한 내용을 실제 프로젝트에 적용 — 학습 기록 기반 진단 → 코칭 → 선택적 수정. "배운 거 적용", "프로젝트에 적용해줘", "학습 내용 실전 적용", "코드에 반영" 등 학습→실전 적용 요청 시 사용한다. Codex에서는 `$apply project-path topic`으로 호출한다.
 ---
 
 # apply
@@ -9,7 +9,7 @@ description: 학습한 내용을 실제 프로젝트에 적용 — 학습 기록
 
 ## Phase 0: 초기화
 
-1. `$ARGUMENTS`에서 `<project-path>` + `<topic>` 파싱
+1. `호출 인자`에서 `<project-path>` + `<topic>` 파싱
 2. `context.resolve(mode=project, projectPath=<project-path>)` 호출
 3. 학습 기록 탐색 — `study/` 디렉토리에서 topic 관련 파일을 Glob/Grep으로 검색
    - 탐색 범위: `study/**/*{topic}*`, `study/.routine/**/*{topic}*`
@@ -59,7 +59,7 @@ description: 학습한 내용을 실제 프로젝트에 적용 — 학습 기록
 3. 사용자 확인 후 Phase 2 진입
 
 학습 기록이 없으면:
-- "'{topic}' 관련 학습 기록이 없습니다. /routine 또는 /learn으로 먼저 학습을 권장합니다. 그래도 진행할까요?"
+- "'{topic}' 관련 학습 기록이 없습니다. $routine 또는 $learn으로 먼저 학습을 권장합니다. 그래도 진행할까요?"
 - 사용자가 진행을 선택하면 → WebSearch로 best practice 조사 후 Phase 2
 
 ## Phase 2: 프로젝트 스캔
@@ -150,7 +150,7 @@ description: 학습한 내용을 실제 프로젝트에 적용 — 학습 기록
    - `package.json` scripts: `test`, `typecheck`, `lint`
    - 검증 실패 시 수정 제안
 2. 요약 문서 Write → `{project}/.study/apply/{Topic-Name}.md`
-3. `session.appendLog(context, topic=<topic>, content=<요약>, via="via /apply")`
+3. `session.appendLog(context, topic=<topic>, content=<요약>, via="via $apply")`
 4. session-state.md → `# COMPLETED\n`
 
 문서 템플릿:
