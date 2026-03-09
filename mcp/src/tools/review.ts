@@ -4,6 +4,7 @@ import { z } from "zod";
 import { loadConfig } from "../config.js";
 import { makeEnvelope } from "../lib/envelope.js";
 import { appendText, listFiles, readText, writeText } from "../lib/fs.js";
+import { discoverStudyTopics, findStudyTopic, getDefaultTopicNotePath, getDefaultTopicReviewMetaPath, getDefaultTopicReviewQaPath } from "../lib/study-topics.js";
 import { parseMeta } from "../parsers/meta-parser.js";
 import { resolveContextData } from "./context.js";
 import type { Clock } from "../lib/clock.js";
@@ -163,8 +164,52 @@ function metaToMarkdown(topic: string, meta: ReviewMeta): string {
   return `# ${topic} Review Meta\n\nsessionCount: ${meta.sessionCount}\n\n| Concept | Level | Streak | NextReview | Graduated | Attempts |\n|---|---|---:|---|---|---:|\n${rows}\n`;
 }
 
+function legacyMetaPath(notePath: string): string {
+  return path.join(path.dirname(notePath), `${path.basename(notePath, ".md")}-meta.md`);
+}
+
+function legacyQaPath(notePath: string): string {
+  return path.join(path.dirname(notePath), `${path.basename(notePath, ".md")}-qa.md`);
+}
+
+async function resolveMetaPath(dir: string, topic: string): Promise<string> {
+  const entry = await findStudyTopic(dir, topic);
+  if (!entry) {
+    return getDefaultTopicReviewMetaPath(dir, topic);
+  }
+  if (entry.layout === "legacy") {
+    return entry.reviewMetaPath ?? legacyMetaPath(entry.notePath);
+  }
+  return entry.reviewMetaPath ?? getDefaultTopicReviewMetaPath(dir, topic);
+}
+
+async function ensureTopicNote(dir: string, topic: string): Promise<string> {
+  const entry = await findStudyTopic(dir, topic);
+  if (entry) {
+    return entry.notePath;
+  }
+
+  const notePath = getDefaultTopicNotePath(dir, topic);
+  const existing = await readText(notePath);
+  if (!existing.trim()) {
+    await writeText(notePath, `---\ntitle: ${JSON.stringify(topic)}\n---\n# ${topic}\n`);
+  }
+  return notePath;
+}
+
+async function resolveQaPath(dir: string, topic: string, today: string): Promise<string> {
+  const entry = await findStudyTopic(dir, topic);
+  if (!entry) {
+    return getDefaultTopicReviewQaPath(dir, topic, today);
+  }
+  if (entry.layout === "legacy") {
+    return entry.legacyQaPath ?? legacyQaPath(entry.notePath);
+  }
+  return getDefaultTopicReviewQaPath(dir, entry.topic, today);
+}
+
 async function readMetaFile(dir: string, topic: string): Promise<{ path: string; meta: ReviewMeta }> {
-  const filePath = path.join(dir, `${topic}-meta.md`);
+  const filePath = await resolveMetaPath(dir, topic);
   const text = await readText(filePath);
   return {
     path: filePath,
@@ -192,7 +237,8 @@ export async function reviewSaveMeta(
   const parsed = saveMetaInputSchema.parse(input);
   const context = await resolveContextData(parsed.context as ContextInput);
   const dir = resolveReviewDir(context, parsed.skill);
-  const filePath = path.join(dir, `${parsed.topic}-meta.md`);
+  await ensureTopicNote(dir, parsed.topic);
+  const filePath = await resolveMetaPath(dir, parsed.topic);
 
   const meta: ReviewMeta = {
     topic: parsed.topic,
@@ -293,9 +339,9 @@ export async function reviewGetQueue(
   let totalActive = 0;
 
   for (const { skill, dir } of dirs) {
-    const metaFiles = await listFiles(dir, { extension: "-meta.md", maxDepth: 1 });
+    const topics = await discoverStudyTopics(dir);
 
-    if (metaFiles.length === 0) {
+    if (topics.length === 0) {
       const topicFiles = (await listFiles(dir, { extension: ".md", maxDepth: 1 })).filter(
         (file) => !file.endsWith("plan.md") && !file.endsWith("-quiz.md") && !file.endsWith("-meta.md") && !file.endsWith("-qa.md"),
       );
@@ -314,10 +360,23 @@ export async function reviewGetQueue(
       continue;
     }
 
-    for (const file of metaFiles) {
-      const topic = topicFromMetaFile(file);
-      const text = await readText(file);
-      const meta = parseMeta(text, topic);
+    for (const topicEntry of topics) {
+      if (!topicEntry.reviewMetaPath) {
+        items.push({
+          skill,
+          topic: topicEntry.topic,
+          concept: "핵심 개념",
+          level: "L1",
+          nextReview: today,
+          streak: 0,
+          overdueDays: 0,
+        });
+        totalActive += 1;
+        continue;
+      }
+
+      const text = await readText(topicEntry.reviewMetaPath);
+      const meta = parseMeta(text, topicEntry.topic);
       for (const concept of meta.concepts) {
         if (concept.graduated) {
           graduated += 1;
@@ -328,7 +387,7 @@ export async function reviewGetQueue(
         if (overdueDays >= 0) {
           items.push({
             skill,
-            topic,
+            topic: topicEntry.topic,
             concept: concept.name,
             level: concept.level,
             nextReview: concept.nextReview,
@@ -357,10 +416,11 @@ export async function reviewAppendQnA(
   const parsed = appendQnAInputSchema.parse(input);
   const context = await resolveContextData(parsed.context as ContextInput);
   const dir = resolveReviewDir(context, parsed.skill);
-  const filePath = path.join(dir, `${parsed.topic}-qa.md`);
+  const today = toDateOnly(clock.now());
+  await ensureTopicNote(dir, parsed.topic);
+  const filePath = await resolveQaPath(dir, parsed.topic, today.slice(0, 7));
 
   const existing = await readText(filePath);
-  const today = toDateOnly(clock.now());
   const marker = context.mode === "project" ? "via /project-review" : "via /review";
 
   const itemsText = parsed.items

@@ -38,6 +38,23 @@ function makeNestedFixture(): string {
   return base;
 }
 
+function makeTopicDirFixture(): string {
+  const base = path.join(os.tmpdir(), `mcp-stats-topic-dir-${Date.now()}`);
+  mkdirSync(path.join(base, "study", "react", "topics", "Lane-Model-and-Priority"), { recursive: true });
+  mkdirSync(path.join(base, "study", "nextjs", "topics", "Next-Src-Api"), { recursive: true });
+  writeFileSync(
+    path.join(base, "study", "react", "topics", "Lane-Model-and-Priority", "note.md"),
+    "---\ntitle: Lane-Model-and-Priority\n---\n# Lane\n\n## 2026-02-24\n\nSession content.\n",
+    "utf8",
+  );
+  writeFileSync(
+    path.join(base, "study", "nextjs", "topics", "Next-Src-Api", "note.md"),
+    "---\ntitle: Next-Src-Api\n---\n# Next Src Api\n\n## 2026-02-20\n\nSession content.\n",
+    "utf8",
+  );
+  return base;
+}
+
 describe("stats tools", () => {
   it("stats.getDashboard aggregates skills", async () => {
     const base = makeFixture();
@@ -80,5 +97,18 @@ describe("stats tools", () => {
     expect(names).toContain("nextjs");
     expect(typeof result.data.totalReviewPending).toBe("number");
     expect(typeof result.data.streak).toBe("number");
+  });
+
+  it("stats.getDashboard reads topic_dir notes", async () => {
+    const base = makeTopicDirFixture();
+    process.env.STUDY_ROOT = base;
+
+    const result = await statsGetDashboard({
+      context: { mode: "skill" },
+    });
+
+    const names = result.data.skills.map((skill) => skill.name);
+    expect(names).toContain("react");
+    expect(names).toContain("nextjs");
   });
 });

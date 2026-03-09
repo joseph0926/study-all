@@ -1,4 +1,4 @@
-import { mkdirSync, readFileSync } from "node:fs";
+import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import os from "node:os";
 import path from "node:path";
 import { describe, expect, it } from "vitest";
@@ -187,6 +187,7 @@ describe("review tools", () => {
     });
 
     expect(result.data.ok).toBe(true);
+    expect(result.data.filePath).toContain(path.join(".study", "topics", "Demo", "review", "qa"));
     const content = readFileSync(result.data.filePath, "utf8");
     expect(content).toContain("# Demo Review QnA");
     expect(content).toContain("dispatcher");
@@ -227,7 +228,7 @@ describe("review tools", () => {
       ],
     });
 
-    const content = readFileSync(path.join(base, ".study", "Demo-qa.md"), "utf8");
+    const content = readFileSync(path.join(base, ".study", "topics", "Demo", "review", "qa", `${new Date().toISOString().slice(0, 7)}.md`), "utf8");
     // 헤더는 1번만
     const headerCount = (content.match(/# Demo Review QnA/g) ?? []).length;
     expect(headerCount).toBe(1);
@@ -538,5 +539,29 @@ describe("review tools", () => {
       topic: "Demo",
     });
     expect(meta.data.concepts.length).toBe(1);
+  });
+
+  it("review.getQueue discovers nested topic_dir notes", async () => {
+    const base = path.join(os.tmpdir(), `mcp-review-topic-dir-${Date.now()}`);
+    process.env.STUDY_ROOT = base;
+    mkdirSync(path.join(base, "study", "react", "topics", "Lane-Model-and-Priority", "review"), { recursive: true });
+    writeFileSync(
+      path.join(base, "study", "react", "topics", "Lane-Model-and-Priority", "note.md"),
+      "---\ntitle: Lane-Model-and-Priority\naliases:\n  - Lane-Model-And-Priority\n---\n# Lane\n\n## 2026-02-24\n\nSession content.\n",
+      "utf8",
+    );
+    writeFileSync(
+      path.join(base, "study", "react", "topics", "Lane-Model-and-Priority", "review", "meta.md"),
+      "# Lane-Model-and-Priority Review Meta\n\nsessionCount: 1\n\n| Concept | Level | Streak | NextReview | Graduated | Attempts |\n|---|---|---:|---|---|---:|\n| scheduler | L2 | 1 | 2026-01-01 | false | 1 |\n",
+      "utf8",
+    );
+
+    const result = await reviewGetQueue({
+      context: { mode: "skill", skill: "react" },
+      skill: "react",
+    });
+
+    expect(result.data.items.some((item) => item.topic === "Lane-Model-and-Priority")).toBe(true);
+    expect(result.data.items.some((item) => item.concept === "scheduler")).toBe(true);
   });
 });

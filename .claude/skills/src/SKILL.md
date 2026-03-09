@@ -127,7 +127,7 @@ allowed-tools: Read, Grep, Glob, Bash, Write, WebSearch, WebFetch, mcp__study__c
 ## 종료 (`>>정리`)
 
 1. 패턴 워크스루 문서 Write
-   - skill 모드: `study/src/{주제명}.md`
+   - skill 모드: `study/src/topics/{주제명}/note.md`
    - project 모드: `{project}/.study/src/{주제명}.md`
 
 2. `session.appendLog(context, topic=<주제명>, content=<요약>)`로 세션 기록

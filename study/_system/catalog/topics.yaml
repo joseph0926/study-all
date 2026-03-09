@@ -1,0 +1,81 @@
+topics:
+  - path: "study/learn/topics/FORGE-React-렌더링-파이프라인/note.md"
+    title: "FORGE: React 렌더링 파이프라인"
+    aliases:
+      - "FORGE-React-렌더링-파이프라인"
+  - path: "study/learn/topics/JSX-객체-반환-원리/note.md"
+    title: "JSX-객체-반환-원리"
+  - path: "study/learn/topics/React-context-전달과-상태경계/note.md"
+    title: "React-context-전달과-상태경계"
+  - path: "study/learn/topics/React-데이터-페칭-불관여/note.md"
+    title: "React-데이터-페칭-불관여"
+  - path: "study/learn/topics/React-리렌더링-비용과-메모이제이션/note.md"
+    title: "React-리렌더링-비용과-메모이제이션"
+  - path: "study/learn/topics/React-리렌더링-트리거/note.md"
+    title: "React-리렌더링-트리거"
+  - path: "study/learn/topics/React-외부-store-필요조건/note.md"
+    title: "React-외부-store-필요조건"
+  - path: "study/learn/topics/scheduleUpdateOnFiber/note.md"
+    title: "scheduleUpdateOnFiber"
+  - path: "study/learn/topics/useEffect-사이드이펙트-역할/note.md"
+    title: "useEffect-사이드이펙트-역할"
+  - path: "study/learn/topics/useRef-렌더링-참조규칙/note.md"
+    title: "useRef-렌더링-참조규칙"
+  - path: "study/learn/topics/useState-useReducer-관계/note.md"
+    title: "useState-useReducer-관계"
+  - path: "study/learn/topics/브라우저-JS-실행-원리/note.md"
+    title: "브라우저-JS-실행-원리"
+  - path: "study/learn/topics/사용자-체감-성능-지표-매핑/note.md"
+    title: "사용자-체감-성능-지표-매핑"
+  - path: "study/learn/topics/캐시-개념/note.md"
+    title: "캐시-개념"
+  - path: "study/nextjs/legacy/topics/Next-Src-Api/note.md"
+    title: "next/src/api"
+    aliases:
+      - "Next-Src-Api"
+  - path: "study/performance/topics/배포 후 느려진 페이지 진단 실전/note.md"
+    title: "배포 후 느려진 페이지 진단 실전"
+    status: seed
+  - path: "study/react/legacy/topics/Fiber-Structure/note.md"
+    title: "Topic 3: Fiber Node And Tags"
+    aliases:
+      - "Fiber-Structure"
+  - path: "study/react/legacy/topics/React-Core-API/note.md"
+    title: "React Core API Surface"
+    aliases:
+      - "React-Core-API"
+  - path: "study/react/legacy/topics/Shared/note.md"
+    title: "Topic 2: shared"
+    aliases:
+      - "Shared"
+  - path: "study/react/legacy/topics/Work-Loop/note.md"
+    title: "Topic 4: Work Loop"
+    aliases:
+      - "Work-Loop"
+  - path: "study/react/topics/autocomplete-설계-구현-테스트/note.md"
+    title: "autocomplete-설계-구현-테스트"
+    status: seed
+  - path: "study/react/topics/Lane-Model-and-Priority/note.md"
+    title: "Lane-Model-and-Priority"
+    aliases:
+      - "Lane-Model-And-Priority"
+  - path: "study/react/topics/non-urgent UI 업데이트와 상태 경계 설정/note.md"
+    title: "non-urgent UI 업데이트와 상태 경계 설정"
+    status: seed
+  - path: "study/react/topics/useEffect-실무-패턴/note.md"
+    title: "useEffect-실무-패턴"
+    status: seed
+  - path: "study/react/topics/useReducer-실무-패턴/note.md"
+    title: "useReducer-실무-패턴"
+    aliases:
+      - "UseReducer-실무-패턴"
+  - path: "study/react/topics/useRef-실무-패턴/note.md"
+    title: "useRef-실무-패턴"
+    status: seed
+  - path: "study/react/topics/useRef-심화-내부구현/note.md"
+    title: "useRef-심화-내부구현"
+    status: seed
+  - path: "study/src/topics/useRef-내부구현-패턴/note.md"
+    title: "useRef-내부구현-패턴 — 패턴 워크스루"
+    aliases:
+      - "useRef-내부구현-패턴"

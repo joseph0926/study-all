@@ -129,7 +129,7 @@ allowed-tools: Read, Grep, Glob, Bash, WebSearch, WebFetch, Write, mcp__study__c
    - 사용자 질문은 원문 그대로, 답변은 핵심 구조와 코드 인용을 유지한다.
 
 2. 문서 파일에 Write한다.
-   - skill 모드: `study/learn/<주제명>.md`
+   - skill 모드: `study/learn/topics/<주제명>/note.md`
    - project 모드: `{project}/.study/learn/<주제명>.md`
    - 포맷: 아래 모드별 템플릿을 따른다.
 3. `session.appendLog(context, topic=<주제명>, content=<요약>)`로 세션 기록.
@@ -162,7 +162,7 @@ allowed-tools: Read, Grep, Glob, Bash, WebSearch, WebFetch, Write, mcp__study__c
 
 | 대상 토픽 | 관계 | 근거 |
 |-----------|------|------|
-| `study/<skill>/<Topic>.md` | <관계 유형> | <왜 연결되는지 + 비유> |
+| `study/<skill>/topics/<Topic>/note.md` | <관계 유형> | <왜 연결되는지 + 비유> |
 
 연결이 없으면 이 섹션을 생략한다.
 ```

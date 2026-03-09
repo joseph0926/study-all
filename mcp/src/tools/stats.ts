@@ -2,6 +2,7 @@ import path from "node:path";
 import { z } from "zod";
 import { makeEnvelope } from "../lib/envelope.js";
 import { listFiles, readText } from "../lib/fs.js";
+import { discoverStudyTopics } from "../lib/study-topics.js";
 import { parsePlan } from "../parsers/plan-parser.js";
 import { getResumePoint } from "../parsers/session-parser.js";
 import { loadConfig } from "../config.js";
@@ -62,9 +63,7 @@ async function discoverSkillDirs(notesDir: string): Promise<string[]> {
 }
 
 async function getLastActivityDate(skillDir: string): Promise<string | undefined> {
-  const files = (await listFiles(skillDir, { extension: ".md", maxDepth: 1 })).filter(
-    (file) => !file.endsWith("plan.md") && !file.endsWith("-quiz.md") && !file.endsWith("-meta.md"),
-  );
+  const files = (await discoverStudyTopics(skillDir)).map((topic) => topic.notePath);
 
   let latest: string | undefined;
   for (const file of files) {

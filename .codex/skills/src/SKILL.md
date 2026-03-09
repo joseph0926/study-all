@@ -126,7 +126,7 @@ description: 소스코드 패턴 리딩 — 핵심 코드에서 패턴을 발견
 ## 종료 (`>>정리`)
 
 1. 패턴 워크스루 문서 Write
-   - skill 모드: `study/src/{주제명}.md`
+   - skill 모드: `study/src/topics/{주제명}/note.md`
    - project 모드: `{project}/.study/src/{주제명}.md`
 
 2. `session.appendLog(context, topic=<주제명>, content=<요약>)`로 세션 기록

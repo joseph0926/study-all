@@ -46,7 +46,7 @@ problems:
 1. `$ARGUMENTS`에서 `[skill] [level]` 파싱 (`skill` 필수, `level` 선택)
 2. `context.resolve(mode=skill, skill=test)`
 3. `stats.getDashboard(context={mode=skill})` → 전체 스킬/토픽 현황
-4. `study/{skill}/` 학습 기록 Read → 학습한 개념 전체 목록 추출
+4. `study/{skill}/topics/` 학습 기록 Read → 학습한 개념 전체 목록 추출
 5. `study/test/profile.md` Read → 기존 레벨 이력 (없으면 새 프로파일)
 6. 시작 레벨 결정:
    - 명시 레벨 > profile.md 기록 > 기본 L2
@@ -109,7 +109,7 @@ problems:
 
 - 출제 범위는 학습한 **토픽 전체의 실무 적용 영역**이다
 - 코드 스니펫은 반드시 **실무/앱 수준 코드**여야 한다 (내부 유틸/소스코드 아님)
-- `study/{skill}/` 학습 기록에서 개념을 참조하되, `ref/` 소스는 정답 근거 확인용으로만 사용
+- `study/{skill}/topics/` 학습 기록에서 개념을 참조하되, `ref/` 소스는 정답 근거 확인용으로만 사용
 - 같은 개념이라도 다른 실무 시나리오로 출제하여 다각도 검증
 
 #### 자기 검증 체크리스트
@@ -249,7 +249,7 @@ problems:
 - 문제의 의도/맥락 명확화
 - 제약 조건 해석
 - 요구사항의 범위 확인
-- 용어/개념 설명 (`study/{skill}/` 학습 기록 참조)
+- 용어/개념 설명 (`study/{skill}/topics/` 학습 기록 참조)
 
 #### 금지
 - 정답 코드/풀이 방향 직접 제시
@@ -443,7 +443,7 @@ problems:
 
 ## 규칙
 
-- 기존 `study/{skill}/` 파일은 **읽기만** 한다. 수정하지 않는다.
+- 기존 `study/{skill}/topics/` 파일은 **읽기만** 한다. 수정하지 않는다.
 - 쓰기 동작은 Phase 4 (`>>정리` 이후)에만 수행한다. 예외: 문제 파일 (Phase 1), `session-state.md` (Phase 전환).
 - 문제 파일: 유형 A/B/C/E/F는 `.ts` 기본 (사용자 요청 시 변경 가능), 유형 D는 `.md`.
 - 주석 규격(제약/왜?/근거/대안/약점)은 유형 A/B/C/E/F 평가의 핵심 지표다. 유형 D는 마크다운 작성란(예측 결과/근거/직관과 다른 점)으로 대체.

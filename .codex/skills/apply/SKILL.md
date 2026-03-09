@@ -98,7 +98,7 @@ description: 학습한 내용을 실제 프로젝트에 적용 — 학습 기록
 
 | # | 위치 | 진단 | 우선순위 | 근거 |
 |---|------|------|---------|------|
-| 1 | Form.tsx:42 | ref callback 미사용 | P2 | study/react/useRef-실무-패턴-meta.md |
+| 1 | Form.tsx:42 | ref callback 미사용 | P2 | study/react/topics/useRef-실무-패턴/review/meta.md |
 
 "적절" 항목도 간략히 왜 적절한지 설명한다 (학습 확인 효과).
 

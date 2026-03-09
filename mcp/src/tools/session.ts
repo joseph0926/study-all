@@ -2,7 +2,8 @@ import { promises as fs } from "node:fs";
 import path from "node:path";
 import { z } from "zod";
 import { MemoryCache, buildCacheKey } from "../lib/cache.js";
-import { appendText, getDirSnapshot, listFiles, readText, toTitleCaseTopic } from "../lib/fs.js";
+import { appendText, getDirSnapshot, listFiles, readText } from "../lib/fs.js";
+import { discoverStudyTopics, findStudyTopic, getDefaultTopicNotePath } from "../lib/study-topics.js";
 import { makeEnvelope } from "../lib/envelope.js";
 import { getResumePoint } from "../parsers/session-parser.js";
 import { resolveContextData } from "./context.js";
@@ -45,17 +46,14 @@ const sourcePathInputSchema = z.object({
 });
 
 async function resolveTopicFile(baseDir: string, topic: string): Promise<string> {
+  const resolved = await findStudyTopic(baseDir, topic);
+  if (resolved) {
+    return resolved.notePath;
+  }
+
   const direct = topic.endsWith(".md") ? topic : `${topic}.md`;
   const candidateA = path.join(baseDir, direct);
-  const candidateB = path.join(baseDir, `${toTitleCaseTopic(topic)}.md`);
-
-  const files = await listFiles(baseDir, { extension: ".md", maxDepth: 1 });
-  const map = new Map(files.map((file) => [path.basename(file).toLowerCase(), file]));
-
-  const normalizedA = path.basename(candidateA).toLowerCase();
-  const normalizedB = path.basename(candidateB).toLowerCase();
-
-  return map.get(normalizedA) ?? map.get(normalizedB) ?? candidateB;
+  return direct.includes(path.sep) ? candidateA : getDefaultTopicNotePath(baseDir, topic);
 }
 
 function resolveSessionDir(context: Awaited<ReturnType<typeof resolveContextData>>, skillOverride?: string): string {
@@ -211,10 +209,8 @@ async function extractOverview(sourceDir: string): Promise<string> {
 }
 
 async function getExistingTopics(notesDir: string): Promise<string[]> {
-  const files = await listFiles(notesDir, { extension: ".md", maxDepth: 1 });
-  return files
-    .map((f) => path.basename(f, ".md"))
-    .filter((name) => !name.endsWith("-meta") && !name.endsWith("-qa") && !name.endsWith("-quiz") && name !== "plan");
+  const topics = await discoverStudyTopics(notesDir);
+  return topics.map((topic) => topic.topic);
 }
 
 export async function sessionGetSourceDigest(

@@ -82,7 +82,7 @@ items:
 각 개념에 대해:
 
 1. `review.getMeta(context, skill=<skill>, topic=<topic>)` → 개념의 현재 레벨/streak 확인
-2. 학습 기록 참조: `study/{skill}/{topic}.md` Read → 해당 개념이 다뤄진 부분 탐색
+2. 학습 기록 참조: `study/{skill}/topics/<topic>/note.md` 또는 MCP가 resolve한 topic note Read → 해당 개념이 다뤄진 부분 탐색
 3. 레벨별 출제 전략:
 
 | 레벨 | 인지 수준 | 출제 방식 | 예시 |
@@ -112,7 +112,7 @@ items:
 
 피드백 원칙:
 - **왜 맞았는지/틀렸는지** 설명한다 (채점만 하지 않는다)
-- 학습 기록 경로를 인용한다: "이 내용은 `study/{skill}/{topic}.md`에서 다뤘습니다"
+- 학습 기록 경로를 인용한다: "이 내용은 `study/{skill}/topics/<topic>/note.md`에서 다뤘습니다"
 - 오답 시 정답을 간결하게 설명하되, 전체 강의를 하지 않는다 (그건 `$learn`의 역할)
 - L3~L4에서 오답이면 "이 부분은 `$learn {관련 주제}`로 보충하면 좋겠습니다" 제안 가능
 
@@ -185,7 +185,7 @@ session-state.md → `# COMPLETED\n` 마커로 Write
 ## 규칙
 
 - 간격/레벨 계산을 프롬프트에서 재구현하지 않는다. MCP `recordResult`의 결과를 신뢰한다.
-- 학습 기록(`study/{skill}/`)은 읽기만 한다. 수정하지 않는다.
+- 학습 기록(`study/{skill}/topics/` 및 legacy topic note)은 읽기만 한다. 수정하지 않는다.
 - 쓰기 동작은 Phase 2(`>>정리` 이후)에만 수행한다. 예외: `recordResult`(매 개념), `session-state.md`(Phase 전환).
 - 출제 시 학습 기록을 반드시 참조한다. 학습 기록 없이 일반 지식만으로 출제하지 않는다.
 - AI가 자체 판단으로 Phase를 건너뛰지 않는다.

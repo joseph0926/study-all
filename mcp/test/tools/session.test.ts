@@ -72,6 +72,23 @@ describe("session tools", () => {
     expect(text).toContain("via /project-learn");
   });
 
+  it("session.appendLog creates topic_dir note when skill topic is new", async () => {
+    const base = path.join(os.tmpdir(), `mcp-session-skill-topic-dir-${Date.now()}`);
+    process.env.STUDY_ROOT = base;
+    mkdirSync(path.join(base, "study", "learn"), { recursive: true });
+
+    const result = await sessionAppendLog({
+      context: { mode: "skill", skill: "learn" },
+      topic: "Demo Topic",
+      content: "### 학습 로드맵\n- [ ] Step 1: demo",
+    });
+
+    expect(result.data.ok).toBe(true);
+    expect(result.data.filePath).toBe(path.join(base, "study", "learn", "topics", "Demo-Topic", "note.md"));
+    const text = readFileSync(result.data.filePath, "utf8");
+    expect(text).toContain("via /learn");
+  });
+
   it("session.getSourcePaths returns files", async () => {
     process.env.STUDY_ROOT = ROOT;
 
