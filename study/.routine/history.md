@@ -12,3 +12,7 @@
 | 03-03 | useReducer 실무 패턴 | PASS | review 등록: useState는 useReducer의 특수 케이스, eager bailout 최적화 차이, useEffect 내 setState 판별 플로우, reducer 순수성 원칙, useReducer 실무 위치 | 3 |
 | 03-04 | — | — | — | 0 |
 | 03-05 | useEffect 실무 패턴 | PASS | review 등록: Object.is 의존성 비교, cleanup 판단 기준 (지속성), 전체 cleanup → 전체 effect 순서, useEffect fetch 한계와 대안, useEffect vs useLayoutEffect 판단 | 1 |
+| 03-06 | — | — | — | 0 |
+| 03-07 | — | — | — | 0 |
+| 03-08 | — | — | — | 0 |
+| 03-09 | 배포 후 느려진 페이지 진단 실전 | PASS | review 등록: 증상→지표 매핑 프레임, LCP 4단계 분해, INP 3구간 분해, 격리 테스트로 원인 확정, Core Web Vitals 한계 인식 | 1 |
