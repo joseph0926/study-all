@@ -17,3 +17,4 @@
 | 03-08 | — | — | — | 0 |
 | 03-09 | 배포 후 느려진 페이지 진단 실전 | PASS | review 등록: 증상→지표 매핑 프레임, LCP 4단계 분해, INP 3구간 분해, 격리 테스트로 원인 확정, Core Web Vitals 한계 인식 | 1 |
 | 03-09 | autocomplete 설계/구현/테스트 | PASS | review 등록: debounce useRef 패턴, AbortController signal 전달, discriminated union 상태 모델, aria-activedescendant 가상 포커스, abort+latest-wins 이중 방어 | 1 |
+| 03-09 | non-urgent UI 업데이트와 상태 경계 설정 | PASS | review 등록: deferred value와 consumer subtree, startTransition의 동기 구간 setState 마킹, blocking/non-blocking vs sync/async | 1 |
