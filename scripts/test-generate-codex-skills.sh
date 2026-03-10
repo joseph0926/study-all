@@ -48,7 +48,7 @@ bash "$GEN" --apply --source "$SRC" --target "$DST" >/dev/null
 cat > "$TMP_DIR/expected-sample.md" <<'EOF'
 ---
 name: sample-skill
-description: 샘플 설명 Codex에서는 `$sample-skill <path> [topic]`으로 호출한다.
+description: 샘플 설명 Codex에서는 `$sample-skill path [topic]`으로 호출한다.
 ---
 
 # sample-skill
@@ -76,6 +76,22 @@ diff -u "$TMP_DIR/expected-sample.md" "$DST/sample-skill/SKILL.md"
 diff -u "$TMP_DIR/expected-dashboard-lite.md" "$DST/dashboard-lite/SKILL.md"
 
 bash "$GEN" --check --source "$SRC" --target "$DST" >/dev/null
+
+mkdir -p "$DST/retired-skill"
+cat > "$DST/retired-skill/SKILL.md" <<'EOF'
+# stale
+EOF
+
+if bash "$GEN" --check --source "$SRC" --target "$DST" >/dev/null 2>&1; then
+  echo "expected --check to fail when target has stale generated skill" >&2
+  exit 1
+fi
+
+bash "$GEN" --apply --source "$SRC" --target "$DST" >/dev/null
+if [[ -e "$DST/retired-skill/SKILL.md" ]]; then
+  echo "expected --apply to prune stale generated skill" >&2
+  exit 1
+fi
 
 echo "# drift" >> "$DST/dashboard-lite/SKILL.md"
 if bash "$GEN" --check --source "$SRC" --target "$DST" >/dev/null 2>&1; then

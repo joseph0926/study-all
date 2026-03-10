@@ -1,6 +1,6 @@
 ---
 name: routine
-description: 장기 학습 세션 오케스트레이터. 탐색→심화→코딩→체크포인트→복습등록 5단계를 한 세션으로 운영하고, JSONL 로그로 이어하기와 복구를 관리한다. "루틴 시작", "공부하자", "오늘 뭐 배울까", "학습 시작", "루틴"처럼 세션을 새로 시작하거나 이어갈 때 사용한다. 단일 질문 답변, 개별 복습, 소스코드 패턴 리딩만 필요하면 learn/review/src를 사용한다.
+description: 장기 학습 세션 오케스트레이터. 탐색→심화→코딩→체크포인트→복습등록 5단계를 한 세션으로 운영하고, JSONL 로그로 이어하기와 복구를 관리한다. "루틴 시작", "공부하자", "오늘 뭐 배울까", "학습 시작", "루틴"처럼 세션을 새로 시작하거나 이어갈 때 사용한다. 단일 질문 답변, 개별 복습, 프로젝트 분석만 필요하면 learn/review/project를 사용한다.
 argument-hint: "[project-path] [주제]"
 disable-model-invocation: true
 allowed-tools: Read, Grep, Glob, Bash, Write, WebSearch, WebFetch, mcp__study__context_resolve, mcp__study__routine_appendEntry, mcp__study__routine_readLog, mcp__study__routine_resetLog, mcp__study__routine_extractTranscript, mcp__study__stats_getDashboard, mcp__study__review_saveMeta
@@ -34,8 +34,8 @@ allowed-tools: Read, Grep, Glob, Bash, Write, WebSearch, WebFetch, mcp__study__c
 
 - 이 스킬은 5단계 학습 세션을 처음부터 끝까지 오케스트레이션할 때만 사용한다.
 - 단일 질문 답변만 필요하면 `learn`을 사용한다.
-- 소스코드 패턴 리딩만 필요하면 `src`를 사용한다.
 - 복습 큐 소화만 필요하면 `review`를 사용한다.
+- 프로젝트 분석/개선만 필요하면 `project`를 사용한다.
 - 코딩 평가만 필요하면 `test`를 사용한다.
 
 ---

@@ -16,7 +16,6 @@ allowed-tools: Read, Grep, Glob, Bash, Write, Edit, WebSearch, WebFetch, AskUser
 - 단순 버그 수정, 한 줄 변경, 리팩터링 → 직접 처리 (이 스킬 불필요).
 - 학습 목적의 코딩 → `routine` 또는 `test` 스킬 사용.
 - 프로젝트 분석/개선 → `project` 스킬 사용.
-- 학습 내용 적용 → `apply` 스킬 사용.
 
 ---
 

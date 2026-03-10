@@ -20,7 +20,7 @@ Options:
 
 Notes:
   - Source of truth is .claude/skills/*/SKILL.md
-  - This script rewrites only .codex/skills/*/SKILL.md
+  - This script syncs .codex/skills/*/SKILL.md and prunes removed generated skills
 USAGE
 }
 
@@ -287,6 +287,7 @@ trap 'rm -rf "$TMP_DIR"' EXIT
 changes=0
 creates=0
 updates=0
+prunes=0
 same=0
 invalid=0
 
@@ -323,8 +324,26 @@ while IFS= read -r src_file; do
   fi
 done < <(find "$SOURCE_DIR" -mindepth 2 -maxdepth 2 -name 'SKILL.md' -type f | sort)
 
+if [[ -d "$TARGET_DIR" ]]; then
+  while IFS= read -r target_file; do
+    skill_name="$(basename "$(dirname "$target_file")")"
+    if [[ -f "$SOURCE_DIR/$skill_name/SKILL.md" ]]; then
+      continue
+    fi
+
+    changes=$((changes + 1))
+    prunes=$((prunes + 1))
+    echo "[generate-codex-skills] prune: $skill_name/SKILL.md"
+
+    if [[ "$MODE" == "apply" ]]; then
+      rm -f "$target_file"
+      rmdir "$(dirname "$target_file")" 2>/dev/null || true
+    fi
+  done < <(find "$TARGET_DIR" -mindepth 2 -maxdepth 2 -name 'SKILL.md' -type f | sort)
+fi
+
 echo "[generate-codex-skills] mode=$MODE source=$SOURCE_DIR target=$TARGET_DIR"
-echo "[generate-codex-skills] same=$same create=$creates update=$updates invalid=$invalid"
+echo "[generate-codex-skills] same=$same create=$creates update=$updates prune=$prunes invalid=$invalid"
 
 if [[ "$MODE" == "dry-run" ]]; then
   echo "[generate-codex-skills] dry-run complete (no file changes)."
