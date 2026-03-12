@@ -19,38 +19,34 @@ allowed-tools: Read, Grep, Glob, Bash, WebSearch, WebFetch, Write, mcp__study__c
    - project 모드: `<project-path>` + `<질문>` 파싱 → `context.resolve(mode=project, projectPath=<project-path>)`
    - skill 모드: `context.resolve(mode=skill, skill=learn)`
 2. 사용자 질문에서 주제명 추출 (간결한 kebab-case, 예: `Suspense-동작원리`, `인증-흐름`)
-3. 세션 복원/초기화
+3. 세션 초기화
 
    상태 파일:
    - skill 모드: `study/learn/session-state.md`
    - project 모드: `{project}/.study/learn/session-state.md`
 
-   3-A. Read 시도:
-     - 파일 없음 또는 `# COMPLETED` → 새 세션 → Step 3-C
-     - 활성 내용 + 당일 → "이전 세션 복원. Q{N}부터 계속합니다." → 상태 복원 → Step 4
-     - 활성 내용 + 이전 날짜 → "이전 세션 발견 ({날짜}). 이어서/새로?" → 사용자 선택
+   - 파일 없음 또는 `# COMPLETED` → 새 세션 시작
+   - 활성 내용 존재 → "이전 세션이 있습니다. 이어서/새로?" → 사용자 선택
 
-   3-B. 복원 정보:
-     - topic, qaCount, frameType/analogyFrame, connections, nextDirection, qaHistory
-     - `qaHistory`는 컨텍스트 컴팩션 대비 폴백이다. 각 항목은 사용자 질문 원문과 AI 답변 요약을 보관한다.
-
-   3-C. 새 세션 → 상태 파일 초기화 Write:
-     ```
-     # SESSION-STATE
-     updated: {YYYY-MM-DD HH:MM}
-     topic: {주제명}
-     qaCount: 0
-     frameType: (미결정)
-     connections: (없음)
-     nextDirection: 초기 탐색
-     qaHistory: []
-     ```
+   새 세션 → 상태 파일 초기화 Write:
+   ```
+   # SESSION-STATE
+   updated: {YYYY-MM-DD HH:MM}
+   topic: {주제명}
+   status: active
+   qaCount: 0
+   ```
 
 4. 근거 탐색 — `references/evidence-priority.md`의 모드별 우선순위를 따른다.
 
    추가 규칙 (learn 전용):
    - 웹 소스 선호 순위: 공식 문서 > GitHub 소스 > 스펙/RFC > 핵심 기여자 블로그 > 일반 아티클
    - project 모드 탐색 범위: 소규모(<100) 전체, 중규모(100~500) 진입점 기반, 대규모(500+) 점진적 심화
+
+   **근거 자동 escalation:**
+   - "추론:"으로 답변하려는 내용이 사실적 주장(메커니즘, 성능, 동작 방식)이면 → 자동으로 웹 검색을 먼저 시도하고, 근거를 못 찾은 경우에만 "추론:"으로 표기한다.
+   - 사용자가 "왜?", "근거?", "진짜?", "검증된?" 같은 검증 질문을 하면 → 즉시 웹 검색 escalation (ref/ 스킵 가능).
+   - 목표: 사용자가 "웹검색 해봐줘"를 직접 요청해야 하는 상황을 없앤다.
 
 5. 아래 순서로 답변한다. 모드별 구조가 다르다.
 
@@ -61,6 +57,10 @@ allowed-tools: Read, Grep, Glob, Bash, WebSearch, WebFetch, Write, mcp__study__c
      - 1:1 대응 가능한 비유를 사용하고, 대응 관계를 명시한다.
      - 1:1 대응이 불가능하면 "비유 한계:" 접두사로 이유와 부분 비유를 제시한다.
      - 대응 요소가 3개 미만이면 비유를 생략하고 "비유 한계:" 설명만 남긴다.
+     - **비유 실패 감지:** 사용자 반응에서 "이해가 안 되는데", "잘 모르겠", "다시 설명", "비유가 안 와닿" 등의 신호, 또는 동일 개념에 대한 반복 질문이 감지되면 자동으로 대안 비유를 제시한다.
+       - 대안 ①: 도메인 전환 — 물리적 비유가 실패했으면 사회적/일상적 비유로 전환
+       - 대안 ②: 추상도 낮추기 — 더 구체적인 일상 예시로 전환
+       - 2회 실패 시: "비유 한계:" 전환 후 코드/텍스트 직접 설명으로 진행
    - 5-B. **코드/텍스트 설명** — 비유 프레임 위에 근거를 쌓는다.
      - ref/ 코드 근거: `file:line` 경로 포함
      - 웹 근거: 출처 URL + 버전/날짜 포함
@@ -86,6 +86,7 @@ allowed-tools: Read, Grep, Glob, Bash, WebSearch, WebFetch, Write, mcp__study__c
      - "커스텀 구조:" 시 비유를 병행한다: 실생활 1:1 대응 비유로 구조를 설명한다 (대응 요소 3개 이상).
      - 비유 불가 시 → "비유 한계:" 접두사로 이유와 부분 비유를 제시한다.
      - 억지 매핑/억지 비유 금지.
+     - **비유 실패 감지:** skill 모드와 동일한 감지 + 대안 전략 적용.
    - 5-B. **코드 추적** — 패턴 프레임 위에 코드 근거를 쌓는다.
      - 프로젝트 소스 근거: `file:line` 경로 포함
      - ref/ 소스 근거: "ref 소스:" 접두사 + `ref/<lib>/path:line`
@@ -107,34 +108,55 @@ allowed-tools: Read, Grep, Glob, Bash, WebSearch, WebFetch, Write, mcp__study__c
      - 단일 사실 확인이 아니면 시각화를 포함했는지 확인한다.
 
 6. 사용자의 추가 질문을 대기한다. → Step 4~5 반복.
-   - 매 Q&A 후 세션 상태 파일을 Write 갱신한다 (qaCount++, frameType, connections, nextDirection).
-   - `qaHistory`에 아래 형식으로 append한다. 답변은 요약(핵심 1-3줄 + refs)으로 저장한다.
-     ```
-     qaHistory:
-       - question: <사용자 질문 원문>
-         summary: <답변 핵심 1-3줄 요약>
-         refs: [file:line, url, ...]
-     ```
+   - 매 Q&A 후 세션 상태 파일의 qaCount만 갱신한다.
 
-종료(`>>정리`) 시:
+7. **이해도 체크포인트** — Q&A 3회 완료 시점에 능동 회상을 유도한다.
+   - "지금까지 내용을 한 문장으로 정리하면 어떻게 될까요?" 형태의 확인 질문 1개를 제시한다.
+   - 사용자 답변이 핵심을 놓쳤으면 → 놓친 부분만 간결히 보충한다.
+   - 사용자가 "패스", "건너뛰기"라고 하거나, 무시하고 다음 질문을 하면 → 즉시 다음 Q&A로 진행한다.
+   - 이후 3회마다 반복하되, 사용자가 한 번이라도 건너뛰면 해당 세션에서 더 이상 제시하지 않는다.
 
-1. **대화 컨텍스트를 우선 사용**하여 문서를 작성한다. 컨텍스트 컴팩션으로 유실된 턴은 `session-state.md`의 `qaHistory`(summary+refs)로 보완한다.
+종료 시:
 
+**종료 신호:**
+- 확정: `>>정리` → 즉시 정리 실행
+- 유연: `정리해줘`, `끝`, `마무리`, `여기까지` → "세션을 정리할까요?" 확인 1회 후 실행
+- 일반 대화 속 "정리"(문맥상 학습 내용 정리 요청)는 종료 신호로 인식하지 않는다.
+
+**정리 실행 순서:**
+
+1. **핵심 명제 추출** — 세션의 Q&A를 분석하여 3~5개 핵심 명제를 추출한다.
+   - 형식: "~은 ~이다 (왜냐하면 ~)"
+   - 각 명제에 근거 출처 1개 이상 첨부.
+   - 세션 중 사용자가 교정한 오해가 있으면 "오해 → 정정" 쌍으로 포함.
+
+2. **활용 프레임워크** — "그래서 나는 이제 뭘 다르게 하는가?"에 답하는 판단 기준을 작성한다.
+   - 형식: "~할 때, ~를 확인/적용한다"
+   - 실무 시나리오 1~2개 예시 포함.
+
+3. **문서 작성** — 대화 컨텍스트를 우선 사용하여 문서를 작성한다.
    - 대화 컨텍스트에 남아있는 Q&A → 원문 구조(비유/코드/시각화/연결) 그대로 사용.
-   - 컴팩션으로 유실된 Q&A → qaHistory의 question 원문 + summary를 기반으로 재구성.
    - 각 사용자 질문 → `## Q{N}. <원문>` (질문이 길면 첫 문장을 제목, 전문을 본문)
    - 각 AI 답변 → 답변 본문 (비유/코드/시각화/연결 구조를 그대로 유지)
    - 메타데이터 헤더(`# <주제명>`, `> 최초 질문`, `> 일시`)를 작성한다.
+   - `## 핵심 명제`와 `## 활용 프레임워크` 섹션을 Q&A 뒤에 배치한다.
    - `## 연결` 섹션은 세션 중 탐색한 연결 정보를 기반으로 작성한다.
-   - 사용자 질문은 원문 그대로, 답변은 핵심 구조와 코드 인용을 유지한다.
 
-2. 문서 파일에 Write한다.
+4. 문서 파일에 Write한다.
    - skill 모드: `study/learn/topics/<주제명>/note.md`
    - project 모드: `{project}/.study/learn/<주제명>.md`
    - 포맷: 아래 모드별 템플릿을 따른다.
-3. `session.appendLog(context, topic=<주제명>, content=<요약>)`로 세션 기록.
+
+5. `session.appendLog(context, topic=<주제명>, content=<요약>)`로 세션 기록.
    - project 모드에서는 `via="via /learn (project mode)"` 추가.
-4. 세션 상태 파일을 `# COMPLETED\n` 마커로 Write한다.
+
+6. 세션 상태 파일을 `# COMPLETED\n` 마커로 Write한다.
+
+7. **다음 단계 제안** — 학습 내용에 맞는 후속 활동을 1~2개 제안한다.
+   - 코딩 실습이 적절한 경우: "`/test <스킬> <레벨>`으로 실습해보세요"
+   - 복습이 적절한 경우: "`/review <스킬> <토픽>`으로 복습할 수 있습니다"
+   - 심화가 적절한 경우: 관련 후속 질문 1개 제안
+   - 제안만 하며 실행하지 않는다.
 
 **skill 모드 문서 템플릿:**
 
@@ -157,6 +179,16 @@ allowed-tools: Read, Grep, Glob, Bash, WebSearch, WebFetch, Write, mcp__study__c
 ...
 
 ---
+
+## 핵심 명제
+
+1. ~은 ~이다 (근거: `file:line` 또는 URL)
+2. ...
+
+## 활용 프레임워크
+
+- ~할 때, ~를 확인/적용한다
+- 예시: ...
 
 ## 연결
 
@@ -190,6 +222,16 @@ allowed-tools: Read, Grep, Glob, Bash, WebSearch, WebFetch, Write, mcp__study__c
 
 ---
 
+## 핵심 명제
+
+1. ~은 ~이다 (근거: `file:line` 또는 URL)
+2. ...
+
+## 활용 프레임워크
+
+- ~할 때, ~를 확인/적용한다
+- 예시: ...
+
 ## 연결
 
 ### 프로젝트 내부
@@ -202,22 +244,19 @@ allowed-tools: Read, Grep, Glob, Bash, WebSearch, WebFetch, Write, mcp__study__c
 
 | 대상 토픽 | 관계 | 근거 |
 |-----------|------|------|
-| `study/<skill>/<Topic>.md` | <관계 유형> | <왜 연결되는지> |
+| `study/<skill>/topics/<Topic>/note.md` | <관계 유형> | <왜 연결되는지> |
 
 연결이 없으면 해당 하위 섹션을 생략한다.
 ```
 
-사용자 신호 규칙:
-- `>>정리` — 세션 종료 + 문서화 실행
-- 일반 대화 속 "정리"는 신호로 인식하지 않는다 (`>>` 접두사 필수).
-
 규칙:
 - 근거 탐색 우선순위 → `references/evidence-priority.md` 참조.
-- 쓰기 동작은 `>>정리` 이후에만 수행한다. 예외: `session-state.md`는 매 Q&A 후 갱신한다.
-- 문서화 source of truth는 대화 컨텍스트다. `session-state.md`의 `qaHistory`는 컨텍스트 컴팩션 시 폴백으로만 사용한다.
+- 사실적 주장에 "추론:"을 사용하기 전에 웹 검색을 먼저 시도한다.
+- 쓰기 동작은 종료 신호 이후에만 수행한다. 예외: `session-state.md`의 qaCount 갱신.
+- 문서화 source of truth는 대화 컨텍스트다.
 - skill 모드 답변 순서: 비유(프레임) → 코드/텍스트(근거+매칭) → 시각화(통합 정리) → 연결.
 - project 모드 답변 순서: 패턴 매핑(프레임) → 코드 추적(근거+매칭) → 시각화(통합 정리) → 이중 연결.
-- 비유는 1:1 대응을 기본으로 한다. 억지 비유보다 "비유 한계:" 설명이 낫다.
+- 비유는 1:1 대응을 기본으로 한다. 실패 시 도메인 전환 → 추상도 낮추기 → "비유 한계:" 순으로 대응한다.
 - 시각화는 단일 사실 확인이 아닌 한 포함한다.
 - 연결 탐색은 `study/` 스캔으로 수행한다. 단순 동일 라이브러리 연결은 금지한다.
 - project 모드에서 프로젝트 코드를 수정하지 않는다 (읽기 전용).
